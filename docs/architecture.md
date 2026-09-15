@@ -1,61 +1,44 @@
-# Architecture — v0.0.2
+# Architecture — Siglum v0.0.3
 
-## Dependency direction
-
-```text
-apps/cli ──> storage ──> core
-    └──────> models  ──> core
-```
-
-`core` contains deterministic value transformations and validation, not file/network I/O. `storage` owns the SQLite transaction boundary. `models` can propose edits but cannot approve them or write the database. The CLI acts on explicit user commands. Native Ollama and Chat Completions-compatible providers have bounded HTTP transport, but cannot reach storage. See provider-protocol.md and security-model.md. This is not yet an autonomous research runtime.
-
-The mono-repository uses pnpm workspace dependencies, TypeScript NodeNext ESM and project references. It has two direct development dependencies and no third-party runtime dependencies. Tests use Node's built-in test runner instead of adding Vitest at this bootstrap stage. ESLint and richer editor tooling can be added in a scoped follow-up.
-
-## One authority, not two competing versions of the manuscript
-
-SQLite is authoritative in this preview. `documents.head_revision_id` points to a stored revision snapshot. Exports are copies; importing a file creates a new document and does not reconcile an existing document. No file watcher, auto-overwrite, or Git synchronization is implied.
-
-Each snapshot stores ordered text blocks:
-
-```ts
-{ id, version, text, separator }
-```
-
-Blank lines form the initial boundaries. `text + separator` is concatenated verbatim; original CRLF/LF, combining characters and ordinary UTF-8 text are not normalized. A UTF-8 BOM is retained. This is **not Markdown AST parsing**: blank lines inside fenced code can form block boundaries. Accepted text may introduce blank lines but retains its block identity. Structural parsing is a later migration.
-
-## Proposal lifecycle
-
-`proposeChanges(documentId, baseRevisionId, edits, providerId)` verifies that the entire response was generated against the current head, validates the full batch, then stores pending changes. A failure stores no portion of the batch.
+## Dependencies and authority
 
 ```text
-pending ──accept──> accepted ──revert──> reverted
-   └──────reject─────────────────────> rejected
+apps/cli -> storage -> core
+       \-> models  -> core
 ```
 
-No other transitions are allowed. Reverting creates a *new* content revision and decision; it does not erase history.
+`core` validates text, revisions, source value types, static extraction and bounded source context. `storage` owns one SQLite database and all transactions. `models` receives immutable value snapshots and returns untrusted proposals; it has no database or approval handles. CLI source HTTP is a host capability invoked only by explicit `source add/refresh --fetch`. It is not a model tool or autonomous crawler.
 
-The initial same-batch constraint is one edit per block. Accepting change A uses only A's block precondition, so change B targeting an unchanged different block remains applicable. For a target block, both exact text and its monotonic `version` must match. This prevents an ABA hazard: A → B → A has the same characters but is **not** the old block version.
+The product name is Siglum. Repository `JaynOwO/writer-agent`, workspace directory `.writer`, pnpm packages `@writer-agent/*` and `writer` command alias stay unchanged. `pnpm siglum` is an additional root script. There are no new package dependencies or lockfile changes. NodeNext ESM/project references, Node's built-in test runner/SQLite, and the existing compiler remain in use.
 
-Reverts require the currently accepted block version. A later modification of the same block causes an explicit conflict, even after its characters return to a prior value. This is intentionally conservative, not automatic rebase.
+## Manuscript rules retained
 
-## Transaction and schema boundary
+SQLite is canonical; Markdown import/export is explicit, not live synchronization. Snapshots contain `{ id, version, text, separator }` blocks. Initial blank-line splitting preserves original text but is not a Markdown AST. Exact block ID/text/version checks prevent stale edits, accidental overwrite and ABA. Pending -> accepted/rejected; accepted -> reverted. Each accept/revert appends a new content revision and decision; reject does not change content. Different blocks remain independent. Revision/head/change/decision updates are atomic, and history has append-only triggers.
 
-The database has `workspace`, `documents`, `revisions`, `changes`, `decisions` tables. `PRAGMA application_id` identifies the format and `PRAGMA user_version=1` identifies the schema. Unknown formats/versions are rejected; the preview contains no destructive migration.
+## Source records and snapshots
 
-Writes use `BEGIN IMMEDIATE` with a busy timeout, parameterized SQL, foreign keys, WAL and `synchronous=FULL`. Content-changing decisions write a revision, advance the document head, change the proposal status, and append a decision in the same transaction. SQL triggers prevent accidental UPDATE/DELETE on revision and decision tables. They are not tamper-proof security against someone who controls the database file.
+Schema v2 adds sources, source_snapshots, source_excerpts, research_notes, source_bindings, proposal_contexts and change_contexts. No original manuscript table is rebuilt. Raw response/file bytes live in a bounded SQLite BLOB alongside extracted text, separate hashes, a recorded extractor version, capture time and unverified reported metadata. This makes saving evidence atomic without coordinating loose files and database transactions. File export is explicit and never overwrites.
 
-Snapshots duplicate document content per revision. This is acceptable for a correctness-focused prototype and is not a scalable storage format for years of long manuscripts. Future optimization must preserve event semantics and include migration tests.
+A web source is identified by its normalized requested URL (fragment removed, query retained). Each capture appends an independent snapshot. Local files store only a basename and get a new source unless refresh is explicit. Excerpts pin exact extracted-text lines/offsets and hashes, not mutable URLs. Notes are records, not source text or preferences. Source bindings pin an excerpt to a document block version and dynamically report current/stale. Revert does not silently reapprove a citation.
 
-## Semantic layer, deliberately separated
+Source content, excerpt and context reads validate stored hashes/structure. Append-only triggers deter accidental modification; a database owner can still bypass them. Hashes are integrity checks, not origin signatures. Full snapshots duplicate data; this is not a compact archival database for unlimited material. Library search is bounded, exact substring search of latest snapshots, not embedding retrieval.
 
-`reviewTextChange()` produces `lexical-v1` hints only. Exact revision safety is independent of those hints. A missed or false lexical hint cannot break rollback. The four initial categories are uncertainty/attribution removed, causality added and scope marker removed.
+## Source-aware provider protocol
 
-Not yet implemented: Claim Ledger, reference snapshots, evidence-to-claim support, intention contracts, semantic argument matching, sentence-level patch identity, semantic evaluation on human-labeled writing datasets.
+Response Proposal Protocol v1 is unchanged. Requests gain optional bounded `sources` values. The user-data message serializes them as explicitly unverified context, separate from the editing instruction and manuscript. It never promotes page text into system instructions. A model sees only explicit selections, not raw HTML, unselected sources or private notes.
 
-## Privacy and future tools
+The host captures document/source snapshots before inference, passes a separate clone to the provider, validates the response, and rechecks the document head and selected source context inside the persistence transaction. Valid pending changes and their supplied-source record commit together. A stale document, bad response or invalid source context saves no partial batch. No SQLite transaction spans a network wait.
 
-The scripted adapter remains offline. The two HTTP adapters make a single bounded, explicit request. CLI suggest previews unless --send is supplied; remote requests additionally require --allow-remote and HTTPS. The application revalidates responses and the current document head before persisting pending changes. Decision reasons persist locally but are not automatically learned as preferences. There is no MCP host, Skills execution, browser automation or shell tool exposed to models. Future research content must be treated as untrusted data; external tools need explicit capability scopes, approval gates and budget limits. API secrets are read from named process environment variables only at send time and must not enter project source or user manuscript files. No key store or dotenv loader is provided. Model notes are transient and unverified. HTTP limits do not constitute a calibrated cost/quality guarantee.
+`change_contexts` links proposals to exact selected text and identifiers. The status is "supplied-not-verified". It does not claim the model used every source or that a source supports a particular sentence. Manual paragraph/excerpt links and model-context provenance are separate objects. The full Claim Ledger, citation validation and semantic changes remain future work.
 
-## Future desktop integration
+## Web intake boundary
 
-React/Tauri remain candidates, not dependencies in this build. The current storage API is synchronous and must not later run lengthy operations on a desktop UI thread. A future host should isolate persistence and model work in an appropriate process/worker and define an event protocol.
+URL preview does not resolve DNS. An explicit request validates scheme/credentials/port/hostname, rejects local/private/special-use IP ranges, validates every DNS address and pins one address using the request's lookup callback with pooling disabled. TLS validates the original hostname. No redirects, cookies, bearer keys, embedded resources or source scripts are followed/executed. The entire operation has a deadline, supported media/charset checks, header and streamed-body limits. Compression is refused. Test dependency injection cannot be selected via URLs/CLI flags.
+
+This is not a network sandbox or a complete SSRF audit. Public addresses may still route specially under unusual network configurations; use OS/network egress controls for stronger isolation. The static text extractor is deliberately limited, not a rendering engine or full HTML5 parser. Its version/warnings are persisted so evidence interpretation remains explicit.
+
+## Migration and desktop future
+
+Old schema-v1 workspaces can still use original editing; source features request an explicit migration. The migration previews by default, retains a verified VACUUM INTO backup, checks a cooperative lock/data version, adds tables transactionally and preserves all existing content rows. Unknown formats are refused. Source-code update bundles never migrate user data. See the paired source guides for backup and recovery boundaries.
+
+Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, automatic tool execution, Skills/MCP, intent contracts, learned memory and verified semantic review are not implemented here.

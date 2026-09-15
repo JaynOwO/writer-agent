@@ -1,6 +1,6 @@
 # Proposal protocol v1
 
-The model sees one selected document snapshot and one instruction. It does not receive a Workspace, database handle, other documents, environment variables, API credentials or tool definitions.
+The model sees one selected document snapshot, one instruction and any explicitly selected source context. It does not receive a Workspace, database handle, other documents, environment variables, API credentials or tool definitions.
 
 ## Request
 
@@ -41,8 +41,14 @@ An empty `edits` array is valid. At most 100 edits, one per block; summaries at 
 6. Storage checks the document head and validates the full batch in a transaction, storing only pending changes.
 7. User separately invokes accept/reject/revert. Each operation retains v0.0.1 conflict and transaction semantics.
 
-Model notes are returned to the CLI with `verified: false, persisted: false`. They are deliberately not saved as enduring semantic judgments or preferences in schema v1. Existing lexical hints remain independent and fallible.
+Model notes are returned to the CLI with `verified: false, persisted: false`. They are deliberately not saved as enduring semantic judgments or preferences in either supported schema. Existing lexical hints remain independent and fallible.
 
 ## Model compatibility
 
 OpenAI-compatible means the Chat Completions request/response shape implemented here, not the Responses API, all providers, all models, or every JSON Schema feature. The user chooses compatible models and switches explicitly. Ollama uses native chat rather than its compatibility API. Non-streaming only. No automatic model discovery, selection, downloads, thinking-output display, retries, tool calls or provider switching.
+
+## v0.0.3 source context (response protocol remains v1)
+
+ModelRequest has optional `sources: SourceContextItem[]`. Each item pins sourceId/snapshotId/optional excerptId, locator, reported title, full extracted-text hash, selected-content hash, extracted-text line range and exact selected text. The request must contain at most 8 items and 80000 serialized UTF-8 bytes. No implicit selection, truncation or note inclusion is permitted. Source text is untrusted user-data context, never system instructions.
+
+The host retains its own captured baseline, validates the response as before and saves pending changes plus the selected source context in one transaction. Provenance is `supplied-not-verified`: no automatic assertion of actual model use, citation correctness or evidence support. The model cannot author/override this stored context record. Raw HTML and private absolute file paths are not model inputs. Excerpts/pinned snapshots do not drift when a source is refreshed. See [sources](sources.md).

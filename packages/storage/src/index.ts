@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 import { DatabaseSync } from 'node:sqlite';
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -9,6 +10,10 @@ import type {
   WorkspaceInfo, DocumentRecord, Revision, Change, Decision, Snapshot, ProposedEdit, ReviewHint,
 } from '@writer-agent/core';
 import { APPLICATION_ID, SCHEMA_SQL, SCHEMA_VERSION } from './schema.js';
+import { SourceLibrary } from './sources.js';
+export { migrateWorkspace } from './migration.js';
+export { SourceLibrary } from './sources.js';
+import type { ProposalContextInput } from '@writer-agent/core';
 
 // Keep SQL decoding at the storage boundary. Domain code never receives raw SQLite values.
 type Row = Record<string, unknown>;
@@ -76,7 +81,19 @@ export class Workspace {
   readonly root: string;
   private readonly db: DatabaseSync;
   private closed = false;
-  private constructor(root: string, db: DatabaseSync) { this.root = root; this.db = db; }
+  readonly sources: SourceLibrary;
+  private constructor(root: string, db: DatabaseSync) {
+    this.root = root; this.db = db;
+    this.sources = new SourceLibrary(db, () => {
+      this.assertOpen();
+      if (this.schemaVersion() < 2) throw new WriterError('MIGRATION_REQUIRED', 'Sources need schema v2. Run writer migrate <workspace> to preview, then --apply after closing other sessions.');
+    }, fn => this.transaction(fn));
+  }
+  private schemaVersion(): number {
+    const v = this.db.prepare('PRAGMA user_version').get()?.user_version;
+    if (v !== 1 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
+    return v;
+  }
 
   static create(directory: string, name = 'My writing workspace'): Workspace {
     requireString(directory, 'workspace directory', 4096);
@@ -120,7 +137,7 @@ export class Workspace {
     try {
       const version = db.prepare('PRAGMA user_version').get();
       const app = db.prepare('PRAGMA application_id').get();
-      if (!version || integer(version, 'user_version') !== SCHEMA_VERSION || !app || integer(app, 'application_id') !== APPLICATION_ID) {
+      if (!version || ![1,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
         throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace format/version. No migration or overwrite was attempted.');
       }
       db.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL;');
@@ -131,7 +148,10 @@ export class Workspace {
   }
 
   close(): void { if (!this.closed) { this.db.close(); this.closed = true; } }
-  private assertOpen(): void { if (this.closed) throw new WriterError('WORKSPACE_CLOSED', 'Workspace is closed.'); }
+  private assertOpen(): void {
+    if (this.closed) throw new WriterError('WORKSPACE_CLOSED', 'Workspace is closed.');
+    if (existsSync(join(this.root, '.writer', 'migration.lock'))) throw new WriterError('WORKSPACE_BUSY', 'Workspace migration is locked.');
+  }
   private transaction<T>(fn: () => T): T {
     this.assertOpen();
     this.db.exec('BEGIN IMMEDIATE');
@@ -142,7 +162,7 @@ export class Workspace {
     this.assertOpen();
     const rows = this.db.prepare('SELECT * FROM workspace').all();
     if (rows.length !== 1 || !rows[0]) throw new WriterError('CORRUPT_DATA', 'Invalid workspace metadata.');
-    return { id: field(rows[0], 'id'), name: field(rows[0], 'name'), createdAt: field(rows[0], 'created_at'), schemaVersion: SCHEMA_VERSION };
+    return { id: field(rows[0], 'id'), name: field(rows[0], 'name'), createdAt: field(rows[0], 'created_at'), schemaVersion: this.schemaVersion() };
   }
   createDocument(title: string, markdown: string): DocumentRecord {
     requireString(title, 'title');
@@ -193,7 +213,7 @@ export class Workspace {
     return this.db.prepare(`SELECT d.* FROM decisions d JOIN changes c ON c.id=d.change_id WHERE c.document_id=? ORDER BY d.seq`).all(documentId).map(decodeDecision);
   }
 
-  proposeChanges(documentId: string, baseRevisionId: string, edits: readonly ProposedEdit[], providerId = 'manual'): Change[] {
+  proposeChanges(documentId: string, baseRevisionId: string, edits: readonly ProposedEdit[], providerId = 'manual', context?: ProposalContextInput): Change[] {
     requireString(baseRevisionId, 'baseRevisionId'); requireString(providerId, 'providerId', 200); validateEdits(edits);
     return this.transaction(() => {
       const doc = this.getDocument(documentId);
@@ -213,6 +233,15 @@ export class Workspace {
       });
       const insert = this.db.prepare(`INSERT INTO changes(id,document_id,base_revision_id,block_id,base_block_version,before_text,after_text,summary,provider_id,hints_json,status,accepted_revision_id,accepted_block_version,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,'pending',NULL,NULL,?)`);
       for (const c of changes) insert.run(c.id,c.documentId,c.baseRevisionId,c.blockId,c.baseBlockVersion,c.before,c.after,c.summary,c.providerId,JSON.stringify(c.hints),c.createdAt);
+      if (context !== undefined) {
+        if (this.schemaVersion() < 2) throw new WriterError('MIGRATION_REQUIRED', 'Source contexts need an explicit workspace migration.');
+        requireString(context.instruction, 'instruction', 10000); validateText(context.instruction);
+        this.sources.verifyContext(context.items);
+        const contextId = newId('ctx');
+        this.db.prepare('INSERT INTO proposal_contexts(id,document_id,base_revision_id,provider_id,instruction,items_json,created_at) VALUES(?,?,?,?,?,?,?)')
+          .run(contextId, documentId, baseRevisionId, providerId, context.instruction, JSON.stringify(context.items), new Date().toISOString());
+        for (const change of changes) this.db.prepare('INSERT INTO change_contexts(change_id,context_id) VALUES(?,?)').run(change.id, contextId);
+      }
       return changes;
     });
   }

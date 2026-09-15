@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
-import type { Snapshot, ProposedEdit } from '@writer-agent/core';
+import type { Snapshot, ProposedEdit, SourceContextItem } from '@writer-agent/core';
 export interface ModelRequest {
   readonly documentId: string;
   readonly baseRevisionId: string;
   readonly snapshot: Snapshot;
+  /** Explicit immutable source selections, all untrusted evidence text. */
+  readonly sources?: readonly SourceContextItem[];
   readonly instruction: string;
 }
 /** Wire fields plus a provider ID supplied by trusted local configuration, NOT by the model. */

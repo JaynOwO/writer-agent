@@ -2,17 +2,24 @@
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { MAX_DOCUMENT_BYTES, WriterError, isRecord, requireString, validateEdits } from '@writer-agent/core';
-import { Workspace } from '@writer-agent/storage';
+import { Workspace, migrateWorkspace } from '@writer-agent/storage';
 import { demo } from './demo.js';
 import { ProviderError } from '@writer-agent/models';
 import { suggestCommand } from './suggest.js';
+import { sourceCommand } from './source-command.js';
+import { sourcesDemo } from './sources-demo.js';
 
-const help = `Writer Agent v0.0.2 (CLI development preview; no API key needed for demos/tests)
+const help = `Siglum v0.0.3 (CLI development preview; no API key needed for demos/tests)
 
   writer help
+  writer source help
+  writer migrate <workspace> [--apply]
+  writer provenance <workspace> <changeId>
+  writer demo:sources
   writer model
   writer suggest <workspace> <documentId> --provider ollama|openai-compatible
     --model <model-id> --instruction <text> [--send] [--allow-remote]
+    [--sources <snapshotId,...>] [--excerpts <excerptId,...>]
     [--base-url <api-base>] [--key-env <ENV_NAME>] [--timeout-ms <ms>]
     [--max-output-tokens <n>] [--response-format json-schema|json|prompt]
     [--token-parameter max_completion_tokens|max_tokens]
@@ -33,7 +40,8 @@ const help = `Writer Agent v0.0.2 (CLI development preview; no API key needed fo
   writer export <workspace> <documentId> <new-output.md>
 
 Run from source with: pnpm writer <command> ... (run pnpm build first).
-See docs/cli.md and docs/providers.md. Only suggest --send makes provider requests. No command pushes Git.
+See docs/cli.md and docs/providers.md. Only suggest --send makes model requests. source add/refresh --fetch explicitly retrieves a public page. No command pushes Git.
+Product brand: Siglum. pnpm siglum is an alias for pnpm writer; repository and package IDs stay writer-agent.
 `;
 function print(value: unknown): void { console.log(JSON.stringify(value, null, 2)); }
 function readUtf8(path: string): string {
@@ -49,6 +57,13 @@ function requireArgs(args: string[], min: number, max = min): void {
 async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
+  if (command === 'source') { await sourceCommand(rest); return; }
+  if (command === 'demo:sources') { requireArgs(rest,0); await sourcesDemo(); return; }
+  if (command === 'migrate') {
+    requireArgs(rest,1,2);
+    if (rest[1] !== undefined && rest[1] !== '--apply') throw new WriterError('INVALID_INPUT','Use --apply only after closing other workspace sessions.');
+    print(migrateWorkspace(rest[0]!,rest[1] === '--apply')); return;
+  }
   if (command === 'suggest') { await suggestCommand(rest); return; }
   if (command === 'model') { requireArgs(rest,0); print({protocolVersion:1,providers:['ollama','openai-compatible'],offline:'MockModelProvider; pnpm demo; pnpm demo:provider',help:'docs/providers.md; no model listing or network request performed'}); return; }
   if (command === 'demo') { requireArgs(rest, 0, 1); await demo(rest[0]); return; }
@@ -61,7 +76,7 @@ async function main(args: string[]): Promise<void> {
   }
   const limits: Record<string, readonly [number, number]> = {
     import: [2,3], list: [1,1], show: [2,2], propose: [3,3], changes: [2,2],
-    accept: [2,3], reject: [2,3], revert: [2,3], history: [2,2], decisions: [2,2], export: [3,3],
+    accept: [2,3], reject: [2,3], revert: [2,3], history: [2,2], decisions: [2,2], export: [3,3], provenance: [2,2],
   };
   const limit = Object.hasOwn(limits, command) ? limits[command] : undefined;
   if (!limit) throw new WriterError('INVALID_INPUT', `Unknown command: ${command}`);
@@ -88,6 +103,7 @@ async function main(args: string[]): Promise<void> {
         print(workspace.proposeChanges(target, proposal.baseRevisionId, proposal.edits, providerId));
         break;
       }
+      case 'provenance': print(workspace.sources.provenance(target)); break;
       case 'changes': print(workspace.listChanges(target)); break;
       case 'accept': print(workspace.accept(target, extra)); break;
       case 'reject': print(workspace.reject(target, extra)); break;

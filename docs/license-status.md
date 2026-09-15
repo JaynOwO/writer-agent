@@ -9,3 +9,7 @@ The software license does not automatically license users' own manuscripts, impo
 For contributions, see [CONTRIBUTING](../CONTRIBUTING.md). No copyright assignment or separate commercial dual-license agreement is introduced by this milestone. Earlier v0.0.1-spec documentation describes the historical bootstrap stage and does not override this release's license grant.
 
 Authoritative reference: https://www.apache.org/licenses/LICENSE-2.0 (consulted 2026-09-15). Section 4 covers redistribution, section 5 contributions, and section 6 trademarks. This explanation does not add to or replace the license.
+
+## Product name in v0.0.3
+
+The product-facing name is Siglum (formerly Writer Agent). Repository and package identifiers are unchanged. Apache-2.0 is unchanged. NOTICE retains JaynOwO and contributors attribution. No trademark registration/exclusivity or third-party-content relicensing is implied by this name change.
