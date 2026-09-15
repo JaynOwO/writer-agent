@@ -2,14 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.3 -->
+<!-- siglum:version=0.0.4 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 A local-first agent harness for research, writing, and review.
 
 **Models propose. Sources stay traceable. Authors decide.**
 
-**v0.0.3** · CLI development preview · **Apache-2.0**
+**v0.0.4** · CLI development preview · **Apache-2.0**
 
 Siglum keeps manuscript revisions, review decisions and immutable source snapshots locally. It can ask a configured model to propose edits using explicitly selected source text. A model response cannot accept its own changes. This is a working development core, not a finished writing IDE or an autonomous researcher.
 
@@ -26,6 +26,7 @@ pnpm check
 pnpm demo
 pnpm demo:provider
 pnpm demo:sources
+pnpm demo:review
 ```
 
 In Windows PowerShell, use the `.cmd` shim when `.ps1` execution is restricted; there is no need to change execution policy:
@@ -34,9 +35,10 @@ In Windows PowerShell, use the `.cmd` shim when `.ps1` execution is restricted; 
 pnpm.cmd install --frozen-lockfile
 pnpm.cmd check
 pnpm.cmd demo:sources
+pnpm.cmd demo:review
 ```
 
-Expected demonstration markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`. The source demo captures a synthetic HTML fixture, saves an excerpt and note, supplies that excerpt to a scripted provider, records provenance, accepts/reverts a proposal and exports the preserved source. **These markers are software checks, not evidence of real model quality.**
+Expected demonstration markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`. The source demo captures a synthetic HTML fixture, saves an excerpt and note, supplies that excerpt to a scripted provider, records provenance, accepts/reverts a proposal and exports the preserved source. **These markers are software checks, not evidence of real model quality.**
 
 <!-- section:sources -->
 ## Keep sources, not just URLs
@@ -72,6 +74,22 @@ Successful inference creates **pending** changes only. `changes`, `accept`, `rej
 
 See [provider instructions](docs/providers.md) and the [proposal protocol](docs/provider-protocol.md). Provider credentials are read from named process environment variables; they do not belong in manuscripts, source snapshots, Git or chat messages.
 
+<!-- section:semantic-review -->
+## Claim ledger and semantic review
+
+Annotate claims manually or explicitly ask a model to extract candidate assertions, anchored to exact text in a pinned revision. Confirming an annotation means “this describes my wording,” not “this assertion is true.” Important claims are explicit author choices, not inferred memory.
+
+`review run` inspects selected pending changes. The host builds the proposed text in memory; a separate model task assesses claim mappings, certainty, attribution, scope, numbers/time, causality and selected-evidence relations. By default it sees the affected blocks; full-document scope requires an explicit choice. Missing material/assessments mean **not-assessed**, not unsupported.
+
+```sh
+pnpm siglum claim help
+pnpm siglum review help
+```
+
+Each extraction/review previews by default and needs its own `--send`. Reports distinguish exact text observations from `model-assessment-not-verified` interpretations. Agreeing, disagreeing or correcting a finding does not accept/revert a text change; mappings and evidence assessments also accept separate feedback. Later manuscript, pending-change or claim-decision changes mark semantic reports stale while preserving their input. A different brief requires a new run; old reports remain about their old brief. JSON exports include private text: keep them out of Git.
+
+See the [review guide](docs/review.md) and [protocol](docs/analysis-protocol.md). The offline demo uses scripted fake responses; extraction/review quality with real models is **not yet validated**. The 80 Chinese/English evaluation labels are drafts awaiting human review, not a validated benchmark.
+
 <!-- section:status -->
 ## Implemented and deliberately not implemented
 
@@ -84,19 +102,21 @@ See [provider instructions](docs/providers.md) and the [proposal protocol](docs/
 | <!-- feature:notes --> Research notes | Locally stored notes bound to a snapshot or excerpt; not automatic memory |
 | <!-- feature:provenance --> Proposal context | Atomic recording of source text supplied with pending model proposals |
 | <!-- feature:bindings --> Paragraph links | Author-created excerpt links pinned to a block version; edits make old links visibly stale |
+| <!-- feature:claims --> Claim ledger | Manual/candidate annotations, exact anchors, confirmation/correction and explicit important claims |
+| <!-- feature:semantic-review --> Semantic review | Separate protocol, model claim mappings, selected-evidence assessments, version-bound reports and author feedback |
 | <!-- feature:bilingual --> Documentation | English and Simplified Chinese README, paired source guides and mechanical README parity checks |
 
 <!-- limit:no-gui --> **No GUI or packaged desktop app yet.** Use the CLI and demonstrations.
 
 <!-- limit:no-web-search --> **No global web search, crawler or autonomous research loop.** Provide individual URLs or files; source search is local.
 
-<!-- limit:no-semantic-verdict --> **No full Semantic Diff, Claim Ledger or evidence-support verdict.** Lexical hints can be wrong or miss changes; no accuracy claim follows from passing tests.
+<!-- limit:no-semantic-verdict --> **Semantic review is an attributed model assessment, not factual certification.** The initial ledger/review protocol is implemented; accuracy is unvalidated. Correct quotation coordinates do not prove correct reasoning.
 
 <!-- limit:block-edits --> **Edits still replace whole text blocks.** Reverting an older same-block edit conflicts rather than erasing later work. A reverted block's previous source link remains stale until explicitly linked again.
 
 <!-- limit:static-extraction --> **Static extraction is limited.** UTF-8 HTML/text/Markdown only; no PDFs, JavaScript rendering, logins, embedded resources, compressed responses or redirects. The small extractor is not a full HTML parser, article reader or visual page snapshot; uncommon named entities and page layout may differ. Check original bytes when quoting.
 
-<!-- limit:manual-migration --> **Existing workspaces are not silently upgraded.** v1 workspaces retain original editing; source features need an explicit backed-up schema-v2 migration. Updating source code never migrates manuscripts.
+<!-- limit:manual-migration --> **Existing workspaces are not silently upgraded.** v1 workspaces retain original editing and v2 retains sources; new claim/review features require an explicit backed-up schema-v3 migration. Updating source code never migrates manuscripts.
 
 <!-- limit:no-memory-tools --> **No learned writing preferences, Skills or MCP execution yet.** Research notes and refusal reasons are records, not learned rules.
 
@@ -112,9 +132,9 @@ Close other programs using an old workspace before running the migration preview
 <!-- section:development -->
 ## Development
 
-[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.3 specification](docs/v0.0.3-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.4 specification](docs/v0.0.4-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
 
-The repository still has no third-party runtime dependencies. The dependency lockfile is unchanged from v0.0.2. CI is configured for Windows/Linux and Node 22/24; report actual job results separately. Real provider/public-site smoke tests are opt-in and separate from offline regression tests.
+The repository still has no third-party runtime dependencies. The dependency lockfile is unchanged from v0.0.3. CI is configured for Windows/Linux and Node 22/24; report actual job results separately. Real provider/public-site smoke tests are opt-in and separate from offline regression tests.
 
 Update both READMEs together. `docs:check` checks versions, license, declared sections/features/limitations, command parity and local link targets. It does not prove translation accuracy or validate prose claims.
 

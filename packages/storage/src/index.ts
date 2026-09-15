@@ -11,6 +11,8 @@ import type {
 } from '@writer-agent/core';
 import { APPLICATION_ID, SCHEMA_SQL, SCHEMA_VERSION } from './schema.js';
 import { SourceLibrary } from './sources.js';
+import { AnalysisLedger } from './analysis.js';
+export { AnalysisLedger } from './analysis.js';
 export { migrateWorkspace } from './migration.js';
 export { SourceLibrary } from './sources.js';
 import type { ProposalContextInput } from '@writer-agent/core';
@@ -82,16 +84,21 @@ export class Workspace {
   private readonly db: DatabaseSync;
   private closed = false;
   readonly sources: SourceLibrary;
+  readonly analysis: AnalysisLedger;
   private constructor(root: string, db: DatabaseSync) {
     this.root = root; this.db = db;
     this.sources = new SourceLibrary(db, () => {
       this.assertOpen();
       if (this.schemaVersion() < 2) throw new WriterError('MIGRATION_REQUIRED', 'Sources need schema v2. Run writer migrate <workspace> to preview, then --apply after closing other sessions.');
     }, fn => this.transaction(fn));
+    this.analysis = new AnalysisLedger(db, () => {
+      this.assertOpen();
+      if (this.schemaVersion() < 3) throw new WriterError('MIGRATION_REQUIRED', 'Analysis requires schema v3. Preview writer migrate, then --apply after backup and closing other sessions.');
+    }, fn => this.transaction(fn), this);
   }
   private schemaVersion(): number {
     const v = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (v !== 1 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
+    if (v !== 1 && v !== 2 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
     return v;
   }
 
@@ -137,7 +144,7 @@ export class Workspace {
     try {
       const version = db.prepare('PRAGMA user_version').get();
       const app = db.prepare('PRAGMA application_id').get();
-      if (!version || ![1,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
+      if (!version || ![1,2,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
         throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace format/version. No migration or overwrite was attempted.');
       }
       db.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL;');

@@ -1,4 +1,4 @@
-# 来源库 — Siglum v0.0.3
+# 来源库 — Siglum v0.0.4
 
 [English](sources.md) | [简体中文](sources.zh-CN.md)
 
@@ -108,7 +108,7 @@ pnpm writer source export ../my-writing <snapshotId> ../saved-source
 <a id="existing-workspaces"></a>
 ## 已有工作区
 
-安装 v0.0.3 或运行代码更新工具**不会迁移任何写作工作区**。新工作区使用 schema v2；旧 schema v1 仍支持原有文稿操作和无来源改稿。只有来源操作需要先明确迁移，否则会提示 `MIGRATION_REQUIRED`。
+安装 v0.0.4 或运行代码更新工具**不会迁移任何写作工作区**。新工作区使用 schema v3；已有 v2 无需迁移即可继续使用来源库，新的分析功能要求 v3；旧 schema v1 仍支持原有文稿操作和无来源改稿。只有来源操作需要先明确迁移，否则会提示 `MIGRATION_REQUIRED`。
 
 先关闭使用旧工作区的所有程序，特别是旧版 Writer Agent，再执行：
 
@@ -117,8 +117,8 @@ pnpm writer migrate ../my-writing
 pnpm writer migrate ../my-writing --apply
 ```
 
-第一条只预览。`--apply` 会校验应用与版本、获取本地迁移锁，通过 `VACUUM INTO` 建立并校验一致的 SQLite 备份，再在一个事务里增加来源表。不会重写已有文稿表、ID 或历史。未知格式会拒绝；检测到并发写入或结构错误就中止，保留备份。
+第一条只预览。`--apply` 会校验应用与版本、获取本地迁移锁，通过 `VACUUM INTO` 建立并校验一致的 SQLite 备份，再在一个事务里增加缺失的来源／分析表。不会重写已有文稿表、ID 或历史。未知格式会拒绝；检测到并发写入或结构错误就中止，保留备份。
 
-备份路径位于 `.writer/backups/schema-v1-.../workspace.sqlite`。确认迁移后的工作区正常前请保留备份；它包含私人稿件且没有加密。需要恢复时，请先关闭全部连接并依据备份制定恢复步骤；**不要直接覆盖正在使用的 SQLite 数据库，也不要混用旧 WAL／SHM 文件**。中断可能留下 `migration.lock`；确认没有迁移正在运行后再修复，不会自动猜测并清理锁。
+备份路径位于 `.writer/backups/schema-v<old-version>-.../workspace.sqlite`。确认迁移后的工作区正常前请保留备份；它包含私人稿件且没有加密。需要恢复时，请先关闭全部连接并依据备份制定恢复步骤；**不要直接覆盖正在使用的 SQLite 数据库，也不要混用旧 WAL／SHM 文件**。中断可能留下 `migration.lock`；确认没有迁移正在运行后再修复，不会自动猜测并清理锁。
 
 迁移锁和数据版本检查用于减少意外竞争，不是对抗旧程序或恶意本地进程的安全边界；执行迁移前仍需关闭它们。

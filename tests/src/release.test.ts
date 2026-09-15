@@ -5,10 +5,10 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 const root=fileURLToPath(new URL('../../',import.meta.url));
-test('all six project manifests adopt Apache-2.0 and v0.0.3 without enabling npm publication',()=>{
+test('all six project manifests adopt Apache-2.0 and v0.0.4 without enabling npm publication',()=>{
   for(const dir of ['.','apps/cli','packages/core','packages/models','packages/storage','tests']){
     const p=JSON.parse(readFileSync(join(root,dir,'package.json'),'utf8')) as {version:string;license:string;private:boolean};
-    assert.equal(p.version,'0.0.3');assert.equal(p.license,'Apache-2.0');assert.equal(p.private,true);
+    assert.equal(p.version,'0.0.4');assert.equal(p.license,'Apache-2.0');assert.equal(p.private,true);
   }
 });
 test('license includes standard terms and appendix; notice identifies the project',()=>{
@@ -21,12 +21,35 @@ test('runtime packages keep only the already-declared workspace dependencies',()
     for(const[name,version]of Object.entries(p.dependencies??{})){assert.match(name,/^@writer-agent\//);assert.equal(version,'workspace:*');}
   }
 });
-test('CI explicitly runs all three demos without configuring a real model key',()=>{
-  const ci=readFileSync(join(root,'.github/workflows/ci.yml'),'utf8');assert.match(ci,/pnpm demo:provider/);assert.match(ci,/pnpm demo:sources/);assert.match(ci,/pnpm install --frozen-lockfile/);assert.doesNotMatch(ci,/secrets\./);
+test('CI explicitly runs all four demos without configuring a real model key',()=>{
+  const ci=readFileSync(join(root,'.github/workflows/ci.yml'),'utf8');assert.match(ci,/pnpm demo:provider/);assert.match(ci,/pnpm demo:sources/);assert.match(ci,/pnpm demo:review/);assert.match(ci,/pnpm install --frozen-lockfile/);assert.doesNotMatch(ci,/secrets\./);
 });
 
-test('public CLI and core demo identify Siglum v0.0.3 while repository names stay compatible',()=>{
-  for(const file of ['apps/cli/src/index.ts','apps/cli/src/demo.ts'])assert.match(readFileSync(join(root,file),'utf8'),/Siglum v0\.0\.3/);
+test('public CLI and core demo identify Siglum v0.0.4 while repository names stay compatible',()=>{
+  for(const file of ['apps/cli/src/index.ts','apps/cli/src/demo.ts'])assert.match(readFileSync(join(root,file),'utf8'),/Siglum v0\.0\.4/);
   const p=JSON.parse(readFileSync(join(root,'package.json'),'utf8')) as {name:string;scripts:Record<string,string>};
   assert.equal(p.name,'writer-agent');assert.equal(p.scripts.siglum,p.scripts.writer);
+});
+
+
+test('new review guide translations retain matching executable command examples',()=>{
+  const en=readFileSync(join(root,'docs/review.md'),'utf8'),zh=readFileSync(join(root,'docs/review.zh-CN.md'),'utf8');
+  const commands=(text:string)=>[...text.matchAll(/```sh\n([\s\S]*?)```/g)].map(m=>m[1]!.trim());
+  assert.deepEqual(commands(en),commands(zh));
+  for(const text of [en,zh]){assert.match(text,/REVIEW_DEMO_OK/);assert.match(text,/model-assessment-not-verified/);assert.match(text,/mapping:N/);assert.match(text,/assessment:N/);}
+});
+test('manual claim JSON shown in both review guides has exact quote offsets',async()=>{
+  const {pinAnchor}=await import('@writer-agent/core');
+  for(const file of ['docs/review.md','docs/review.zh-CN.md']){
+    const text=readFileSync(join(root,file),'utf8');const code=/```json\n([\s\S]*?)```/.exec(text)!;
+    const example=JSON.parse(code[1]!) as {anchors:{blockId:string;start:number;end:number;quote:string}[]};
+    const a=example.anchors[0]!;
+    assert.doesNotThrow(()=>pinAnchor({blocks:[{id:a.blockId,version:1,text:'Some teams may improve.',separator:''}]},a));
+  }
+});
+test('analysis demo is wired into the CLI, root scripts and CI but no updater is added to runtime',()=>{
+  const p=JSON.parse(readFileSync(join(root,'package.json'),'utf8')) as {scripts:Record<string,string>};
+  assert.equal(p.scripts['demo:review'],'node scripts/review-demo.mjs');
+  assert.match(readFileSync(join(root,'apps/cli/src/index.ts'),'utf8'),/demo:review/);
+  assert.doesNotMatch(JSON.stringify(p.scripts),/auto-update|gh pr|git push/);
 });

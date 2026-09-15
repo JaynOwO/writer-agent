@@ -4,3 +4,5 @@ export * from './errors.js';
 export * from './protocol.js';
 export * from './mock.js';
 export * from './providers.js';
+
+export * from './analysis-protocol.js';

@@ -2,7 +2,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import {
   WriterError, requireString, newId, extractSource, hashBytes, lineRange, lineCount,
-  validateMetadata, validateSourceContext, sourceText, parseSnapshot, MAX_CONTEXT_ITEMS,
+  validateMetadata, validateSourceContext, validateSourceSelection, sourceText, parseSnapshot, MAX_CONTEXT_ITEMS,
 } from '@writer-agent/core';
 import type {
   SourceRecord, SourceSnapshot, SourceMediaType, SourceExcerpt, ResearchNote,
@@ -126,6 +126,7 @@ export class SourceLibrary {
     this.snapshot(snapshotId);return this.db.prepare('SELECT * FROM research_notes WHERE snapshot_id=? ORDER BY seq').all(snapshotId).map(r=>({id:str(r,'id'),snapshotId,excerptId:r.excerpt_id===null?null:str(r,'excerpt_id'),text:str(r,'text'),createdAt:str(r,'created_at')}));
   }
   context(selection:SourceSelection):SourceContextItem[] {
+    validateSourceSelection(selection);
     const snapshots=selection.snapshots??[],excerpts=selection.excerpts??[];
     if(!Array.isArray(snapshots)||!Array.isArray(excerpts)||snapshots.length+excerpts.length>MAX_CONTEXT_ITEMS)throw new WriterError('INVALID_INPUT','Select at most 8 snapshots/excerpts.');
     // An empty selection remains compatible with schema v1 and does not access source tables.

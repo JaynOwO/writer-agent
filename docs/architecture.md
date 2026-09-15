@@ -1,4 +1,4 @@
-# Architecture — Siglum v0.0.3
+# Architecture — Siglum v0.0.4
 
 ## Dependencies and authority
 
@@ -29,7 +29,7 @@ Response Proposal Protocol v1 is unchanged. Requests gain optional bounded `sour
 
 The host captures document/source snapshots before inference, passes a separate clone to the provider, validates the response, and rechecks the document head and selected source context inside the persistence transaction. Valid pending changes and their supplied-source record commit together. A stale document, bad response or invalid source context saves no partial batch. No SQLite transaction spans a network wait.
 
-`change_contexts` links proposals to exact selected text and identifiers. The status is "supplied-not-verified". It does not claim the model used every source or that a source supports a particular sentence. Manual paragraph/excerpt links and model-context provenance are separate objects. The full Claim Ledger, citation validation and semantic changes remain future work.
+`change_contexts` links proposals to exact selected text and identifiers. The status is "supplied-not-verified". It does not claim the model used every source or that a source supports a particular sentence. Manual paragraph/excerpt links and model-context provenance are separate objects. These source relationships remain distinct from the v0.0.4 claim ledger and fallible semantic assessments. They never become truth flags.
 
 ## Web intake boundary
 
@@ -39,6 +39,18 @@ This is not a network sandbox or a complete SSRF audit. Public addresses may sti
 
 ## Migration and desktop future
 
-Old schema-v1 workspaces can still use original editing; source features request an explicit migration. The migration previews by default, retains a verified VACUUM INTO backup, checks a cooperative lock/data version, adds tables transactionally and preserves all existing content rows. Unknown formats are refused. Source-code update bundles never migrate user data. See the paired source guides for backup and recovery boundaries.
+Old schema-v1 workspaces can still use original editing, v2 still supports sources; analysis features request an explicit v3 migration. The migration previews by default, retains a verified VACUUM INTO backup, checks a cooperative lock/data version, adds tables transactionally and preserves all existing content rows. Unknown formats are refused. Source-code update bundles never migrate user data. See the paired source guides for backup and recovery boundaries.
 
-Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, automatic tool execution, Skills/MCP, intent contracts, learned memory and verified semantic review are not implemented here.
+Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, automatic tool execution, Skills/MCP, inferred intent, learned memory and factual certification are not implemented here.
+
+## v0.0.4 analysis layer
+
+Schema v3 adds ledger_claims, claim_occurrences, claim_decisions, analysis_runs, analysis_feedback and claim_evidence without rebuilding previous tables. Payloads are JSON with integrity hashes and append-only triggers. Claims have multiple explicitly linked immutable occurrences; model equivalence mappings do not silently join claim identities. Manual annotations are human-authored; extracted annotations begin as candidates. Confirming an annotation is not certifying truth. Corrections append new occurrences and supersede old ones.
+
+The host captures pending change fingerprints, document head, selected blocks, explicit sources, important claims and an annotation stamp. It builds a proposed snapshot without editing stored text. Separate claim-extraction/semantic-review methods reuse bounded transport, not Proposal Protocol v1. Schemas reject extra fields; exact UTF-16 quote anchors and local references are independently validated. JSON duplicate keys and deep nesting are refused for these new tasks. Returned reasoning text is a concise review explanation, not hidden chain-of-thought.
+
+Before persistence, the host reconstructs the capture and checks document, pending status, claim decisions and source context atomically. No transaction spans HTTP. Successful reports retain inputs, outputs, prompt/protocol versions, selected model/endpoint/settings, duration and returned usage (unknown is null). Failed/cancelled/invalid/stale runs create no current report. Review cannot approve edits or mutate source evidence.
+
+Exact prefix/suffix replacement spans are mechanical observations, not a minimal diff algorithm or semantic judgments. Reports display model mappings/findings/assessments separately. Feedback on a finding, mapping or assessment is immutable and never changes a manuscript approval. Later manuscript revisions or selected pending-status changes invalidate current review status; extraction reports retain candidate history. An important-claim decision changes the review stamp. An unrelated source refresh leaves old pinned-material analysis about the old material, not an evaluation of the new material.
+
+The input/response cap is 6,000,000 serialized UTF-8 bytes, not a context-window guarantee. There are at most 100 candidates per side/findings, 200 mappings/assessments, 8 anchors per item and 80,000 bytes of selected source context. Small local models may not reliably output exact offsets or the schema; there is no silent repair or fallback. See analysis-protocol.md and review.md.

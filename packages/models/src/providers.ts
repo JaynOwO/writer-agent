@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
-import { isRecord } from '@writer-agent/core';
+import { isRecord, captureAnalysisRequest } from '@writer-agent/core';
+import type { AnalysisRequest } from '@writer-agent/core';
+import { analysisMessages, analysisSchema, parseAnalysis, completionUsage } from './analysis-protocol.js';
+import type { AnalysisProvider, AnalysisResponse } from './analysis-protocol.js';
 import type { ModelProvider, ModelRequest, ModelResponse, ProviderOptions, OpenAICompatibleOptions } from './types.js';
 import { ProviderError, checkCancelled } from './errors.js';
 import { MAX_WIRE_BYTES, captureRequest, proposalSchema, buildMessages, parseProposal } from './protocol.js';
@@ -33,7 +36,7 @@ function messageContent(message: unknown): string {
   return message.content;
 }
 /** OpenAI Chat Completions compatibility, not the Responses API or every provider/model. */
-export class OpenAICompatibleProvider implements ModelProvider {
+export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider {
   readonly id: string;
   readonly #settings: Settings;
   readonly #format: 'json-schema' | 'json' | 'prompt';
@@ -45,13 +48,27 @@ export class OpenAICompatibleProvider implements ModelProvider {
     if (!['json-schema','json','prompt'].includes(this.#format) || !['max_completion_tokens','max_tokens'].includes(this.#tokenParameter)) throw new ProviderError('PROVIDER_CONFIG','Unknown response-format or token-parameter option.');
     this.id = `openai-compatible/${this.#settings.model}`;
   }
+  async extractClaims(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'claim-extraction',signal); }
+  async reviewChanges(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'semantic-review',signal); }
+  private async analysis(input:AnalysisRequest,task:AnalysisRequest['task'],signal?:AbortSignal):Promise<AnalysisResponse> {
+    checkCancelled(signal);
+    const request=captureAnalysisRequest(input);
+    if(request.task!==task)throw new ProviderError('PROVIDER_INVALID_ANALYSIS','Analysis task mismatch.');
+    const completion=await this.complete(analysisMessages(request),analysisSchema(task),task==='claim-extraction'?'siglum_claims_v1':'siglum_review_v1',signal);
+    checkCancelled(signal);return parseAnalysis(completion.text,request,this.id,completion.usage);
+  }
   describe() { return { provider:'openai-compatible', ...this.#settings, responseFormat:this.#format, tokenParameter:this.#tokenParameter }; }
   async propose(input: ModelRequest, signal?: AbortSignal): Promise<ModelResponse> {
     checkCancelled(signal);
     const request = captureRequest(input);
-    const body: Record<string,unknown> = { model:this.#settings.model, messages:buildMessages(request), stream:false,
+    const completion = await this.complete(buildMessages(request),proposalSchema(),'writer_proposal_v1',signal);
+    return parseProposal(completion.text,request,this.id);
+  }
+  private async complete(messages: {role:'system'|'user';content:string}[], schema:Record<string,unknown>, schemaName:string, signal?:AbortSignal) {
+    checkCancelled(signal);
+    const body: Record<string,unknown> = { model:this.#settings.model, messages, stream:false,
       [this.#tokenParameter]:this.#settings.maxOutputTokens };
-    if (this.#format === 'json-schema') body.response_format = { type:'json_schema', json_schema:{ name:'writer_proposal_v1',strict:true,schema:proposalSchema() } };
+    if (this.#format === 'json-schema') body.response_format = { type:'json_schema', json_schema:{ name:schemaName,strict:true,schema } };
     else if (this.#format === 'json') body.response_format = { type:'json_object' };
     const envelope = await postJson(this.#settings,body,signal);
     if (!isRecord(envelope) || !Array.isArray(envelope.choices) || envelope.choices.length !== 1 || !isRecord(envelope.choices[0])) throw new ProviderError('PROVIDER_BAD_RESPONSE','Expected exactly one completed chat choice.');
@@ -61,28 +78,42 @@ export class OpenAICompatibleProvider implements ModelProvider {
     const content = messageContent(choice.message);
     if (choice.finish_reason !== 'stop') throw new ProviderError('PROVIDER_BAD_RESPONSE','Model response did not finish normally.');
     checkCancelled(signal);
-    return parseProposal(content,request,this.id);
+    return {text:content,usage:completionUsage(envelope)};
   }
 }
 /** Native /api/chat, non-streaming and schema-constrained. Server/model must be installed separately. */
-export class OllamaProvider implements ModelProvider {
+export class OllamaProvider implements ModelProvider, AnalysisProvider {
   readonly id: string;
   readonly #settings: Settings;
   constructor(options: ProviderOptions) {
     this.#settings = configure(options,'http://127.0.0.1:11434','/api/chat',false);
     this.id = `ollama/${this.#settings.model}`;
   }
+  async extractClaims(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'claim-extraction',signal); }
+  async reviewChanges(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'semantic-review',signal); }
+  private async analysis(input:AnalysisRequest,task:AnalysisRequest['task'],signal?:AbortSignal):Promise<AnalysisResponse> {
+    checkCancelled(signal);
+    const request=captureAnalysisRequest(input);
+    if(request.task!==task)throw new ProviderError('PROVIDER_INVALID_ANALYSIS','Analysis task mismatch.');
+    const completion=await this.complete(analysisMessages(request),analysisSchema(task),signal);
+    checkCancelled(signal);return parseAnalysis(completion.text,request,this.id,completion.usage);
+  }
   describe() { return { provider:'ollama', ...this.#settings, responseFormat:'json-schema' }; }
   async propose(input: ModelRequest, signal?: AbortSignal): Promise<ModelResponse> {
     checkCancelled(signal);
     const request = captureRequest(input);
-    const envelope = await postJson(this.#settings,{ model:this.#settings.model, messages:buildMessages(request),
-      stream:false, format:proposalSchema(), options:{num_predict:this.#settings.maxOutputTokens} },signal);
+    const completion=await this.complete(buildMessages(request),proposalSchema(),signal);
+    return parseProposal(completion.text,request,this.id);
+  }
+  private async complete(messages:{role:'system'|'user';content:string}[],schema:Record<string,unknown>,signal?:AbortSignal) {
+    checkCancelled(signal);
+    const envelope = await postJson(this.#settings,{ model:this.#settings.model, messages,
+      stream:false, format:schema, options:{num_predict:this.#settings.maxOutputTokens} },signal);
     if (!isRecord(envelope) || envelope.done !== true) throw new ProviderError('PROVIDER_BAD_RESPONSE','Expected a completed, non-streaming Ollama response.');
     if (envelope.done_reason === 'length') throw new ProviderError('PROVIDER_TRUNCATED','Ollama reached its output limit. No partial proposal was saved.');
     if (envelope.done_reason !== undefined && envelope.done_reason !== 'stop') throw new ProviderError('PROVIDER_BAD_RESPONSE','Ollama response did not finish normally.');
     const content = messageContent(envelope.message);
     checkCancelled(signal);
-    return parseProposal(content,request,this.id);
+    return {text:content,usage:completionUsage(envelope,true)};
   }
 }

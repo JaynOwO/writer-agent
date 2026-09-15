@@ -11,3 +11,7 @@ Use feature branches and PRs. Do not auto-merge, force-push, rewrite shared hist
 ## Siglum v0.0.3 additions
 
 Keep English/Simplified Chinese READMEs and paired source guides aligned. Run `pnpm check` and all three demos. Use synthetic fixtures, never commit real private research. Source snapshots are evidence records, not verified facts. Do not weaken URL/DNS/response guards, reinterpret supplied context as source support, or silently migrate a workspace. Add migration/integrity/provenance regressions for changes to source storage.
+
+## Review contributions
+
+Update both review guides and READMEs. Add tests for exact anchors, source references, stale-run rejection and non-mutating feedback. Never interpret a valid schema or agreeing models as truth. Draft evaluation labels need independent human review before benchmark claims; synthetic predictions are not live evaluations. Default CI must remain key-free and use fixtures/loopback HTTP only.

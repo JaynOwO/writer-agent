@@ -33,3 +33,14 @@ These document the formats this implementation targets, not evidence of having c
 - [OWASP SSRF Prevention](https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html): address validation, DNS rebinding/pinning, redirect restrictions and defense in depth.
 
 The application implements a conservative prototype policy and fixture tests, not all recommendations or a formal security certification. The small HTML tokenizer is original implementation code, explicitly not a standards-complete parser.
+
+## v0.0.4 implementation references
+
+- Node SQLite API: https://nodejs.org/docs/latest-v22.x/api/sqlite.html
+- SQLite VACUUM INTO consistency/backup: https://www.sqlite.org/lang_vacuum.html
+- OpenAI Structured Outputs: https://platform.openai.com/docs/guides/structured-outputs
+- Ollama native structured output: https://docs.ollama.com/capabilities/structured-outputs
+
+Reference review date: 2026-09-15 (retrieval limitations below). Runtime interoperability is independently limited to the actual tested fixtures/environments. Schema support does not validate semantic correctness.
+
+The v0.0.4 authoring session retrieved the SQLite VACUUM, OpenAI structured-output and Ollama structured-output pages. The versioned Node documentation page could not be retrieved in that session; Node behavior was checked against the installed v22.16.0 runtime and existing regression tests instead. Links are not proof of live provider compatibility.

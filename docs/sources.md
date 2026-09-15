@@ -1,4 +1,4 @@
-# Source library — Siglum v0.0.3
+# Source library — Siglum v0.0.4
 
 [English](sources.md) | [简体中文](sources.zh-CN.md)
 
@@ -108,7 +108,7 @@ Snapshots, excerpts, notes, bindings and context records use append-only tables.
 <a id="existing-workspaces"></a>
 ## Existing workspaces
 
-Installing v0.0.3 or running the source-code updater does **not** migrate any writing workspace. New workspaces use schema v2. Old schema-v1 workspaces still support original manuscript operations and source-free suggestions; source operations return `MIGRATION_REQUIRED` until explicitly upgraded.
+Installing v0.0.4 or running the source-code updater does **not** migrate any writing workspace. New workspaces use schema v3. Existing v2 workspaces still support sources without migration; analysis features require v3. Old schema-v1 workspaces still support original manuscript operations and source-free suggestions; source operations return `MIGRATION_REQUIRED` until explicitly upgraded.
 
 Close all programs using the old workspace, especially older versions of Writer Agent. Then:
 
@@ -117,8 +117,8 @@ pnpm writer migrate ../my-writing
 pnpm writer migrate ../my-writing --apply
 ```
 
-The first command only previews. `--apply` verifies the application/schema, acquires a local migration lock, makes and checks a consistent SQLite backup using `VACUUM INTO`, then adds source tables in a single transaction. Original manuscript tables/IDs/history are not rewritten. An unknown schema is refused. A detected concurrent writer or schema failure aborts the migration; the backup remains.
+The first command only previews. `--apply` verifies the application/schema, acquires a local migration lock, makes and checks a consistent SQLite backup using `VACUUM INTO`, then adds missing source/analysis tables in a single transaction. Original manuscript tables/IDs/history are not rewritten. An unknown schema is refused. A detected concurrent writer or schema failure aborts the migration; the backup remains.
 
-The returned backup path is under `.writer/backups/schema-v1-.../workspace.sqlite`. Keep it until you have checked the migrated workspace. Backups include private manuscript data and are not encrypted. If recovery is needed, close all connections and ask for a recovery plan using that backup; do **not** copy it over a live SQLite database or mix it with stale WAL/SHM files. An interrupted migration can leave `migration.lock`; confirm no migration is running before repairing it. The tool does not guess and remove stale locks automatically.
+The returned backup path is under `.writer/backups/schema-v<old-version>-.../workspace.sqlite`. Keep it until you have checked the migrated workspace. Backups include private manuscript data and are not encrypted. If recovery is needed, close all connections and ask for a recovery plan using that backup; do **not** copy it over a live SQLite database or mix it with stale WAL/SHM files. An interrupted migration can leave `migration.lock`; confirm no migration is running before repairing it. The tool does not guess and remove stale locks automatically.
 
 The locking/data-version checks reduce accidental concurrent changes, but are not a security boundary against older programs or hostile local processes. Close those programs first.

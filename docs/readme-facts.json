@@ -1,10 +1,42 @@
 {
   "brand": "Siglum",
   "repository": "JaynOwO/writer-agent",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "Apache-2.0",
-  "providers": ["ollama", "openai-compatible"],
-  "sections": ["intro", "quickstart", "sources", "models", "status", "privacy", "development", "license"],
-  "features": ["revisions", "providers", "sources", "excerpts", "notes", "provenance", "bindings", "bilingual"],
-  "limitations": ["no-gui", "no-web-search", "no-semantic-verdict", "block-edits", "static-extraction", "manual-migration", "no-memory-tools"]
+  "providers": [
+    "ollama",
+    "openai-compatible"
+  ],
+  "sections": [
+    "intro",
+    "quickstart",
+    "sources",
+    "models",
+    "status",
+    "privacy",
+    "development",
+    "license",
+    "semantic-review"
+  ],
+  "features": [
+    "revisions",
+    "providers",
+    "sources",
+    "excerpts",
+    "notes",
+    "provenance",
+    "bindings",
+    "bilingual",
+    "claims",
+    "semantic-review"
+  ],
+  "limitations": [
+    "no-gui",
+    "no-web-search",
+    "no-semantic-verdict",
+    "block-edits",
+    "static-extraction",
+    "manual-migration",
+    "no-memory-tools"
+  ]
 }

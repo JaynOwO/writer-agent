@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import { SOURCES_SQL } from './source-schema.js';
-export const SCHEMA_VERSION = 2;
+import { ANALYSIS_SQL } from './analysis-schema.js';
+export const SCHEMA_VERSION = 3;
 export const APPLICATION_ID = 0x57525431; // "WRT1"
 export const SCHEMA_V1_SQL = `
 CREATE TABLE workspace (
@@ -71,4 +72,4 @@ PRAGMA application_id = ${APPLICATION_ID};
 PRAGMA user_version = 1;
 `;
 
-export const SCHEMA_SQL = SCHEMA_V1_SQL + SOURCES_SQL + `PRAGMA user_version = ${SCHEMA_VERSION};`;
+export const SCHEMA_SQL = SCHEMA_V1_SQL + SOURCES_SQL + ANALYSIS_SQL + `PRAGMA user_version = ${SCHEMA_VERSION};`;

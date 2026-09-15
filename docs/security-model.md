@@ -39,3 +39,13 @@ Raw bytes and extracted text are preserved separately. Snapshots, notes and snip
 Only explicit snapshots/excerpts enter model context; raw HTML, notes and local absolute file paths do not. No source is promoted to trusted instructions, and all model output passes the original approval boundary. Context metadata is host-derived and revalidated at atomic proposal insertion. "supplied-not-verified" must not become a source-support verdict. Source bindings are author-created and become stale after same-block edits.
 
 New databases use schema v2. Old databases require explicit backed-up migration for source tables; original editing remains compatible. A cooperative migration lock and data-version recheck detect common concurrent writes. Close older clients before migration. Backups remain on failure; do not overwrite a live database for recovery or automatically remove an unexplained migration lock. No code-updater step migrates user data.
+
+## v0.0.4 analysis controls
+
+Claim extraction and review are separate explicitly authorized model calls, preview-only until --send; remote destinations retain --allow-remote. Analysis uses value snapshots only, never database/approval/source-fetch tools. All source/manuscript text remains untrusted. This limits side effects, not persuasive prompt injection or factual errors.
+
+Independent host validation checks exact quote coordinates, local candidate references, selected-source quotations, pending operation fingerprints and document/annotation freshness. Schema validation is not proof of semantic validity. Positive/conflicting selected-evidence assessments require exact quotations, but their reasoning remains attributed and challengeable. No selected material means not-assessed. No auto-accept, retry, repair, source lookup, model escalation or inferred persistent preference is added.
+
+Reports retain full selected text inside the private, unencrypted workspace. JSON exports are explicit and refuse existing paths; they are not sanitized for public distribution. Never commit them. Provider diagnostics do not include raw error bodies or keys. Returned usage is recorded, not estimated money; cancellation may not prevent upstream billing. Successful records are append-only with hashes, not tamper-proof against an owner of the database.
+
+Feedback can target historical reports and records the current manuscript revision at the time of feedback. It is not a reanalysis or approval of the current text. Changed briefs require a new run, and absence of findings is not a safety signal.

@@ -2,14 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.3 -->
+<!-- siglum:version=0.0.4 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 面向研究、写作与审稿的本地优先 Agent Harness。
 
 **模型提出建议，来源始终可追溯，作者保留最终决定权。**
 
-**v0.0.3** · 命令行开发预览版 · **Apache-2.0**
+**v0.0.4** · 命令行开发预览版 · **Apache-2.0**
 
 Siglum 在本地保存文稿版本、审核决定和不可覆盖的来源快照。你可以明确选择资料片段，让配置的模型据此提出修改；模型不能自行接受修改。这是可以运行的开发核心，还不是完整的写作 IDE 或自主研究助手。
 
@@ -26,6 +26,7 @@ pnpm check
 pnpm demo
 pnpm demo:provider
 pnpm demo:sources
+pnpm demo:review
 ```
 
 Windows PowerShell 限制 `.ps1` 执行时，使用 `.cmd` 入口即可，不需要修改系统执行策略：
@@ -34,9 +35,10 @@ Windows PowerShell 限制 `.ps1` 执行时，使用 `.cmd` 入口即可，不需
 pnpm.cmd install --frozen-lockfile
 pnpm.cmd check
 pnpm.cmd demo:sources
+pnpm.cmd demo:review
 ```
 
-三个演示的成功标记分别是 `DEMO_OK`、`PROVIDER_DEMO_OK`、`SOURCES_DEMO_OK`。来源演示会导入虚构 HTML 资料，保存摘录与笔记，把摘录交给预设模型，记录来源，接受并撤回修改，最后导出保存的原始资料。**这些标记证明的是程序流程，不是真实模型的写作质量。**
+三个演示的成功标记分别是 `DEMO_OK`、`PROVIDER_DEMO_OK`、`SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`。来源演示会导入虚构 HTML 资料，保存摘录与笔记，把摘录交给预设模型，记录来源，接受并撤回修改，最后导出保存的原始资料。**这些标记证明的是程序流程，不是真实模型的写作质量。**
 
 <!-- section:sources -->
 ## 保存资料本身，而不只是链接
@@ -72,6 +74,22 @@ pnpm siglum help
 
 详见[模型使用说明](docs/providers.md)和[提案协议](docs/provider-protocol.md)。模型凭据只从指定名称的进程环境变量读取，不应该放进文稿、来源快照、Git 或聊天消息。
 
+<!-- section:semantic-review -->
+## 论断台账与语义审查
+
+手动标注或明确请求模型提取候选论断，将其定位到特定版本里的精确文本。确认标注表示“这准确描述了我的文字”，不代表确认事实为真。重要观点需要明确标记，不会从聊天或驳回记录里自动猜测。
+
+`review run` 检查你选定的待审核修改：程序先在内存中构建修改后文本，再让模型分析论断对应、确定性、归因、范围、数字／时间、因果和所选证据关系。默认只检查涉及的文本块；全篇范围需要明确选择。无来源或无返回评估表示“未评估”，不是“没有证据”。
+
+```sh
+pnpm siglum claim help
+pnpm siglum review help
+```
+
+每次提取／审稿都默认预览，必须单独加 `--send` 才请求模型。报告区分精确文字观察与 `model-assessment-not-verified` 模型意见。赞同、驳回、纠正审稿意见不会接受或撤销正文修改；映射和证据关系也可以分别反馈。文稿、待审核修改状态或论断决策变化，会使语义报告标记过期。换指令需要新任务，旧报告仍对应原来的指令与资料。报告可导出 JSON，内含私人文字，切勿提交到 Git。
+
+详见[简中审稿指南](docs/review.zh-CN.md)和[协议](docs/analysis-protocol.md)。离线演示使用预设假响应；真实模型的提取和审稿质量**尚未验证**。80 个中英评估案例的标签也是待人工审查的草案，不是权威基准。
+
 <!-- section:status -->
 ## 已实现与明确未实现的功能
 
@@ -84,19 +102,21 @@ pnpm siglum help
 | <!-- feature:notes --> 研究笔记 | 绑定快照或摘录的本地笔记，不是自动记忆 |
 | <!-- feature:provenance --> 提案来源 | 与待审核修改一起原子保存当次提供给模型的资料 |
 | <!-- feature:bindings --> 段落绑定 | 作者将摘录绑定到特定文本块版本；正文变化后旧绑定显示为过期 |
+| <!-- feature:claims --> 论断台账 | 手动／候选标注、精确位置、确认与纠正、明确的重要观点 |
+| <!-- feature:semantic-review --> 语义审查 | 独立审稿协议、模型论断对应、所选证据评估、历史报告与作者反馈 |
 | <!-- feature:bilingual --> 文档 | 英文与简中 README、双语来源指南、README 机械一致性检查 |
 
 <!-- limit:no-gui --> **暂时没有 GUI 或桌面安装包。** 当前通过命令行和演示使用。
 
 <!-- limit:no-web-search --> **没有全网搜索、爬虫或自主研究循环。** 需要提供单个网址或文件；来源搜索只针对本地资料。
 
-<!-- limit:no-semantic-verdict --> **没有完整 Semantic Diff、论断账本或证据支持判定。** 词汇规则可能误报、漏报；测试通过不代表语义判断准确率。
+<!-- limit:no-semantic-verdict --> **语义审查仍是可质疑的模型评估，不是真假认证。** 已有第一版论断台账和审稿协议，但没有可靠性或准确率保证。引文位置正确不代表分析结论正确。
 
 <!-- limit:block-edits --> **修改仍按整个文本块处理。** 同一块后来被修改时，撤回旧修改会报冲突而非抹掉新内容。即便文字撤回，之前的来源绑定也保持过期，需要重新确认绑定。
 
 <!-- limit:static-extraction --> **静态提取有明确限制。** 只支持 UTF-8 HTML／文本／Markdown，不支持 PDF、JavaScript 渲染、登录、嵌入资源、压缩响应或重定向。小型提取器不是完整 HTML 解析器、正文阅读器或页面截图；不常见的实体与排版可能存在差异，引用时应核对原始字节。
 
-<!-- limit:manual-migration --> **不会偷偷升级已有工作区。** v1 工作区仍可使用原有改稿功能；来源功能需要明确执行带备份的 schema v2 迁移。更新程序代码不会迁移文稿。
+<!-- limit:manual-migration --> **旧工作区不会静默升级。** v1 保留原有改稿，v2 继续使用来源库。新论断／审稿功能需明确备份并升级到 schema v3，代码更新不会迁移私人文稿。
 
 <!-- limit:no-memory-tools --> **尚未学习写作偏好，也没有 Skills 或 MCP 执行。** 笔记与拒绝理由是记录，不是已经学会的规则。
 
@@ -112,7 +132,7 @@ pnpm siglum help
 <!-- section:development -->
 ## 开发
 
-[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.3 规格](docs/v0.0.3-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
+[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.4 规格](docs/v0.0.4-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
 
 项目仍然没有第三方运行时依赖，依赖锁文件与 v0.0.2 保持一致。CI 配置覆盖 Windows／Linux 和 Node 22／24，实际运行结果应单独确认。真实模型、公开网站的冒烟测试均需明确授权，与离线回归测试分开记录。
 
