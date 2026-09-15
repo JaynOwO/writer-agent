@@ -1,4 +1,4 @@
-# Architecture — v0.0.1
+# Architecture — v0.0.2
 
 ## Dependency direction
 
@@ -7,7 +7,7 @@ apps/cli ──> storage ──> core
     └──────> models  ──> core
 ```
 
-`core` contains deterministic value transformations and validation, not file/network I/O. `storage` owns the SQLite transaction boundary. `models` can propose edits but cannot approve them or write the database. The CLI acts on explicit user commands. This is not yet an autonomous research runtime.
+`core` contains deterministic value transformations and validation, not file/network I/O. `storage` owns the SQLite transaction boundary. `models` can propose edits but cannot approve them or write the database. The CLI acts on explicit user commands. Native Ollama and Chat Completions-compatible providers have bounded HTTP transport, but cannot reach storage. See provider-protocol.md and security-model.md. This is not yet an autonomous research runtime.
 
 The mono-repository uses pnpm workspace dependencies, TypeScript NodeNext ESM and project references. It has two direct development dependencies and no third-party runtime dependencies. Tests use Node's built-in test runner instead of adding Vitest at this bootstrap stage. ESLint and richer editor tooling can be added in a scoped follow-up.
 
@@ -54,7 +54,7 @@ Not yet implemented: Claim Ledger, reference snapshots, evidence-to-claim suppor
 
 ## Privacy and future tools
 
-The present model adapter is scripted and makes no network requests. Decision reasons persist locally but are not automatically learned as preferences. There is no MCP host, Skills execution, browser automation or shell tool exposed to models. Future research content must be treated as untrusted data; external tools need explicit capability scopes, approval gates and budget limits. API secrets must not enter project source or user manuscript files.
+The scripted adapter remains offline. The two HTTP adapters make a single bounded, explicit request. CLI suggest previews unless --send is supplied; remote requests additionally require --allow-remote and HTTPS. The application revalidates responses and the current document head before persisting pending changes. Decision reasons persist locally but are not automatically learned as preferences. There is no MCP host, Skills execution, browser automation or shell tool exposed to models. Future research content must be treated as untrusted data; external tools need explicit capability scopes, approval gates and budget limits. API secrets are read from named process environment variables only at send time and must not enter project source or user manuscript files. No key store or dotenv loader is provided. Model notes are transient and unverified. HTTP limits do not constitute a calibrated cost/quality guarantee.
 
 ## Future desktop integration
 

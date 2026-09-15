@@ -1,3 +1,5 @@
+> Updated for v0.0.2: the original commands below are retained. For `writer model` and preview/`writer suggest --send`, see [providers.md](providers.md). Only the explicitly sent suggest command makes provider HTTP requests; existing commands remain offline. On Windows use `pnpm.cmd`.
+
 # CLI walkthrough
 
 先在项目根目录运行 `pnpm install --no-frozen-lockfile`、`pnpm check`。以下命令均在**源码项目根目录**执行。`../my-writing` 是另外一个写作工作区，不是 GitHub 仓库；路径含空格时使用引号。

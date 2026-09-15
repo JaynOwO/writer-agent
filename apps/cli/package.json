@@ -1,9 +1,9 @@
 {
   "name": "@writer-agent/cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
-  "license": "UNLICENSED",
+  "license": "Apache-2.0",
   "dependencies": {
     "@writer-agent/core": "workspace:*",
     "@writer-agent/models": "workspace:*",

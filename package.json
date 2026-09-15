@@ -1,10 +1,10 @@
 {
   "name": "writer-agent",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
-  "description": "Local-first writing harness: deterministic revision core (development preview)",
-  "license": "UNLICENSED",
+  "description": "Local-first writing harness with validated model proposals (development preview)",
+  "license": "Apache-2.0",
   "packageManager": "pnpm@10.11.0",
   "engines": {
     "node": ">=22.16.0",
@@ -17,7 +17,8 @@
     "check": "node scripts/check.mjs",
     "clean": "node scripts/clean.mjs",
     "demo": "node scripts/demo.mjs",
-    "writer": "node apps/cli/dist/index.js"
+    "writer": "node apps/cli/dist/index.js",
+    "demo:provider": "node scripts/provider-demo.mjs"
   },
   "devDependencies": {
     "@types/node": "22.19.7",

@@ -4,10 +4,20 @@ import { basename, resolve } from 'node:path';
 import { MAX_DOCUMENT_BYTES, WriterError, isRecord, requireString, validateEdits } from '@writer-agent/core';
 import { Workspace } from '@writer-agent/storage';
 import { demo } from './demo.js';
+import { ProviderError } from '@writer-agent/models';
+import { suggestCommand } from './suggest.js';
 
-const help = `Writer Agent v0.0.1 (CLI development preview; no API key needed)
+const help = `Writer Agent v0.0.2 (CLI development preview; no API key needed for demos/tests)
 
   writer help
+  writer model
+  writer suggest <workspace> <documentId> --provider ollama|openai-compatible
+    --model <model-id> --instruction <text> [--send] [--allow-remote]
+    [--base-url <api-base>] [--key-env <ENV_NAME>] [--timeout-ms <ms>]
+    [--max-output-tokens <n>] [--response-format json-schema|json|prompt]
+    [--token-parameter max_completion_tokens|max_tokens]
+    Use --instruction-file <utf8-file> instead of --instruction for long text.
+    Without --send: preview only. With --send: ONLY save validated pending edits.
   writer demo [new-workspace-directory]
   writer init <new-workspace-directory> [name]
   writer import <workspace> <input.md> [title]
@@ -23,7 +33,7 @@ const help = `Writer Agent v0.0.1 (CLI development preview; no API key needed)
   writer export <workspace> <documentId> <new-output.md>
 
 Run from source with: pnpm writer <command> ... (run pnpm build first).
-See docs/cli.md for proposal JSON. Commands never call cloud APIs or push Git.
+See docs/cli.md and docs/providers.md. Only suggest --send makes provider requests. No command pushes Git.
 `;
 function print(value: unknown): void { console.log(JSON.stringify(value, null, 2)); }
 function readUtf8(path: string): string {
@@ -39,6 +49,8 @@ function requireArgs(args: string[], min: number, max = min): void {
 async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
+  if (command === 'suggest') { await suggestCommand(rest); return; }
+  if (command === 'model') { requireArgs(rest,0); print({protocolVersion:1,providers:['ollama','openai-compatible'],offline:'MockModelProvider; pnpm demo; pnpm demo:provider',help:'docs/providers.md; no model listing or network request performed'}); return; }
   if (command === 'demo') { requireArgs(rest, 0, 1); await demo(rest[0]); return; }
   if (command === 'init') {
     requireArgs(rest, 1, 2);
@@ -95,6 +107,6 @@ async function main(args: string[]): Promise<void> {
 }
 main(process.argv.slice(2)).catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(error instanceof WriterError ? `ERROR [${error.code}]: ${message}` : `ERROR: ${message}`);
-  process.exitCode = error instanceof WriterError ? 2 : 1;
+  console.error(error instanceof WriterError || error instanceof ProviderError ? `ERROR [${error.code}]: ${message}` : `ERROR: ${message}`);
+  process.exitCode = error instanceof WriterError ? 2 : error instanceof ProviderError ? 3 : 1;
 });
