@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.4 — claim ledger and semantic review preview
+
+Added manual and model-candidate claim annotations, exact UTF-16 anchors, explicit important-claim decisions, separate extraction/review task protocols, model claim mappings and selected-evidence assessments, immutable reports and author feedback. Added schema-v3 migration with verified backups, CLI review workflows, REVIEW_DEMO_OK, regression tests and an 80-case bilingual draft evaluation scaffold. No new dependencies, model fees, GUI, automatic fact certification or sentence-level text editing. Real-model semantic quality is not yet established.
+
 ## 0.0.3 — Siglum / source-library development preview
 
 Adopted the Siglum product name without renaming repository/package IDs. Added separate English/Simplified Chinese READMEs, paired source guides and mechanical parity checks. Added explicit static URL/UTF-8 file capture, immutable SQLite source snapshots, raw/extracted hashes, metadata, exact excerpts, local notes/search, version-pinned paragraph links and source-context provenance saved atomically with pending proposals. Added explicit backed-up schema-v1-to-v2 migration while retaining source-free legacy editing. Added the offline sources demo and network/migration/provenance/CLI regressions. Dependency lockfile is unchanged.

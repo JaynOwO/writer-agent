@@ -140,3 +140,16 @@ export function validateSourceContext(value: unknown): asserts value is readonly
   }
   if (Buffer.byteLength(JSON.stringify(value),'utf8') > MAX_CONTEXT_BYTES) throw new WriterError('INVALID_INPUT', 'Selected source context exceeds 80000 serialized UTF-8 bytes. Select excerpts; nothing was truncated or sent.');
 }
+
+/** Reject mistyped/hidden selection options instead of silently treating them as no context. */
+export function validateSourceSelection(value:unknown):asserts value is SourceSelection {
+  if(!isRecord(value)||Object.keys(value).some(k=>k!=='snapshots'&&k!=='excerpts'))throw new WriterError('INVALID_INPUT','Source selection must contain only snapshots/excerpts.');
+  let total=0;
+  for(const key of ['snapshots','excerpts']) {
+    if(!Object.hasOwn(value,key))continue;
+    const ids=value[key];if(!Array.isArray(ids))throw new WriterError('INVALID_INPUT','Source selection IDs must be arrays.');
+    total+=ids.length;const seen=new Set<string>();
+    for(const id of ids){requireString(id,'source selection ID',200);if(seen.has(id))throw new WriterError('INVALID_INPUT','Duplicate source selection ID.');seen.add(id);}
+  }
+  if(total>MAX_CONTEXT_ITEMS)throw new WriterError('INVALID_INPUT','Select at most 8 source items.');
+}

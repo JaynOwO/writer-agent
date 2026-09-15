@@ -85,3 +85,7 @@ pnpm writer export ../my-writing doc_实际ID ../final.md
 ## Siglum v0.0.3
 
 `pnpm siglum` 是现有 `pnpm writer` 的别名。新增 `source help`、`migrate <workspace> [--apply]`、`provenance <workspace> <changeId>`、`demo:sources`。来源子命令、摘录、笔记、引用绑定和明确发送资料的流程见 [sources.zh-CN.md](sources.zh-CN.md)。旧工作区不自动迁移；代码更新也不迁移私人文稿。
+
+## v0.0.4 claims and review
+
+`writer claim help` and `writer review help` expose the independent annotation/analysis commands. See [review.md](review.md) or [简体中文](review.zh-CN.md) for exact flag and JSON examples. `writer demo:review` is a scripted fake-provider walkthrough. Existing text commands and source workflows remain separate and unchanged.

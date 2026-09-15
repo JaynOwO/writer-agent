@@ -8,10 +8,15 @@ import { ProviderError } from '@writer-agent/models';
 import { suggestCommand } from './suggest.js';
 import { sourceCommand } from './source-command.js';
 import { sourcesDemo } from './sources-demo.js';
+import { claimCommand, reviewCommand } from './analysis-command.js';
+import { reviewDemo } from './review-demo.js';
 
-const help = `Siglum v0.0.3 (CLI development preview; no API key needed for demos/tests)
+const help = `Siglum v0.0.4 (CLI development preview; no API key needed for demos/tests)
 
   writer help
+  writer claim help
+  writer review help
+  writer demo:review
   writer source help
   writer migrate <workspace> [--apply]
   writer provenance <workspace> <changeId>
@@ -40,7 +45,7 @@ const help = `Siglum v0.0.3 (CLI development preview; no API key needed for demo
   writer export <workspace> <documentId> <new-output.md>
 
 Run from source with: pnpm writer <command> ... (run pnpm build first).
-See docs/cli.md and docs/providers.md. Only suggest --send makes model requests. source add/refresh --fetch explicitly retrieves a public page. No command pushes Git.
+See docs/cli.md and docs/providers.md. Only suggest/claim extract/review run --send make model requests. source add/refresh --fetch explicitly retrieves a public page. No command pushes Git.
 Product brand: Siglum. pnpm siglum is an alias for pnpm writer; repository and package IDs stay writer-agent.
 `;
 function print(value: unknown): void { console.log(JSON.stringify(value, null, 2)); }
@@ -57,6 +62,9 @@ function requireArgs(args: string[], min: number, max = min): void {
 async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
+  if (command === 'claim') { await claimCommand(rest); return; }
+  if (command === 'review') { await reviewCommand(rest); return; }
+  if (command === 'demo:review') { requireArgs(rest,0); await reviewDemo(); return; }
   if (command === 'source') { await sourceCommand(rest); return; }
   if (command === 'demo:sources') { requireArgs(rest,0); await sourcesDemo(); return; }
   if (command === 'migrate') {

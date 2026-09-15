@@ -1,0 +1,1438 @@
+{
+  "formatVersion": 1,
+  "status": "draft-not-a-validated-benchmark",
+  "cases": [
+    {
+      "id": "zh-CN-01",
+      "language": "zh-CN",
+      "scenario": "certainty",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "工具可能降低成本。",
+      "after": "工具降低成本。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-02",
+      "language": "zh-CN",
+      "scenario": "certainty-preserved",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "工具可能降低成本。",
+      "after": "成本可能因使用工具而降低。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-03",
+      "language": "zh-CN",
+      "scenario": "attribution",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "研究人员认为，这个方案有效。",
+      "after": "这个方案有效。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "attribution"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-04",
+      "language": "zh-CN",
+      "scenario": "attribution-preserved",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "据报告，销售有所增加。",
+      "after": "报告称销售有所增加。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-05",
+      "language": "zh-CN",
+      "scenario": "scope",
+      "split": "development",
+      "scope": "document",
+      "before": "部分公司减少了招聘。",
+      "after": "公司都减少了招聘。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-06",
+      "language": "zh-CN",
+      "scenario": "scope-preserved",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "部分学生选择夜课。",
+      "after": "一些学生选择了夜间课程。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-07",
+      "language": "zh-CN",
+      "scenario": "causality",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "甲与乙相关。",
+      "after": "甲导致乙。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "causality"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-08",
+      "language": "zh-CN",
+      "scenario": "causality-removed",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "甲导致乙。",
+      "after": "甲与乙同时出现。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "causality",
+        "claim-reformulated"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-09",
+      "language": "zh-CN",
+      "scenario": "number",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "样本包括十二家公司。",
+      "after": "样本包括二十一家公司。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "numeric"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-10",
+      "language": "zh-CN",
+      "scenario": "time",
+      "split": "development",
+      "scope": "document",
+      "before": "该数据采集于2022年。",
+      "after": "该数据采集于2023年。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "time"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-11",
+      "language": "zh-CN",
+      "scenario": "certainty-decreased",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "它必定会改变结果。",
+      "after": "它可能会改变结果。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-12",
+      "language": "zh-CN",
+      "scenario": "sample-to-population",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "受访的十二家公司暂停了招聘。",
+      "after": "该市的公司暂停了招聘。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-13",
+      "language": "zh-CN",
+      "scenario": "opinion-to-proof",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "作者认为这项政策有益。",
+      "after": "作者证明了这项政策有益。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "certainty",
+        "attribution"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-14",
+      "language": "zh-CN",
+      "scenario": "prediction-to-present",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "明年岗位可能减少。",
+      "after": "岗位正在减少。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "time",
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-15",
+      "language": "zh-CN",
+      "scenario": "counterargument-removed",
+      "split": "development",
+      "scope": "document",
+      "before": "工具节省了时间。\n\n但培训也需要时间。",
+      "after": "工具节省了时间。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "claim-unmapped"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-16",
+      "language": "zh-CN",
+      "scenario": "causal-direction",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "需求下降导致价格下降。",
+      "after": "价格下降导致需求下降。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "causality",
+        "claim-reversed"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-17",
+      "language": "zh-CN",
+      "scenario": "negation",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "结果不支持这个解释。",
+      "after": "结果支持这个解释。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "claim-reversed"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-18",
+      "language": "zh-CN",
+      "scenario": "split-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "方案便宜而且实施迅速。",
+      "after": "方案价格低。实施也很快。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-19",
+      "language": "zh-CN",
+      "scenario": "merged-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "参与人数增加了。成本下降了。",
+      "after": "参与人数增加，成本下降。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-20",
+      "language": "zh-CN",
+      "scenario": "argument-relocation",
+      "split": "development",
+      "scope": "document",
+      "before": "成本下降。\n\n培训仍需时间。",
+      "after": "培训仍需时间。\n\n成本下降。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-21",
+      "language": "zh-CN",
+      "scenario": "retained-other-qualifier",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "甲可能成立，乙可能失败。",
+      "after": "甲成立，乙可能失败。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-22",
+      "language": "zh-CN",
+      "scenario": "attribution-subject",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "老师认为学生喜欢这门课。",
+      "after": "学生认为老师喜欢这门课。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "attribution",
+        "claim-reformulated"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-23",
+      "language": "zh-CN",
+      "scenario": "quotation-to-narrator",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "经理说：“我认为会增长。”",
+      "after": "业务会增长。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "attribution",
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-24",
+      "language": "zh-CN",
+      "scenario": "percentage-points",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "份额增加了两个百分点。",
+      "after": "份额增加了百分之二。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "numeric"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-25",
+      "language": "zh-CN",
+      "scenario": "unit-scale",
+      "split": "development",
+      "scope": "document",
+      "before": "预算是三百万元。",
+      "after": "预算是三千元。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "numeric"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-26",
+      "language": "zh-CN",
+      "scenario": "universal-to-subset",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "所有参与者都完成了任务。",
+      "after": "部分参与者完成了任务。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-27",
+      "language": "zh-CN",
+      "scenario": "evidence-does-not-test-cause",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "该调查记录了两项指标同时上升。",
+      "after": "该调查证明甲导致乙。",
+      "sources": [
+        "调查只报告相关性，未进行因果实验。"
+      ],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "causality",
+        "evidence-shift",
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-28",
+      "language": "zh-CN",
+      "scenario": "evidence-contradiction",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "报告记录了十名参与者。",
+      "after": "报告记录了二十名参与者。",
+      "sources": [
+        "参与者人数：10。"
+      ],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "numeric",
+        "evidence-shift"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-29",
+      "language": "zh-CN",
+      "scenario": "conflicting-material",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "结果尚不确定。",
+      "after": "结果尚不确定。",
+      "sources": [
+        "材料甲声称有效。",
+        "材料乙声称无效。"
+      ],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": true,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-30",
+      "language": "zh-CN",
+      "scenario": "missing-material",
+      "split": "development",
+      "scope": "document",
+      "before": "工具有时能减少错误。",
+      "after": "工具有时能够减少错误。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-31",
+      "language": "zh-CN",
+      "scenario": "numeric-format-only",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "总数约为1000。",
+      "after": "总数约为1,000。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-32",
+      "language": "zh-CN",
+      "scenario": "mean-median",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "平均收入上升。",
+      "after": "收入中位数上升。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "numeric",
+        "claim-reformulated"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-33",
+      "language": "zh-CN",
+      "scenario": "temporal-sequence-only",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "政策发布后，招聘下降。",
+      "after": "政策发布导致招聘下降。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "causality"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-34",
+      "language": "zh-CN",
+      "scenario": "condition-removed",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "如果成本不变，利润可能增加。",
+      "after": "利润可能增加。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-35",
+      "language": "zh-CN",
+      "scenario": "exception-removed",
+      "split": "development",
+      "scope": "document",
+      "before": "除两个部门外，所有部门都达标。",
+      "after": "所有部门都达标。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-36",
+      "language": "zh-CN",
+      "scenario": "protected-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "效率不应是唯一目标。",
+      "after": "不该只追求效率。",
+      "sources": [],
+      "brief": "保留“效率不是唯一目标”的观点。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-37",
+      "language": "zh-CN",
+      "scenario": "protected-reversal",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "效率不应是唯一目标。",
+      "after": "效率应是唯一目标。",
+      "sources": [],
+      "brief": "保留“效率不是唯一目标”的观点。",
+      "expectedLabels": [
+        "claim-reversed",
+        "protected-claim"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-38",
+      "language": "zh-CN",
+      "scenario": "question-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "这种方法真的有效吗？",
+      "after": "这种方法是否确实有效？",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-39",
+      "language": "zh-CN",
+      "scenario": "metaphor-ambiguity",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "这项计划打开了一扇窗。",
+      "after": "这项计划打开了一扇门。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [],
+      "expectedAbstention": true,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "zh-CN-40",
+      "language": "zh-CN",
+      "scenario": "unknown-to-known-cause",
+      "split": "development",
+      "scope": "document",
+      "before": "事故原因仍待调查。",
+      "after": "设备故障导致事故。",
+      "sources": [],
+      "brief": "检查含义变化。",
+      "expectedLabels": [
+        "certainty",
+        "causality",
+        "claim-added"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-01",
+      "language": "en",
+      "scenario": "certainty",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The tool may lower costs.",
+      "after": "The tool lowers costs.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-02",
+      "language": "en",
+      "scenario": "certainty-preserved",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The tool may lower costs.",
+      "after": "Costs may fall when the tool is used.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-03",
+      "language": "en",
+      "scenario": "attribution",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Researchers believe the plan works.",
+      "after": "The plan works.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "attribution"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-04",
+      "language": "en",
+      "scenario": "attribution-preserved",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "According to the report, sales increased.",
+      "after": "The report says sales increased.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-05",
+      "language": "en",
+      "scenario": "scope",
+      "split": "development",
+      "scope": "document",
+      "before": "Some companies reduced hiring.",
+      "after": "All companies reduced hiring.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-06",
+      "language": "en",
+      "scenario": "scope-preserved",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Some students chose evening classes.",
+      "after": "A subset of students selected evening classes.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-07",
+      "language": "en",
+      "scenario": "causality",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "A correlates with B.",
+      "after": "A causes B.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "causality"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-08",
+      "language": "en",
+      "scenario": "causality-removed",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "A causes B.",
+      "after": "A occurs alongside B.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "causality",
+        "claim-reformulated"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-09",
+      "language": "en",
+      "scenario": "number",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The sample includes 12 companies.",
+      "after": "The sample includes 21 companies.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "numeric"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-10",
+      "language": "en",
+      "scenario": "time",
+      "split": "development",
+      "scope": "document",
+      "before": "The data were collected in 2022.",
+      "after": "The data were collected in 2023.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "time"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-11",
+      "language": "en",
+      "scenario": "certainty-decreased",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "It will certainly change the result.",
+      "after": "It may change the result.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-12",
+      "language": "en",
+      "scenario": "sample-to-population",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Twelve surveyed companies paused hiring.",
+      "after": "Companies across the city paused hiring.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-13",
+      "language": "en",
+      "scenario": "opinion-to-proof",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The author argues that the policy helps.",
+      "after": "The author proved that the policy helps.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "certainty",
+        "attribution"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-14",
+      "language": "en",
+      "scenario": "prediction-to-present",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Jobs may decline next year.",
+      "after": "Jobs are declining now.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "time",
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-15",
+      "language": "en",
+      "scenario": "counterargument-removed",
+      "split": "development",
+      "scope": "document",
+      "before": "The tool saved time.\n\nHowever, training also takes time.",
+      "after": "The tool saved time.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "claim-unmapped"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-16",
+      "language": "en",
+      "scenario": "causal-direction",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Falling demand caused prices to fall.",
+      "after": "Falling prices caused demand to fall.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "causality",
+        "claim-reversed"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-17",
+      "language": "en",
+      "scenario": "negation",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The results do not support this explanation.",
+      "after": "The results support this explanation.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "claim-reversed"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-18",
+      "language": "en",
+      "scenario": "split-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The plan is inexpensive and quick to implement.",
+      "after": "The plan costs little. Implementation is quick.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-19",
+      "language": "en",
+      "scenario": "merged-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Participation rose. Costs fell.",
+      "after": "Participation rose while costs fell.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-20",
+      "language": "en",
+      "scenario": "argument-relocation",
+      "split": "development",
+      "scope": "document",
+      "before": "Costs fell.\n\nTraining still takes time.",
+      "after": "Training still takes time.\n\nCosts fell.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-21",
+      "language": "en",
+      "scenario": "retained-other-qualifier",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "A may hold, and B may fail.",
+      "after": "A holds, and B may fail.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-22",
+      "language": "en",
+      "scenario": "attribution-subject",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Teachers think students like the class.",
+      "after": "Students think teachers like the class.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "attribution",
+        "claim-reformulated"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-23",
+      "language": "en",
+      "scenario": "quotation-to-narrator",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The manager said, “I think it will grow.”",
+      "after": "The business will grow.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "attribution",
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-24",
+      "language": "en",
+      "scenario": "percentage-points",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The share rose by two percentage points.",
+      "after": "The share rose by two percent.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "numeric"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-25",
+      "language": "en",
+      "scenario": "unit-scale",
+      "split": "development",
+      "scope": "document",
+      "before": "The budget is three million dollars.",
+      "after": "The budget is three thousand dollars.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "numeric"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-26",
+      "language": "en",
+      "scenario": "universal-to-subset",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "All participants completed the task.",
+      "after": "Some participants completed the task.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-27",
+      "language": "en",
+      "scenario": "evidence-does-not-test-cause",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The survey recorded two indicators rising together.",
+      "after": "The survey proves A caused B.",
+      "sources": [
+        "The survey reports correlation and includes no causal experiment."
+      ],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "causality",
+        "evidence-shift",
+        "certainty"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-28",
+      "language": "en",
+      "scenario": "evidence-contradiction",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The report recorded ten participants.",
+      "after": "The report recorded twenty participants.",
+      "sources": [
+        "Participant count: 10."
+      ],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "numeric",
+        "evidence-shift"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-29",
+      "language": "en",
+      "scenario": "conflicting-material",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The outcome is uncertain.",
+      "after": "The outcome is uncertain.",
+      "sources": [
+        "Source A claims an effect.",
+        "Source B claims no effect."
+      ],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": true,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-30",
+      "language": "en",
+      "scenario": "missing-material",
+      "split": "development",
+      "scope": "document",
+      "before": "The tool sometimes reduces errors.",
+      "after": "Errors are sometimes reduced by the tool.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-31",
+      "language": "en",
+      "scenario": "numeric-format-only",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The total is approximately 1000.",
+      "after": "The total is approximately 1,000.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-32",
+      "language": "en",
+      "scenario": "mean-median",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Mean income rose.",
+      "after": "Median income rose.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "numeric",
+        "claim-reformulated"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-33",
+      "language": "en",
+      "scenario": "temporal-sequence-only",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Hiring fell after the policy announcement.",
+      "after": "The policy announcement caused hiring to fall.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "causality"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-34",
+      "language": "en",
+      "scenario": "condition-removed",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "If costs stay constant, profit may rise.",
+      "after": "Profit may rise.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-35",
+      "language": "en",
+      "scenario": "exception-removed",
+      "split": "development",
+      "scope": "document",
+      "before": "All departments except two met the target.",
+      "after": "All departments met the target.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "scope"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-36",
+      "language": "en",
+      "scenario": "protected-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Efficiency should not be the only goal.",
+      "after": "We should not pursue efficiency alone.",
+      "sources": [],
+      "brief": "Preserve the view that efficiency is not the only goal.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-37",
+      "language": "en",
+      "scenario": "protected-reversal",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Efficiency should not be the only goal.",
+      "after": "Efficiency should be the only goal.",
+      "sources": [],
+      "brief": "Preserve the view that efficiency is not the only goal.",
+      "expectedLabels": [
+        "claim-reversed",
+        "protected-claim"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-38",
+      "language": "en",
+      "scenario": "question-paraphrase",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "Does this method really work?",
+      "after": "Is this method actually effective?",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-39",
+      "language": "en",
+      "scenario": "metaphor-ambiguity",
+      "split": "held-out-draft",
+      "scope": "document",
+      "before": "The plan opened a window.",
+      "after": "The plan opened a door.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [],
+      "expectedAbstention": true,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    },
+    {
+      "id": "en-40",
+      "language": "en",
+      "scenario": "unknown-to-known-cause",
+      "split": "development",
+      "scope": "document",
+      "before": "The cause is still under investigation.",
+      "after": "Equipment failure caused the incident.",
+      "sources": [],
+      "brief": "Review changes in meaning.",
+      "expectedLabels": [
+        "certainty",
+        "causality",
+        "claim-added"
+      ],
+      "expectedAbstention": false,
+      "labelStatus": "draft-ai-authored",
+      "reviewedBy": null,
+      "note": "Synthetic draft, not real-world evidence. Labels and ambiguity handling require independent human review; not a validated benchmark."
+    }
+  ]
+}

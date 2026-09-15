@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { WriterError, requireString } from '@writer-agent/core';
 import { APPLICATION_ID, SCHEMA_VERSION } from './schema.js';
 import { SOURCES_SQL } from './source-schema.js';
+import { ANALYSIS_SQL } from './analysis-schema.js';
 function ordinary(path:string,directory:boolean) {
   if(!existsSync(path))throw new WriterError('NOT_FOUND','Workspace path does not exist.');
   const s=lstatSync(path);if(s.isSymbolicLink()||!(directory?s.isDirectory():s.isFile()))throw new WriterError('INVALID_INPUT','Migration requires ordinary workspace paths, not symlinks.');
@@ -12,7 +13,7 @@ function ordinary(path:string,directory:boolean) {
 function versionOf(db:DatabaseSync):number {
   if(db.prepare('PRAGMA application_id').get()?.application_id!==APPLICATION_ID)throw new WriterError('UNSUPPORTED_SCHEMA','Not a Writer Agent / Siglum workspace.');
   const version=db.prepare('PRAGMA user_version').get()?.user_version;
-  if(version!==1&&version!==SCHEMA_VERSION)throw new WriterError('UNSUPPORTED_SCHEMA','Unknown schema; no migration attempted.');return version;
+  if(version!==1&&version!==2&&version!==SCHEMA_VERSION)throw new WriterError('UNSUPPORTED_SCHEMA','Unknown schema; no migration attempted.');return version;
 }
 /** Explicit additive migration. Preview writes no application data. Never triggered by source-code updates. */
 export function migrateWorkspace(directory:string,apply=false) {
@@ -36,7 +37,7 @@ export function migrateWorkspace(directory:string,apply=false) {
     const before=db.prepare('PRAGMA data_version').get()?.data_version;
     const backups=join(state,'backups');
     if(existsSync(backups))ordinary(backups,true);else mkdirSync(backups,{mode:0o700});
-    const dest=mkdtempSync(join(backups,'schema-v1-'));if(process.platform!=='win32')chmodSync(dest,0o700);
+    const dest=mkdtempSync(join(backups,`schema-v${version}-`));if(process.platform!=='win32')chmodSync(dest,0o700);
     backupPath=join(dest,'workspace.sqlite');
     // VACUUM INTO makes a consistent SQLite snapshot, including committed WAL data.
     // It is not a raw file copy and refuses a nonempty existing destination.
@@ -44,14 +45,15 @@ export function migrateWorkspace(directory:string,apply=false) {
     if(process.platform!=='win32')chmodSync(backupPath,0o600);
     const check=new DatabaseSync(backupPath,{readOnly:true});
     try {
-      if(versionOf(check)!==1||check.prepare('PRAGMA quick_check').get()?.quick_check!=='ok')throw new WriterError('CORRUPT_DATA','Backup verification failed; original schema was not changed.');
+      if(versionOf(check)!==version||check.prepare('PRAGMA quick_check').get()?.quick_check!=='ok')throw new WriterError('CORRUPT_DATA','Backup verification failed; original schema was not changed.');
     }finally{check.close();}
     db.exec('PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; BEGIN IMMEDIATE');inTransaction=true;
-    if(versionOf(db)!==1||db.prepare('PRAGMA data_version').get()?.data_version!==before)throw new WriterError('WORKSPACE_BUSY','Workspace changed during backup. Close other sessions and retry; backup retained.');
-    db.exec(SOURCES_SQL);
+    if(versionOf(db)!==version||db.prepare('PRAGMA data_version').get()?.data_version!==before)throw new WriterError('WORKSPACE_BUSY','Workspace changed during backup. Close other sessions and retry; backup retained.');
+    if(version===1)db.exec(SOURCES_SQL);
+    db.exec(ANALYSIS_SQL);
     if(db.prepare('PRAGMA foreign_key_check').all().length)throw new WriterError('CORRUPT_DATA','Workspace foreign-key check failed.');
     db.exec(`PRAGMA user_version=${SCHEMA_VERSION}; COMMIT`);inTransaction=false;
-    return {applied:true,from:1,to:SCHEMA_VERSION,needed:false,backup:backupPath};
+    return {applied:true,from:version,to:SCHEMA_VERSION,needed:false,backup:backupPath};
   } catch(error) {
     if(inTransaction){try{db.exec('ROLLBACK');}catch{/* The original error is retained. */}}
     if(error instanceof WriterError)throw error;

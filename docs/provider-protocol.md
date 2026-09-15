@@ -52,3 +52,7 @@ OpenAI-compatible means the Chat Completions request/response shape implemented 
 ModelRequest has optional `sources: SourceContextItem[]`. Each item pins sourceId/snapshotId/optional excerptId, locator, reported title, full extracted-text hash, selected-content hash, extracted-text line range and exact selected text. The request must contain at most 8 items and 80000 serialized UTF-8 bytes. No implicit selection, truncation or note inclusion is permitted. Source text is untrusted user-data context, never system instructions.
 
 The host retains its own captured baseline, validates the response as before and saves pending changes plus the selected source context in one transaction. Provenance is `supplied-not-verified`: no automatic assertion of actual model use, citation correctness or evidence support. The model cannot author/override this stored context record. Raw HTML and private absolute file paths are not model inputs. Excerpts/pinned snapshots do not drift when a source is refreshed. See [sources](sources.md).
+
+## v0.0.4 separate analysis protocols
+
+Proposal Protocol v1 remains unchanged. Claim extraction and semantic review use their own task-specific schemas/methods; do not pass analysis JSON to propose. See [analysis-protocol.md](analysis-protocol.md). Review findings do not authorize text changes.

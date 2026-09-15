@@ -15,8 +15,8 @@ const facts:Record<string,unknown>=JSON.parse(readFileSync(join(root,'docs/readm
 const manifest:Record<string,unknown>=JSON.parse(readFileSync(join(root,'package.json'),'utf8')) as Record<string,unknown>;
 test('English and Simplified Chinese READMEs agree mechanically with manifest',()=>assert.equal(checkReadmePair(en,zh,facts,manifest),true));
 for(const [name,from,to] of [
-  ['visible version','**v0.0.3**','**v0.0.2**'],
-  ['version marker','siglum:version=0.0.3','siglum:version=0.0.2'],
+  ['visible version',`**v${String(manifest.version)}**`,'**v0.0.0**'],
+  ['version marker',`siglum:version=${String(manifest.version)}`,'siglum:version=0.0.0'],
   ['license marker','siglum:license=Apache-2.0','siglum:license=MIT'],
   ['language switch','[简体中文](README.zh-CN.md)','[Chinese](wrong.md)'],
   ['section','<!-- section:sources -->',''],
