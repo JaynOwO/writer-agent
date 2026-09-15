@@ -1,0 +1,26 @@
+{
+  "name": "writer-agent",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Local-first writing harness: deterministic revision core (development preview)",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.11.0",
+  "engines": {
+    "node": ">=22.16.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -p tsconfig.check.json",
+    "test": "node scripts/test.mjs",
+    "check": "node scripts/check.mjs",
+    "clean": "node scripts/clean.mjs",
+    "demo": "node scripts/demo.mjs",
+    "writer": "node apps/cli/dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.7",
+    "typescript": "5.8.3"
+  }
+}

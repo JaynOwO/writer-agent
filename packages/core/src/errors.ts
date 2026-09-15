@@ -1,0 +1,20 @@
+export type ErrorCode =
+  | 'INVALID_INPUT' | 'NOT_FOUND' | 'ALREADY_EXISTS' | 'STALE_REVISION'
+  | 'CHANGE_CONFLICT' | 'INVALID_TRANSITION' | 'UNSUPPORTED_SCHEMA'
+  | 'CORRUPT_DATA' | 'WORKSPACE_CLOSED';
+
+export class WriterError extends Error {
+  constructor(readonly code: ErrorCode, message: string) {
+    super(message);
+    this.name = 'WriterError';
+  }
+}
+
+export function requireString(value: unknown, label: string, maxLength = 512): asserts value is string {
+  if (typeof value !== 'string' || !value.trim() || value.length > maxLength) {
+    throw new WriterError('INVALID_INPUT', `${label} must be a non-empty string of at most ${maxLength} characters.`);
+  }
+}
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}

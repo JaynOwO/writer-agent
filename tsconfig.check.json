@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@writer-agent/core": [
+        "./packages/core/src/index.ts"
+      ],
+      "@writer-agent/models": [
+        "./packages/models/src/index.ts"
+      ],
+      "@writer-agent/storage": [
+        "./packages/storage/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "packages/*/src/**/*.ts",
+    "apps/*/src/**/*.ts",
+    "tests/src/**/*.ts"
+  ]
+}
