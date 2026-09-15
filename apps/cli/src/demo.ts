@@ -23,7 +23,7 @@ export async function demo(directory?: string): Promise<void> {
     const changes = workspace.proposeChanges(response.documentId, response.baseRevisionId, response.edits, response.providerId);
     const [risky, style, deletion] = changes;
     if (!risky || !style || !deletion) throw new Error('Demo fixture is incomplete.');
-    console.log('Writer Agent v0.0.2 — 离线核心演示');
+    console.log('Siglum v0.0.3 — 离线核心演示');
     console.log('以下为虚构测试文案。Mock 不是 AI，规则提示不是事实核查。\n');
     console.log(`工作区：${workspace.root}`);
     console.log(`文稿 ID：${document.id}\n`);

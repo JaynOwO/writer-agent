@@ -99,3 +99,7 @@ Replace each ID with the exact returned ID. These commands are independent examp
 | STALE_REVISION | User changed document during inference; request a fresh proposal |
 
 Real smoke evidence should name the provider, exact model, selected modes, server version where known, and result. Use synthetic text and redact credentials. Do not describe fake-server results as real model tests.
+
+## v0.0.3：明确提供来源资料
+
+`suggest` 新增 `--sources <snapshotId,...>` 与 `--excerpts <excerptId,...>`，先用 `source` 命令采集并选定资料。默认仍只预览，`--send` 才发送。最多 8 项、序列化后 80000 UTF-8 字节；不会自动截断或发送笔记。`writer provenance <workspace> <changeId>` 查询当次提供的原文和来源 ID，标记为 `supplied-not-verified`，不证明内容为真或足以支持某条断言。完整例子见[简中来源指南](sources.zh-CN.md)。

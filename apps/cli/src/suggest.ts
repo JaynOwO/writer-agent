@@ -1,27 +1,28 @@
 // SPDX-License-Identifier: Apache-2.0
 import { readFileSync, statSync } from 'node:fs';
 import { requireString, WriterError } from '@writer-agent/core';
-import type { Change } from '@writer-agent/core';
+import type { Change, SourceSelection } from '@writer-agent/core';
 import { Workspace } from '@writer-agent/storage';
 import { OpenAICompatibleProvider, OllamaProvider, captureRequest, validateModelResponse, checkCancelled } from '@writer-agent/models';
 import type { ModelProvider, ModelRequest, ProviderOptions, OpenAICompatibleOptions } from '@writer-agent/models';
 
 /** No transaction stays open across the network. A stale result is rejected again by storage. */
 export async function suggestChanges(workspace: Workspace, documentId: string, instruction: string,
-  provider: ModelProvider, signal?: AbortSignal): Promise<{ changes: Change[]; notes: readonly string[] }> {
+  provider: ModelProvider, signal?: AbortSignal, selection: SourceSelection = {}): Promise<{ changes: Change[]; notes: readonly string[] }> {
   checkCancelled(signal);
   const revision = workspace.currentRevision(documentId);
-  const request: ModelRequest = captureRequest({documentId,baseRevisionId:revision.id,snapshot:revision.snapshot,instruction});
+  const sources = workspace.sources.context(selection);
+  const request: ModelRequest = captureRequest({documentId,baseRevisionId:revision.id,snapshot:revision.snapshot,instruction,...(sources.length ? {sources} : {})});
   const providerId = provider.id;
   // Keep an independent application-owned baseline even if a provider mutates its input.
   const response: unknown = await provider.propose(structuredClone(request),signal);
   checkCancelled(signal);
   const checked = validateModelResponse(response,request,providerId);
-  const changes = workspace.proposeChanges(documentId,request.baseRevisionId,checked.edits,providerId);
+  const changes = workspace.proposeChanges(documentId,request.baseRevisionId,checked.edits,providerId,request.sources?.length ? {items:request.sources,instruction:request.instruction} : undefined);
   return {changes,notes:checked.notes};
 }
 const valueFlags = new Set(['--provider','--model','--base-url','--key-env','--instruction','--instruction-file',
-  '--timeout-ms','--max-output-tokens','--response-format','--token-parameter']);
+  '--timeout-ms','--max-output-tokens','--response-format','--token-parameter','--sources','--excerpts']);
 const boolFlags = new Set(['--send','--allow-remote']);
 export function parseSuggestArgs(args: string[]) {
   const [directory,documentId,...flags] = args;
@@ -79,7 +80,13 @@ export function parseSuggestArgs(args: string[]) {
     }
     selected=new OpenAICompatibleProvider(extra);
   }
-  return {directory,documentId,instruction,provider:selected,send:booleans.has('--send')};
+  const ids = (flag:string):string[] => {
+    const v=values.get(flag); if(v===undefined)return [];
+    const parts=v.split(','); if(parts.some(p=>!p||p!==p.trim())||new Set(parts).size!==parts.length)throw new WriterError('INVALID_INPUT','Source selections need unique comma-separated IDs, without spaces.');
+    return parts;
+  };
+  const selection:SourceSelection={snapshots:ids('--sources'),excerpts:ids('--excerpts')};
+  return {directory,documentId,instruction,provider:selected,send:booleans.has('--send'),selection};
 }
 export async function suggestCommand(args: string[]): Promise<void> {
   const options=parseSuggestArgs(args);
@@ -88,16 +95,19 @@ export async function suggestCommand(args: string[]): Promise<void> {
   const cancel=() => controller.abort();
   try {
     const revision=workspace.currentRevision(options.documentId);
+    const sourceContext=workspace.sources.context(options.selection);
     const documentBytes=Buffer.byteLength(workspace.markdown(options.documentId),'utf8');
     if (!options.send) {
       console.log(JSON.stringify({status:'preview-only',sent:false,provider:options.provider.describe(),documentId:options.documentId,
         baseRevisionId:revision.id,documentBytes,blocks:revision.snapshot.blocks.length,
-        notice:'No request sent. Add --send to transmit the entire selected document and instruction to this endpoint. Remote inference may cost money. Loopback describes the connection, not the server\'s own privacy policy.'},null,2));
+        sourceContext:{items:sourceContext.map(({text,...item})=>({...item,bytes:Buffer.byteLength(text,'utf8')})),serializedBytes:Buffer.byteLength(JSON.stringify(sourceContext),'utf8'),verification:'unverified'},
+        notice:'No request sent. Add --send to transmit the entire selected document, instruction and explicitly selected source text to this endpoint. Remote inference may cost money. Loopback describes the connection, not the server\'s own privacy policy.'},null,2));
       return;
     }
     process.once('SIGINT',cancel);process.once('SIGTERM',cancel);
-    const result=await suggestChanges(workspace,options.documentId,options.instruction,options.provider,controller.signal);
+    const result=await suggestChanges(workspace,options.documentId,options.instruction,options.provider,controller.signal,options.selection);
     console.log(JSON.stringify({status:'pending-review',manuscriptChanged:false,changes:result.changes,
+      sourceProvenance:{verification:'supplied-not-verified',selectedItems:sourceContext.length,queryCommand:'writer provenance <workspace> <changeId>'},
       modelNotes:{verified:false,persisted:false,notes:result.notes}},null,2));
   } finally {
     process.removeListener('SIGINT',cancel);process.removeListener('SIGTERM',cancel);

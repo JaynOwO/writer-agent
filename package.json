@@ -1,9 +1,9 @@
 {
   "name": "writer-agent",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
   "type": "module",
-  "description": "Local-first writing harness with validated model proposals (development preview)",
+  "description": "Siglum: a local-first writing harness with traceable sources and reviewable model proposals",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.11.0",
   "engines": {
@@ -18,7 +18,10 @@
     "clean": "node scripts/clean.mjs",
     "demo": "node scripts/demo.mjs",
     "writer": "node apps/cli/dist/index.js",
-    "demo:provider": "node scripts/provider-demo.mjs"
+    "demo:provider": "node scripts/provider-demo.mjs",
+    "siglum": "node apps/cli/dist/index.js",
+    "demo:sources": "node scripts/sources-demo.mjs",
+    "docs:check": "node scripts/check-readme-parity.mjs"
   },
   "devDependencies": {
     "@types/node": "22.19.7",

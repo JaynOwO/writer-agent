@@ -1,4 +1,4 @@
-> Updated for v0.0.2: the original commands below are retained. For `writer model` and preview/`writer suggest --send`, see [providers.md](providers.md). Only the explicitly sent suggest command makes provider HTTP requests; existing commands remain offline. On Windows use `pnpm.cmd`.
+> Updated for v0.0.3: the original manuscript commands below are retained; see [sources.md](sources.md) for source intake, provenance and migration. For `writer model` and preview/`writer suggest --send`, see [providers.md](providers.md). Only explicitly sent suggest calls make provider requests; source add/refresh makes public-page HTTP requests only with --fetch. Original manuscript commands remain offline. On Windows use `pnpm.cmd`.
 
 # CLI walkthrough
 
@@ -81,3 +81,7 @@ pnpm writer export ../my-writing doc_实际ID ../final.md
 ## Backup
 
 结束所有打开同一工作区的进程后，复制完整工作区目录作为备份。不要在应用仍运行时只复制一个 SQLite 主文件。当前无加密、自动同步、自动备份或就地 Markdown 双向编辑功能。
+
+## Siglum v0.0.3
+
+`pnpm siglum` 是现有 `pnpm writer` 的别名。新增 `source help`、`migrate <workspace> [--apply]`、`provenance <workspace> <changeId>`、`demo:sources`。来源子命令、摘录、笔记、引用绑定和明确发送资料的流程见 [sources.zh-CN.md](sources.zh-CN.md)。旧工作区不自动迁移；代码更新也不迁移私人文稿。

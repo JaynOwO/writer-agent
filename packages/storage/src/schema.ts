@@ -1,6 +1,8 @@
-export const SCHEMA_VERSION = 1;
+// SPDX-License-Identifier: Apache-2.0
+import { SOURCES_SQL } from './source-schema.js';
+export const SCHEMA_VERSION = 2;
 export const APPLICATION_ID = 0x57525431; // "WRT1"
-export const SCHEMA_SQL = `
+export const SCHEMA_V1_SQL = `
 CREATE TABLE workspace (
   id TEXT PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
@@ -66,5 +68,7 @@ CREATE TRIGGER decisions_no_update BEFORE UPDATE ON decisions BEGIN
 CREATE TRIGGER decisions_no_delete BEFORE DELETE ON decisions BEGIN
   SELECT RAISE(ABORT, 'decisions are append-only'); END;
 PRAGMA application_id = ${APPLICATION_ID};
-PRAGMA user_version = ${SCHEMA_VERSION};
+PRAGMA user_version = 1;
 `;
+
+export const SCHEMA_SQL = SCHEMA_V1_SQL + SOURCES_SQL + `PRAGMA user_version = ${SCHEMA_VERSION};`;
