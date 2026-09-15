@@ -1,0 +1,16 @@
+{
+  "name": "@writer-agent/models",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@writer-agent/core": "workspace:*"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@writer-agent/cli",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@writer-agent/core": "workspace:*",
+    "@writer-agent/models": "workspace:*",
+    "@writer-agent/storage": "workspace:*"
+  }
+}

@@ -1,0 +1,35 @@
+name: core-checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: core-checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  check:
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: ['22', '24']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.11.0
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      # The first integrator must generate and commit pnpm-lock.yaml before opening the PR.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      - run: pnpm demo
