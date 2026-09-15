@@ -29,7 +29,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: pnpm
-      # The first integrator must generate and commit pnpm-lock.yaml before opening the PR.
+      # No real model keys or external provider calls in this workflow.
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm demo
+      - run: pnpm demo:provider

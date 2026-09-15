@@ -1,49 +1,43 @@
 # Repository instructions
 
-## Current collaboration contract
+## Collaboration and authorized scope
 
-The project owner decides product scope. ChatGPT authors the implementation and specifications.
-For the v0.0.1 handoff, Spark is the local integration/test/Git executor. It should apply the supplied source files, not regenerate this project from a description.
+The owner decides product scope. ChatGPT authors implementations; the owner currently integrates/tests/publishes them with GitHub Desktop. Do not require Codex/Spark access. Give the owner one small, actionable integration step at a time.
 
-## Boundaries
+v0.0.2 is authorized for Apache-2.0 adoption, proposal protocol v1, bounded HTTP transport, native Ollama and OpenAI Chat Completions-compatible adapters, CLI suggest/review workflow, tests and docs. Read docs/v0.0.2-spec.md, docs/provider-protocol.md, docs/security-model.md and docs/limitations.md.
 
-- Read this file, `docs/v0.0.1-spec.md`, and `docs/limitations.md` before changes.
-- Do not redesign the architecture, broaden scope, add cloud models, add UI, or add dependencies without explicit authorization.
-- A mechanical integration fix is allowed only if required to compile/run the supplied code; record every such fix and its reason. Do not silently alter patch semantics or weaken tests.
-- Do not claim a tool call, test, build, Git push, or CI run succeeded unless it actually did. Include failures and blocked steps.
-- This is a development preview with no selected open-source license. Do not choose a license or publish packages on the owner's behalf.
+Do not add GUI, autonomous research, streaming, source/claim graphs, learned preferences, MCP/Skills execution, hosted services, extra dependencies or data migrations without a separate scope decision. Do not choose another license, add restrictions to Apache-2.0, claim trademark registration, or publish packages on the owner's behalf.
 
-## Git safety
+## Git and source integration
 
-- Target repository: `JaynOwO/writer-agent`. Verify `origin` before any push.
-- Use a feature branch, initially `feat/bootstrap-v0.0.1`. Never push directly to `main` or `master`.
-- Never force-push, delete branches, reset/clean away uncommitted work, or rewrite shared history.
-- Do not overwrite newly added or changed repository files merely because a delivery bundle includes the same path. The handoff importer checks collisions.
-- Review the staged diff and exact changed-file list. Do not commit private writing workspaces, SQLite databases, `.env` files, credentials, runtime exports, `node_modules`, or build outputs.
-- Create a PR only after local checks pass; do not merge it. If authentication or permissions prevent push/PR creation, report the exact blocker rather than attempting a workaround with pasted credentials.
+- Target repository: JaynOwO/writer-agent. Verify origin before any push.
+- Use a feature branch, e.g. feat/v0.0.2-model-providers. Never push directly to main/master.
+- Never force-push, delete branches, rewrite shared history, reset/clean away work or auto-merge.
+- Import updates only against the verified baseline and a clean worktree. Refuse collisions, modified source, symlinks and wrong repositories. Do not overwrite private data.
+- Review all staged files. Exclude manuscripts, databases, .env, credentials, runtime exports, node_modules and build outputs.
+- Authentication failures must be reported; never ask the user to paste keys or tokens into the conversation.
 
 ## Required validation
 
-For the first handoff only, run `pnpm install --no-frozen-lockfile` to create the real lockfile. Review and commit `pnpm-lock.yaml`. Subsequent installs and CI use `pnpm install --frozen-lockfile`.
+Dependencies and pnpm-lock.yaml remain unchanged from v0.0.1. Use `pnpm install --frozen-lockfile`. Do not fabricate or casually regenerate the lockfile.
 
 ```sh
-pnpm typecheck
-pnpm test
+pnpm check
 pnpm demo
+pnpm demo:provider
 ```
 
-`pnpm check` combines typechecking, building, and tests. The demo must finish with `DEMO_OK`.
-The bundled author's report covers Linux/Node 22.16.0 and an offline preinstalled compiler/types environment, **not** a clean network pnpm install or Windows. Run the real install and validate the local machine; the CI matrix then exercises Node 22/24 on Linux and Windows.
+Windows PowerShell users with blocked .ps1 shims can use pnpm.cmd without changing execution policy. CI tests Linux/Windows with Node 22/24. Default tests and the provider demo use only synthetic loopback HTTP, never paid endpoints or model downloads. Real inference is opt-in and must be reported separately. Never claim installs, tests, smoke checks, Git writes or CI succeeded unless actually verified.
 
-## Domain invariants
+## Invariants
 
-1. Proposals never mutate the manuscript by themselves.
-2. Only explicit accept/reject/revert actions change proposal status.
-3. A text edit requires exact block ID, original text and monotonic block version.
-4. Reverting one block cannot discard accepted changes to another block.
-5. A changed same-block dependency causes a conflict, not fuzzy replacement.
-6. Revision, document head, change status and decision are updated in one transaction.
-7. Revisions and decisions are append-only; rejected proposals do not create content revisions.
-8. Store a rejection reason as evidence of that decision, never automatically as a permanent preference.
-9. Rule hints are warnings, not truth, calibrated confidence, source support or author intent.
-10. No network calls or model API keys are required by the current runtime or test suite.
+1. Providers never receive storage APIs or authority to accept edits. Model output is untrusted data, not executable code.
+2. CLI suggest previews by default. Only --send invokes HTTP. Remote endpoints additionally require --allow-remote and HTTPS.
+3. No automatic retry, repair, credential fallback, redirect following or provider switching.
+4. Read secrets only from configured process environment names at send time. No literal key flags, prompt inclusion, logging or database persistence.
+5. Validate the full output before saving any proposal. Preserve exact block ID/text and monotonic version checks. Reject a stale document head after inference.
+6. No database transaction over network waits. Revision/head/change/decision updates remain atomic.
+7. Accept/reject/revert require explicit user actions. Revert never destroys unrelated accepted edits.
+8. Notes/lexical hints are not facts, evidence support, calibrated confidence or permanent preferences.
+9. Schema v1 is unchanged. Markdown is explicitly imported/exported, not live-synced.
+10. A loopback server can still relay to cloud inference. Never promise privacy based solely on its URL.
