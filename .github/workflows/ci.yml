@@ -41,3 +41,9 @@ jobs:
       - run: pnpm demo:extensions
       - run: pnpm eval:retrieval
       - run: pnpm demo:product
+      # Download the exact checksum-pinned official runtime only in Node24 jobs.
+      # The smoke fixture uses temporary synthetic workspaces, never private credentials.
+      - if: matrix.node == '24'
+        run: pnpm desktop:runtime
+      - if: matrix.node == '24'
+        run: pnpm desktop:smoke

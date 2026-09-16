@@ -1,0 +1,10 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Siglum Updater</title><link rel="stylesheet" href="/style.css"></head><body>
+<header><div><strong>Siglum Updater</strong><span class="muted">v0.2 · Source integration</span></div><div><button id="lang">English</button><button id="exit">退出 / Quit</button></div></header>
+<main><section class="hero"><p class="eyebrow">LOCAL DEVELOPMENT WORKSPACE</p><h1 id="headline">更新代码，保留你的工作。</h1><p id="intro">独立目录集成 · 明确检查 · 可恢复的每一步</p></section>
+<p id="error" role="alert" hidden></p>
+<section id="setup" hidden><h2 id="setup-title">一次性连接现有仓库</h2><label for="repo">Repository root</label><input id="repo" autocomplete="off" placeholder="C:\Users\you\Documents\GitHub\writer-agent"><button id="config-preview">检查并预览 / Preview</button><pre id="config-details"></pre><button id="config-confirm" hidden>确认绑定 / Confirm binding</button></section>
+<section id="connected" hidden><div class="row"><div><p class="eyebrow" id="repository"></p><p class="muted" id="local-path"></p></div><button id="refresh">刷新 / Refresh</button></div><div class="row"><label class="drop" id="drop"><span id="drop-text">选择或拖入完整更新 ZIP</span><input type="file" id="zip" accept=".zip,application/zip"></label><button id="releases">查找 Release / Releases</button></div><p class="muted" id="scope-warning">更新器会执行可信项目的构建与测试。独立 worktree 不是安全沙箱。</p></section>
+<section id="release-section" hidden><h2>GitHub Release</h2><p id="release-info"></p><div id="release-list"></div></section>
+<section><h2 id="tasks-title">集成任务</h2><div id="tasks"></div></section>
+<section id="detail" hidden><div class="row"><h2 id="detail-title"></h2><button id="close-detail">关闭 / Close</button></div><div id="facts" class="facts"></div><pre id="details"></pre><div id="actions" class="actions"></div><details><summary id="log-title">执行输出 / Output</summary><pre id="output"></pre></details><button id="diagnostic">导出元数据诊断 / Diagnostic</button></section>
+</main><footer id="footer">面板关闭不会自动停止宿主。使用「退出」停止当前任务；已经完成的结果会保留。</footer><script src="/app.js"></script></body></html>

@@ -49,6 +49,8 @@ export interface ProtectedClaim {
     readonly anchors: readonly TextAnchor[];
 }
 export interface AnalysisRequest {
+    /** Explicit range-selection review, absent in historical block-level requests. */
+    readonly rangeOperationIds?: readonly string[];
     /** Absent in old reports; never synthesize old memory on read. */
     readonly memory?: MemoryCapture;
     readonly protocolVersion: 1;
@@ -138,7 +140,7 @@ export interface AnalysisRun {
     readonly provider: AnalysisProviderInfo;
     readonly usage: AnalysisUsage | null;
     readonly durationMs: number;
-    readonly promptVersion: 'analysis-v1' | 'analysis-memory-v1';
+    readonly promptVersion: 'analysis-v1' | 'analysis-memory-v1' | 'analysis-range-v1';
     readonly status: 'completed';
     readonly interpretation: 'model-assessment-not-verified';
     readonly createdAt: string;

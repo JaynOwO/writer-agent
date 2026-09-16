@@ -1,0 +1,9 @@
+{
+  "name": "@writer-agent/desktop",
+  "version": "0.0.9",
+  "private": true,
+  "type": "module",
+  "main": "main.mjs",
+  "license": "Apache-2.0",
+  "description": "Siglum desktop host; Electron runtime is externally locked and packaged"
+}

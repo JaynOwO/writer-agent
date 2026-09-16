@@ -33,6 +33,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/storage
 
+  apps/desktop: {}
+
   packages/core: {}
 
   packages/models:
