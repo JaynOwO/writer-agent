@@ -1,3 +1,4 @@
+import { EXTENSION_SQL } from './extension-schema.js';
 // SPDX-License-Identifier: Apache-2.0
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, closeSync, writeFileSync, unlinkSync, chmodSync } from 'node:fs';
@@ -15,7 +16,7 @@ function ordinary(path:string,directory:boolean) {
 function versionOf(db:DatabaseSync):number {
   if(db.prepare('PRAGMA application_id').get()?.application_id!==APPLICATION_ID)throw new WriterError('UNSUPPORTED_SCHEMA','Not a Writer Agent / Siglum workspace.');
   const version=db.prepare('PRAGMA user_version').get()?.user_version;
-  if(version!==1&&version!==2&&version!==3&&version!==4&&version!==SCHEMA_VERSION)throw new WriterError('UNSUPPORTED_SCHEMA','Unknown schema; no migration attempted.');return version;
+  if(version!==1&&version!==2&&version!==3&&version!==4&&version!==5&&version!==SCHEMA_VERSION)throw new WriterError('UNSUPPORTED_SCHEMA','Unknown schema; no migration attempted.');return version;
 }
 /** Explicit additive migration. Preview writes no application data. Never triggered by source-code updates. */
 export function migrateWorkspace(directory:string,apply=false) {
@@ -54,7 +55,8 @@ export function migrateWorkspace(directory:string,apply=false) {
     if(version===1)db.exec(SOURCES_SQL);
     if(version<3)db.exec(ANALYSIS_SQL);
     if(version<4)db.exec(MEMORY_SQL);
-    db.exec(WORKFLOW_SQL);
+    if(version<5)db.exec(WORKFLOW_SQL);
+    db.exec(EXTENSION_SQL);
     if(db.prepare('PRAGMA foreign_key_check').all().length)throw new WriterError('CORRUPT_DATA','Workspace foreign-key check failed.');
     db.exec(`PRAGMA user_version=${SCHEMA_VERSION}; COMMIT`);inTransaction=false;
     return {applied:true,from:version,to:SCHEMA_VERSION,needed:false,backup:backupPath};

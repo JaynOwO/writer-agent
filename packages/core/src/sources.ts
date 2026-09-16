@@ -62,6 +62,7 @@ export interface SourceSelection {
 }
 /** Evidence of what was supplied, not proof the model used it or that it supports any claim. */
 export interface SourceContextItem {
+  readonly origin?: { readonly kind: 'mcp'; readonly serverId: string; readonly name: string; readonly attemptId: string; readonly descriptorHash: string; readonly verification: 'external-service-unverified' };
   readonly sourceId: string;
   readonly snapshotId: string;
   readonly excerptId: string | null;
@@ -123,7 +124,8 @@ export function validateSourceContext(value: unknown): asserts value is readonly
   const seen = new Set<string>();
   for (const item of value as unknown[]) {
     if (!isRecord(item)) throw new WriterError('INVALID_INPUT', 'Invalid source context.');
-    const keys = ['sourceId','snapshotId','excerptId','locator','title','textHash','contentHash','startLine','endLine','text'];
+    const keys = ['sourceId','snapshotId','excerptId','locator','title','textHash','contentHash','startLine','endLine','text',...(Object.hasOwn(item,'origin')?['origin']:[])];
+    if(Object.hasOwn(item,'origin')) { const o=item.origin; if(!isRecord(o)||Object.keys(o).sort().join(',')!==['kind','serverId','name','attemptId','descriptorHash','verification'].sort().join(',')||o.kind!=='mcp'||o.verification!=='external-service-unverified'||typeof o.descriptorHash!=='string'||!/^[a-f0-9]{64}$/.test(o.descriptorHash))throw new WriterError('INVALID_INPUT','Invalid tool-source provenance.'); for(const key of ['serverId','name','attemptId'])requireString(o[key],'provenance',2048); }
     if (Object.keys(item).length !== keys.length || keys.some(k => !Object.hasOwn(item,k))) throw new WriterError('INVALID_INPUT','Unexpected source context fields.');
     for (const k of ['sourceId','snapshotId']) requireString(item[k], k, 200);
     if (item.excerptId !== null) requireString(item.excerptId, 'excerptId', 200);

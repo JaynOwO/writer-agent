@@ -14,3 +14,7 @@ export * from './memory.js';
 export * from './workflow-types.js';
 export * from './workflow.js';
 export * from './source-policy.js';
+
+export * from './extensions.js';
+export * from './tool-schema.js';
+export * from './research.js';

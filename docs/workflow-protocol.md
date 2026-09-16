@@ -47,3 +47,7 @@ Approvals and candidate adoption are host actions. A selected outline version mu
 ## Validation boundaries
 
 Default tests use fixed outputs and loopback HTTP, including the production search/model adapters; real website/model effects require separate opt-in testing. Scope/quote guards do not guarantee fidelity or complete evidence discovery. Full-screen UI, streaming, PDF, unrestricted crawling, Skills/MCP and arbitrary workflow code remain outside v0.0.6.
+
+## v0.0.7 opt-in extension fields
+
+Optional config.extensions is captured and fingerprinted; absence preserves legacy fields. Content requests may carry skills and draft section metadata, never public query-plan. Sources may carry exact mcp origin. Shared fetch quotas cover author-selected MCP reads; no model-defined arbitrary function calls. New chapter candidates support bounded larger quote arrays; old request validation remains intact. See extensions-protocol.md.

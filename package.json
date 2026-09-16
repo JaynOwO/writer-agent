@@ -1,9 +1,9 @@
 {
   "name": "writer-agent",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
-  "description": "Siglum: local-first, consent-gated writing workflows and traceable research",
+  "description": "Siglum: local-first writing workflows, bounded tools and traceable evidence",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.11.0",
   "engines": {
@@ -25,7 +25,9 @@
     "demo:review": "node scripts/review-demo.mjs",
     "eval:score": "node scripts/score-review-eval.mjs",
     "demo:memory": "node scripts/memory-demo.mjs",
-    "demo:workflow": "node scripts/workflow-demo.mjs"
+    "demo:workflow": "node scripts/workflow-demo.mjs",
+    "demo:extensions": "node scripts/extensions-demo.mjs",
+    "eval:retrieval": "node scripts/eval-retrieval.mjs"
   },
   "devDependencies": {
     "@types/node": "22.19.7",

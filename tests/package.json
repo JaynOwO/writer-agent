@@ -1,6 +1,6 @@
 {
   "name": "@writer-agent/tests",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",

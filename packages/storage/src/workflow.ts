@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { DatabaseSync } from 'node:sqlite';
 import { newId, WriterError, workflowHash as hash, validateWorkflowConfig, validateWorkflowBudget, stageTasks, workflowStage,
-  buildMemoryPlan, normalizeMemoryOptions, memoryText, validateWorkflowOutput, renderWorkflowDraft } from '@writer-agent/core';
+  buildMemoryPlan, normalizeMemoryOptions, memoryText, validateWorkflowOutput, renderWorkflowDraft, renderCitedDraft } from '@writer-agent/core';
 import type { WorkflowConfig, WorkflowRun, WorkflowCapture, WorkflowBudget, WorkflowGrant, WorkflowAttempt,
   WorkflowArtifact, WorkflowLease, WorkflowKind, IntentVersion, MemoryPacket, WorkflowContentRequest, OutlineOutput, DraftOutput } from '@writer-agent/core';
 import type { Workspace } from './index.js';
@@ -35,7 +35,7 @@ export class WorkflowStore {
   usage(id:string,grantId?:string):WorkflowBudget{
     const a=this.attempts(id).filter(a=>!grantId||a.grantId===grantId);
     const row=grantId?this.db.prepare('SELECT active_ms n FROM workflow_grants WHERE id=? AND run_id=?').get(grantId,id):this.db.prepare('SELECT COALESCE(SUM(active_ms),0) n FROM workflow_grants WHERE run_id=?').get(id);
-    return {models:a.filter(x=>x.kind==='model').length,searches:a.filter(x=>x.kind==='search').length,fetches:a.filter(x=>x.kind==='fetch').length,activeMs:Number(row?.n??0)};
+    return {models:a.filter(x=>x.kind==='model').length,searches:a.filter(x=>x.kind==='search').length,fetches:a.filter(x=>x.kind==='fetch'||x.kind==='tool').length,activeMs:Number(row?.n??0)};
   }
   private free(id:string){const row=this.db.prepare('SELECT owner,expires_at FROM workflow_runs WHERE id=?').get(id);if(row?.owner!==null){fault('WORKFLOW_BUSY','Task has an execution lease. If its worker exited, wait 45 seconds and explicitly recover it.');}}
   private capture(id:string,c:WorkflowConfig):WorkflowCapture {
@@ -54,7 +54,7 @@ export class WorkflowStore {
     }
     let analysisStamp:string|null=null;
     if(c.template==='review-changes')analysisStamp=hash(this.host.analysis.prepare(c.documentId!,'semantic-review',{instruction:c.goal,changeIds:c.changeIds,documentScope:true,selection:c.selection,memoryOptions:c.memoryOptions}));
-    return {documentId:c.documentId,revisionId:doc?.id??null,snapshot:doc?.snapshot??null,changes,sources,writing,review,writingCapture,reviewCapture,guidanceStamp,analysisStamp};
+    return {documentId:c.documentId,revisionId:doc?.id??null,snapshot:doc?.snapshot??null,changes,sources,writing,review,writingCapture,reviewCapture,guidanceStamp,analysisStamp,...(c.extensions?{extensions:this.host.extensions.capture(c.extensions)}:{})};
   }
   assertFresh(run:WorkflowRun):void{if(hash(this.capture(run.id,run.config))!==hash(run.capture))fault('STALE_REVISION','Document, selected changes or applicable guidance changed. Refresh and reauthorize this task; saved outputs remain historical.');}
   create(input:WorkflowConfig):WorkflowRun{
@@ -66,19 +66,21 @@ export class WorkflowStore {
   compare(id:string,beforeId:string,afterId:string){const r=this.run(id),a=this.artifact(beforeId),b=this.artifact(afterId);for(const x of [a,b])if(x.runId!==r.id||!['draft','draft-revision'].includes(x.type))fault('WORKFLOW_INVALID','Choose two draft artifacts of the same task.');const av=a.value as {output:DraftOutput},bv=b.value as {output:DraftOutput};const before=av.output.markdown,after=bv.output.markdown;let prefix=0;while(prefix<Math.min(before.length,after.length)&&before[prefix]===after[prefix])prefix++;if(prefix>0&&prefix<before.length&&/[\uDC00-\uDFFF]/.test(before[prefix]!))prefix--;let suffix=0;while(suffix<Math.min(before.length-prefix,after.length-prefix)&&before[before.length-1-suffix]===after[after.length-1-suffix])suffix++;if(suffix>0&&/[\uDC00-\uDFFF]/.test(before[before.length-suffix]!))suffix--;return {kind:'mechanical-candidate-comparison',notSemanticVerdict:true,beforeArtifactId:a.id,afterArtifactId:b.id,historical:a.epoch!==r.epoch||b.epoch!==r.epoch||!r.candidateIds.includes(a.id)||!r.candidateIds.includes(b.id),sameText:before===after,before,after,span:{startUtf16:prefix,beforeEndUtf16:before.length-suffix,afterEndUtf16:after.length-suffix,removed:before.slice(prefix,before.length-suffix),inserted:after.slice(prefix,after.length-suffix)}};}
   preview(id:string,limits?:WorkflowBudget){
     const r=this.run(id);this.assertFresh(r);const spent=this.usage(id),max=r.config.budget;
-    const defaults:WorkflowBudget={models:Math.min(r.stage==='audit'?1:r.stage==='research'?3:3,max.models-spent.models),searches:r.stage==='research'&&r.config.research==='web'?Math.min(3,max.searches-spent.searches):0,fetches:r.stage==='research'&&r.config.research==='web'?Math.min(5,max.fetches-spent.fetches):0,activeMs:Math.max(100,max.activeMs-spent.activeMs)};
+    const hasTools=!!r.capture.extensions?.calls.length;
+    const chapterCalls=r.stage==='compose'&&r.capture.extensions?.chapterDrafting&&r.selectedOutlineId?((this.artifact(r.selectedOutlineId).value as {output:OutlineOutput}).output.sections.length+1+(r.config.autoRevision?1:0)):3;
+    const defaults:WorkflowBudget={models:Math.min(r.stage==='audit'?1:r.stage==='research'?3:chapterCalls,max.models-spent.models),searches:r.stage==='research'&&r.config.research==='web'?Math.min(3,max.searches-spent.searches):0,fetches:r.stage==='research'&&(r.config.research==='web'||hasTools)?Math.min(5,max.fetches-spent.fetches):0,activeMs:Math.max(100,max.activeMs-spent.activeMs)};
     const quota=limits??defaults;validateWorkflowBudget(quota);
     for(const k of ['models','searches','fetches','activeMs'] as const)if(quota[k]>max[k]-spent[k])fault('WORKFLOW_BUDGET','Stage limits exceed the remaining task budget.');
-    if(r.stage!=='research'&&(quota.searches||quota.fetches)||r.config.research==='selected'&&(quota.searches||quota.fetches))fault('WORKFLOW_PERMISSION','This stage has no search/fetch permission.');
+    if(r.stage!=='research'&&(quota.searches||quota.fetches)||r.config.research==='selected'&&(quota.searches||(!hasTools&&quota.fetches)))fault('WORKFLOW_PERMISSION','This stage has no search/fetch permission.');
     const summary={runId:id,template:r.config.template,templateVersion:1,stage:r.stage,fingerprint:r.fingerprint,outlineId:r.selectedOutlineId,outline:r.selectedOutlineId?this.artifact(r.selectedOutlineId).value:null,
-      allowedTasks:stageTasks(r.stage),limits:quota,spent,model:r.config.model,search:r.config.research==='web'?{provider:'tavily',endpoint:'https://api.tavily.com/search',keyEnv:r.config.searchKeyEnv,publicBrief:r.config.publicBrief,domains:r.config.domains,timeRange:r.config.timeRange,depth:'basic',maxResults:5}:null,
+      allowedTasks:stageTasks(r.stage,!!r.capture.extensions?.calls.length),limits:quota,spent,model:r.config.model,search:r.config.research==='web'?{provider:'tavily',endpoint:'https://api.tavily.com/search',keyEnv:r.config.searchKeyEnv,publicBrief:r.config.publicBrief,domains:r.config.domains,timeRange:r.config.timeRange,depth:'basic',maxResults:5}:null,
       selection:r.capture,goal:r.config.goal,autoRevision:r.config.autoRevision,
       notice:'Stage consent permits the displayed bounded sequence, not manuscript approval or memory activation. Only publicBrief goes to query planning. Search snippets are discoveries, not page snapshots. Fees may be unknown.'};
     return {fingerprint:hash(summary),summary,limits:quota};
   }
   authorize(id:string,previewHash:string,limits?:WorkflowBudget):WorkflowGrant{return this.tx(()=>{
     const r=this.run(id);this.free(id);if(['completed','cancelled'].includes(r.state))fault('WORKFLOW_PERMISSION','This run is already closed.');const p=this.preview(id,limits);if(p.fingerprint!==previewHash)fault('STALE_REVISION','Authorization preview changed; inspect it again.');
-    const grant:WorkflowGrant={id:newId('grant'),runId:id,stage:r.stage,fingerprint:r.fingerprint,outlineId:r.selectedOutlineId,limits:p.limits,allowedTasks:stageTasks(r.stage),summary:p.summary,createdAt:now()};this.insert('workflow_grants',grant.id,grant,{run_id:id});r.grantId=grant.id;r.state='ready';r.notice='Stage authorized; explicit run/continue starts execution.';this.write(r);this.event(id,'authorized',{grantId:grant.id,previewHash});return grant;
+    const grant:WorkflowGrant={id:newId('grant'),runId:id,stage:r.stage,fingerprint:r.fingerprint,outlineId:r.selectedOutlineId,limits:p.limits,allowedTasks:stageTasks(r.stage,!!r.capture.extensions?.calls.length),summary:p.summary,createdAt:now()};this.insert('workflow_grants',grant.id,grant,{run_id:id});r.grantId=grant.id;r.state='ready';r.notice='Stage authorized; explicit run/continue starts execution.';this.write(r);this.event(id,'authorized',{grantId:grant.id,previewHash});return grant;
   });}
   private checkGrant(r:WorkflowRun){if(!r.grantId)fault('WORKFLOW_PERMISSION','No active stage approval.');const g=this.grant(r.grantId!);if(g.fingerprint!==r.fingerprint||g.stage!==r.stage||g.outlineId!==r.selectedOutlineId)fault('WORKFLOW_PERMISSION','Stage approval is stale.');return g;}
   acquire(id:string,clock=Date.now()):WorkflowLease{return this.tx(()=>{
@@ -95,12 +97,12 @@ export class WorkflowStore {
     if(!within)fault('WORKFLOW_BUDGET','Active execution time budget reached; author waiting time is not counted.');
   }
   reserve(lease:WorkflowLease,key:string,kind:WorkflowKind,task:string,request:unknown):WorkflowAttempt{return this.tx(()=>{
-    this.lock(lease);const r=this.run(lease.runId);this.assertFresh(r);const g=this.checkGrant(r);if(kind!==(task==='search'?'search':task==='fetch'?'fetch':'model'))fault('WORKFLOW_PERMISSION','Wrong budget category for task.');if(!g.allowedTasks.includes(task))fault('WORKFLOW_PERMISSION','Task is outside the approved template stage.');
+    this.lock(lease);const r=this.run(lease.runId);this.assertFresh(r);const g=this.checkGrant(r);if(kind!==(task==='search'?'search':task==='fetch'?'fetch':['mcp-tool','mcp-resource'].includes(task)?'tool':'model'))fault('WORKFLOW_PERMISSION','Wrong budget category for task.');if(!g.allowedTasks.includes(task))fault('WORKFLOW_PERMISSION','Task is outside the approved template stage.');
     if(['draft-revision','revise-proposal'].includes(task)&&!r.config.autoRevision)fault('WORKFLOW_PERMISSION','The author did not permit an automatic revision.');
     if(['draft-revision','revise-proposal'].includes(task)&&this.attempts(r.id).some(a=>a.task===task&&a.status==='completed'))fault('WORKFLOW_BUDGET','The one automatic revision for this task is already consumed. Start an explicit new task for another round.');
     if(this.find(r.id,key))fault('WORKFLOW_INVALID','Step already has a saved result; reuse it.');
     if(this.attempts(r.id).some(a=>a.key===key&&a.status!=='retry-approved'))fault('WORKFLOW_UNKNOWN','A previous attempt requires an explicit retry decision.');
-    const unit={models:kind==='model'?1:0,searches:kind==='search'?1:0,fetches:kind==='fetch'?1:0,activeMs:0};
+    const unit={models:kind==='model'?1:0,searches:kind==='search'?1:0,fetches:kind==='fetch'||kind==='tool'?1:0,activeMs:0};
     const taskUse=sum(this.usage(r.id),unit),stageUse=sum(this.usage(r.id,g.id),unit);for(const k of ['models','searches','fetches','activeMs'] as const)if(taskUse[k]>r.config.budget[k]||stageUse[k]>g.limits[k])fault('WORKFLOW_BUDGET','Task/stage budget exhausted. Raise limits explicitly and reauthorize.');
     if(Buffer.byteLength(JSON.stringify(request))>6_000_000)fault('WORKFLOW_INVALID','Step input exceeds its byte bound.');
     const a:WorkflowAttempt={id:newId('attempt'),runId:r.id,grantId:g.id,key,kind,task,inputHash:hash(request),status:'reserved',request:structuredClone(request),artifactId:null,errorCode:null,usage:null,startedAt:Date.now(),finishedAt:null,generation:lease.generation};
@@ -113,7 +115,16 @@ export class WorkflowStore {
     if(a.status==='completed')return this.artifact(a.artifactId!);
     for(const p of parentIds)if(this.artifact(p).runId!==r.id)fault('WORKFLOW_INVALID','Cross-run artifact reference.');
     const result=effect?effect(value):value;if(Buffer.byteLength(JSON.stringify(result))>6_000_000)fault('WORKFLOW_INVALID','Artifact too large.');
-    const art:WorkflowArtifact={id:newId('artifact'),runId:r.id,key:a.key,type,inputHash:a.inputHash,parentIds,value:result,createdAt:now(),origin:a.kind==='model'?'model':'host',epoch:r.epoch};this.insert('workflow_artifacts',art.id,art,{run_id:r.id,step_key:a.key});a.artifactId=art.id;a.status='completed';a.finishedAt=Date.now();a.usage=usage;this.attemptWrite(a);this.event(r.id,'step-completed',{attemptId:id,artifactId:art.id,type});return art;
+    const art:WorkflowArtifact={id:newId('artifact'),runId:r.id,key:a.key,type,inputHash:a.inputHash,parentIds,value:result,createdAt:now(),origin:a.kind==='model'?'model':'host',epoch:r.epoch};this.insert('workflow_artifacts',art.id,art,{run_id:r.id,step_key:a.key});if(r.capture.extensions)this.host.extensions.candidateCitations(art);a.artifactId=art.id;a.status='completed';a.finishedAt=Date.now();a.usage=usage;this.attemptWrite(a);this.event(r.id,'step-completed',{attemptId:id,artifactId:art.id,type});return art;
+  });}
+  deriveDraft(lease:WorkflowLease,key:string,request:WorkflowContentRequest,output:DraftOutput,parents:string[]):WorkflowArtifact{return this.tx(()=>{
+    this.lock(lease);const r=this.run(lease.runId);this.assertFresh(r);this.checkGrant(r);
+    if(r.stage!=='compose'||!r.capture.extensions?.chapterDrafting||request.task!=='draft'||request.runId!==r.id||!parents.includes(r.selectedOutlineId!))fault('WORKFLOW_PERMISSION','Only authorized chapter assembly is a local derived draft.');
+    const old=this.find(r.id,key);if(old)return old;
+    for(const p of parents){const art=this.artifact(p);if(art.runId!==r.id||art.epoch!==r.epoch)fault('STALE_REVISION','Assembly parents must be from this current run epoch.');}
+    validateWorkflowOutput(output,request);this.host.sources.verifyContext(request.sources);
+    const art:WorkflowArtifact={id:newId('artifact'),runId:r.id,key,type:'draft',inputHash:hash(request),parentIds:parents,value:{request:structuredClone(request),output:structuredClone(output),assembly:'host-joined-chapters-not-additional-model-review'},createdAt:now(),origin:'host',epoch:r.epoch};
+    this.insert('workflow_artifacts',art.id,art,{run_id:r.id,step_key:key});this.host.extensions.candidateCitations(art);this.event(r.id,'chapters-assembled',{artifactId:art.id,parentIds:parents});return art;
   });}
   fail(lease:WorkflowLease,id:string,code:string,unknown:boolean):void{this.tx(()=>{this.lock(lease);const a=this.read<WorkflowAttempt>('workflow_attempts',id);if(a.runId!==lease.runId||a.generation!==lease.generation||!['reserved','dispatched'].includes(a.status))return;
     a.status=unknown&&a.status==='dispatched'?'outcome-unknown':'failed';a.errorCode=/^[A-Z0-9_]{1,80}$/.test(code)?code:'STEP_FAILED';a.finishedAt=Date.now();this.attemptWrite(a);this.event(a.runId,'step-stopped',{attemptId:id,status:a.status,code:a.errorCode});});}
@@ -131,7 +142,7 @@ export class WorkflowStore {
     const art:WorkflowArtifact={id:newId('artifact'),runId:id,key:`author-outline:${newId('edit')}`,type:'outline',inputHash:hash(packet.request),parentIds:[artifactId],value:{request:packet.request,output:structuredClone(value)},createdAt:now(),origin:'author',epoch:r.epoch};this.insert('workflow_artifacts',art.id,art,{run_id:id,step_key:art.key});r.outlineId=art.id;r.selectedOutlineId=null;r.candidateIds=[];r.reportIds=[];r.stage='research';r.state='waiting-approval';r.grantId=null;this.write(r);this.event(id,'outline-amended',{artifactId:art.id});return art;});}
   adopt(id:string,artifactId:string):string{return this.tx(()=>{const r=this.run(id);this.free(id);if(r.adoptedDocumentId){const old=this.events(id).find(e=>(e as {action:string}).action==='adopted') as {detail:{artifactId:string}}|undefined;if(old?.detail.artifactId===artifactId)return r.adoptedDocumentId;fault('WORKFLOW_INVALID','This task already adopted another candidate.');}
     this.assertFresh(r);if(r.config.template!=='new-article'||r.state!=='waiting-approval'||!r.candidateIds.includes(artifactId))fault('WORKFLOW_PERMISSION','Choose a final current candidate at the author adoption gate.');const art=this.artifact(artifactId);if(art.runId!==id||art.epoch!==r.epoch||!art.parentIds.includes(r.selectedOutlineId!))fault('STALE_REVISION','Candidate belongs to an older outline.');
-    const value=art.value as {output:DraftOutput;request:WorkflowContentRequest};validateWorkflowOutput(value.output,value.request);this.host.sources.verifyContext(value.request.sources);const doc=this.host.createDocument(value.output.title,renderWorkflowDraft(value.output,value.request.sources));if(r.config.profileId)this.host.memory.attach(doc.id,r.config.profileId);if(r.config.intent)this.host.memory.saveIntent(doc.id,r.config.intent);
+    const value=art.value as {output:DraftOutput;request:WorkflowContentRequest};validateWorkflowOutput(value.output,value.request);this.host.sources.verifyContext(value.request.sources);const doc=this.host.createDocument(value.output.title,r.capture.extensions?renderCitedDraft(value.output,value.request.sources).markdown:renderWorkflowDraft(value.output,value.request.sources));if(r.capture.extensions)this.host.extensions.adoptCitations(art,doc.id);if(r.config.profileId)this.host.memory.attach(doc.id,r.config.profileId);if(r.config.intent)this.host.memory.saveIntent(doc.id,r.config.intent);
     r.adoptedDocumentId=doc.id;r.state='completed';r.grantId=null;r.notice='Author adopted this candidate; not published externally.';this.write(r);this.event(id,'adopted',{artifactId,documentId:doc.id});return doc.id;
   });}
   finish(id:string):void{this.tx(()=>{const r=this.run(id);this.free(id);if(r.state!=='waiting-approval'||r.config.template==='new-article')fault('WORKFLOW_INVALID','Use candidate adoption for new articles.');r.state='completed';r.grantId=null;r.notice='Task closed. Pending changes still need independent author decisions.';this.write(r);this.event(id,'closed-without-text-approval',{});});}

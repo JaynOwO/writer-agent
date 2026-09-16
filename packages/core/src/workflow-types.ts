@@ -3,7 +3,7 @@ import type { SourceContextItem, SourceSelection, Snapshot, MemoryOptions, Memor
 export type WorkflowTemplate = 'new-article' | 'revise-article' | 'review-changes';
 export type WorkflowStage = 'research' | 'compose' | 'edit' | 'audit';
 export type WorkflowState = 'ready' | 'running' | 'waiting-approval' | 'paused' | 'blocked' | 'failed' | 'completed' | 'cancelled';
-export type WorkflowKind = 'model' | 'search' | 'fetch';
+export type WorkflowKind = 'model' | 'search' | 'fetch' | 'tool';
 export interface WorkflowBudget { models:number; searches:number; fetches:number; activeMs:number }
 export interface WorkflowModel {
   provider:'ollama'|'openai-compatible'; model:string; baseURL:string; apiKeyEnv:string|null;
@@ -16,6 +16,8 @@ export interface WorkflowConfig {
   selection:SourceSelection; profileId:string|null; intent:IntentCard|null; memoryOptions:MemoryOptions;
   model:WorkflowModel; searchKeyEnv:string; domains:string[]; timeRange:'day'|'week'|'month'|'year'|null;
   autoRevision:boolean; budget:WorkflowBudget;
+  /** Presence opts into extension/research v1; absent keeps historical v0.0.6 behavior. */
+  extensions?: import('./extensions.js').WorkflowExtensions;
 }
 export interface WorkflowCapture {
   documentId:string|null; revisionId:string|null; snapshot:Snapshot|null;
@@ -23,6 +25,7 @@ export interface WorkflowCapture {
   writing:MemoryPacket|null; review:MemoryPacket|null;
   writingCapture:MemoryCapture|null; reviewCapture:MemoryCapture|null;
   guidanceStamp:string; analysisStamp:string|null;
+  extensions?: import('./extensions.js').CapturedExtensions;
 }
 export interface WorkflowRun {
   id:string; config:WorkflowConfig; capture:WorkflowCapture; fingerprint:string; epoch:number;
@@ -51,6 +54,8 @@ export interface SearchRequest { query:string;language:'zh-CN'|'en';domains:stri
 export interface WorkflowQueryRequest { protocolVersion:1;task:'query-plan';runId:string;requestId:string;publicBrief:string;language:'zh-CN'|'en';maxQueries:number }
 export type ContentTask = 'outline'|'draft'|'draft-review'|'draft-revision';
 export interface WorkflowContentRequest {
+  skills?: import('./extensions.js').LoadedSkill[];
+  section?: {index:number;total:number;heading:string;approvedOutlineHash:string};
   protocolVersion:1;task:ContentTask;runId:string;requestId:string;goal:string;language:'zh-CN'|'en';
   guidance:MemoryPacket|null;sources:SourceContextItem[];gaps:string[];feedback:string;
   outline:OutlineOutput|null;draft:DraftOutput|null;review:DraftReviewOutput|null;

@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+import { validateWorkflowExtensions, validateLoadedSkills } from './extensions.js';
+import { mapCitations } from './research.js';
 import { WriterError, isRecord } from './errors.js';
 import { validateText } from './document.js';
 import { hashBytes, validateSourceContext } from './sources.js';
@@ -23,7 +25,8 @@ export function validateWorkflowModel(v:unknown):asserts v is WorkflowModel {
   wfInteger(v.timeoutMs,10,600000);wfInteger(v.maxOutputTokens,128,32768);
 }
 export function validateWorkflowConfig(v:unknown):asserts v is WorkflowConfig {
-  exactObject(v,['template','title','goal','publicBrief','language','research','documentId','changeIds','selection','profileId','intent','memoryOptions','model','searchKeyEnv','domains','timeRange','autoRevision','budget']);
+  exactObject(v,['template','title','goal','publicBrief','language','research','documentId','changeIds','selection','profileId','intent','memoryOptions','model','searchKeyEnv','domains','timeRange','autoRevision','budget',...(isRecord(v)&&Object.hasOwn(v,'extensions')?['extensions']:[])]);
+  if (Object.hasOwn(v,'extensions')) { validateWorkflowExtensions(v.extensions); if (v.template !== 'new-article' && (v.extensions.calls.length || v.extensions.chapterDrafting)) wfError('MCP research and chapter drafting are only available in the new-article template.'); }
   if(!['new-article','revise-article','review-changes'].includes(v.template as string)||!['zh-CN','en'].includes(v.language as string)||!['web','selected'].includes(v.research as string)||typeof v.autoRevision!=='boolean')wfError('Unknown workflow template/language/mode.');
   text(v.title,200);text(v.goal,10000);text(v.publicBrief,4000,true);stringIds(v.changeIds,100);
   if(v.template==='new-article'){if(v.documentId!==null||v.changeIds.length)wfError('A new candidate is not an existing document.');}
@@ -40,7 +43,7 @@ export function validateWorkflowConfig(v:unknown):asserts v is WorkflowConfig {
   if(Buffer.byteLength(JSON.stringify(v))>160000)wfError('Workflow config too large.');
 }
 export function workflowStage(template:WorkflowTemplate):WorkflowStage{return template==='new-article'?'research':template==='revise-article'?'edit':'audit';}
-export function stageTasks(stage:WorkflowStage):string[]{return ({research:['query-plan','search','fetch','outline'],compose:['draft','draft-review','draft-revision'],edit:['propose','semantic-review','revise-proposal'],audit:['semantic-review']} as const)[stage].slice();}
+export function stageTasks(stage:WorkflowStage, withTools=false):string[]{const tasks:string[]=({research:['query-plan','search','fetch','outline'],compose:['draft','draft-review','draft-revision'],edit:['propose','semantic-review','revise-proposal'],audit:['semantic-review']} as const)[stage].slice(); return stage==='research'&&withTools?[...tasks,'mcp-tool','mcp-resource']:tasks;}
 export function publicResultUrl(value:string,domains:readonly string[]):string {
   const u=normalizeSourceUrl(value);
   if(domains.length&&!domains.some(d=>u.hostname===d||u.hostname.endsWith('.'+d)))throw new WriterError('SOURCE_BLOCKED','Result outside approved domain scope.');
@@ -52,7 +55,9 @@ export function validateWorkflowRequest(v:unknown):asserts v is WorkflowRequest 
   if(v.task==='query-plan'){
     exactObject(v,['protocolVersion','task','runId','requestId','publicBrief','language','maxQueries']);text(v.publicBrief,4000);wfInteger(v.maxQueries,1,3);
   }else{
-    exactObject(v,['protocolVersion','task','runId','requestId','goal','language','guidance','sources','gaps','feedback','outline','draft','review']);
+    exactObject(v,['protocolVersion','task','runId','requestId','goal','language','guidance','sources','gaps','feedback','outline','draft','review',...(Object.hasOwn(v,'skills')?['skills']:[]),...(Object.hasOwn(v,'section')?['section']:[])]);
+    if(Object.hasOwn(v,'skills')) validateLoadedSkills(v.skills);
+    if(Object.hasOwn(v,'section')) { exactObject(v.section,['index','total','heading','approvedOutlineHash']); wfInteger(v.section.index,0,19); wfInteger(v.section.total,1,20); if(Number(v.section.index)>=Number(v.section.total)||v.task!=='draft')wfError('Invalid chapter target.');text(v.section.heading,300); if(typeof v.section.approvedOutlineHash!=='string'||!/^[a-f0-9]{64}$/.test(v.section.approvedOutlineHash))wfError('Missing approved outline identity.'); }
     if(!['outline','draft','draft-review','draft-revision'].includes(v.task as string))wfError('Unknown workflow task.');text(v.goal,10000);text(v.feedback,4000,true);
     if(v.guidance!==null)validateMemoryPacket(v.guidance);validateSourceContext(v.sources);stringList(v.gaps,60,2000);
     if(v.task!=='outline'&&v.outline===null)wfError('Writing needs an approved outline.');
@@ -82,7 +87,7 @@ function checkWorkflowOutput(v:unknown,request:WorkflowRequest):asserts v is Wor
     if(!Array.isArray(v.sections)||!v.sections.length||v.sections.length>20)wfError('Outline needs 1–20 sections.');
     for(const s of v.sections){exactObject(s,['heading','points','sourceQuotes']);text(s.heading,300);stringList(s.points,20,1000);validateSourceQuotes(s.sourceQuotes,request.sources);}
   }else if(request.task==='draft'||request.task==='draft-revision'){
-    exactObject(v,[...common,'title','markdown','citations','limitations']);text(v.title,200);text(v.markdown,200000);stringList(v.limitations,20,2000);validateSourceQuotes(v.citations,request.sources);
+    exactObject(v,[...common,'title','markdown','citations','limitations']);text(v.title,200);text(v.markdown,200000);stringList(v.limitations,20,2000);if(Object.hasOwn(request,'skills')){if(!Array.isArray(v.citations)||v.citations.length>100)wfError('At most 100 exact candidate citations.');for(const q of v.citations)validateSourceQuotes([q],request.sources);mapCitations(v as unknown as DraftOutput,request.sources);}else validateSourceQuotes(v.citations,request.sources);
     // Only host-provided footnotes are source links. Reject model-invented URL destinations.
     if(/(?:https?:\/\/|\]\(\s*(?:file:|javascript:|data:))/i.test(v.markdown as string)||/^\[\^S\d+\]:/m.test(v.markdown as string))wfError('Use host-resolved [^S1] source markers, not model-authored URLs/footnote definitions.');
     const markers=[...(v.markdown as string).matchAll(/\[\^S(\d+)\]/g)].map(m=>Number(m[1])-1);
