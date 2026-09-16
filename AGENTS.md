@@ -4,7 +4,7 @@
 
 The owner sets product scope; ChatGPT authors source, tests and delivery bundles. The owner uses the separately installed Writer Agent Updater v0.1.2 as the local integrator. Do not require Codex/Spark or a long manual Git workflow. Retain repository JaynOwO/writer-agent, package IDs @writer-agent/*, .writer data path and writer-agent-v*-delivery.zip filenames; product-facing name is Siglum. `pnpm siglum` aliases `pnpm writer`.
 
-v0.0.5 authorizes the owner choices 1C/2C/3C/4D/5C/6C/7C/8B: confirmed intent cards, scoped profiles, explicit rule creation, candidate preference confirmation, optional rejection reasons, deterministic bounded selection/request exceptions, usage snapshots/freshness, mechanical guidance checks, numbered bilingual terminal guide and additive backed-up schema4. Read docs/v0.0.5-spec.md, docs/memory-protocol.md, paired memory guides and security-model.md. Preserve Proposal v1, legacy source/analysis behavior and independent-block text safety. No GUI, passive learning, autonomous web search, sentence-level edits, vectors, Skills/MCP, new dependencies or license change.
+v0.0.6 authorizes owner choices 1B/2C/3B/4B/5C/6B: fixed three-template foreground workflow runtime, phase-scoped explicit consent, real Tavily basic Search adapter, bounded public page intake, query/outline/candidate draft/review tasks, at most one successful automatic revision, durable attempts/checkpoints/lease fencing/recovery, numbered bilingual guide and backed-up additive schema5. Read docs/v0.0.6-spec.md, docs/workflow-protocol.md and paired workflow guides. Existing Proposal v1, analysis, memory and isolated block operations remain intact. No GUI, daemon, arbitrary workflow scripts, Skills/MCP, new dependencies or license change.
 
 ## Git and delivery boundaries
 
@@ -24,6 +24,7 @@ pnpm demo:provider
 pnpm demo:sources
 pnpm demo:review
 pnpm demo:memory
+pnpm demo:workflow
 ```
 
 The updater already calls check and the two existing demos; the source workflow is exercised within the test suite. CI additionally runs demo:sources, demo:review and demo:memory. Tests use synthetic sources and loopback HTTP, no public websites/paid model keys. Record the actual OS/Node/dependency environment and failed/unrun checks. A successful fixture test is not a semantic accuracy guarantee or proof of live-site/provider interoperability.
@@ -41,7 +42,7 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 7. Every proposal still requires exact original text, block ID and monotonic block version. Stale document heads and stale same-block operations are refused.
 8. Save pending proposals/context atomically; no transaction over a network wait. Only explicit human accept/reject/revert changes manuscript approval state.
 9. Old source links become stale on their block's change, including ABA. Never silently approve/rebase a citation.
-10. Code updates never migrate user data. v1/v2/v3-to-v4 workspace migration is explicit, backed up and transactional; close other sessions first. Backups are private and unencrypted.
+10. Code updates never migrate user data. v1/v2/v3/v4-to-v5 workspace migration is explicit, backed up and transactional; close other sessions first. Backups are private and unencrypted.
 
 ## Analysis additions
 
@@ -50,7 +51,7 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - Reconstruct host inputs before save; stale document/annotation/selected-change state saves no current report. No transaction over network waits.
 - Keep exact observations, model assessments and human decisions separate. Correct quotes are not correct reasoning. Empty findings are not safe-to-accept.
 - Retain inputs, selected source text, model metadata, versioned protocol/prompt and returned usage locally; no secret fields or hidden reasoning. Unknown usage/cost is unknown.
-- Preserve all regression tests. Update schema-version assertions only when adding the tested v4 migration. Draft evaluation labels cannot become human-reviewed by automatic script.
+- Preserve all regression tests. Update schema-version assertions only when adding the tested v5 migration. Draft evaluation labels cannot become human-reviewed by automatic script.
 - Update README.md, README.zh-CN.md, paired review guides and commands together. Keep updater format 1 and original delivery filename prefix.
 
 ## Intent/memory invariants
@@ -61,3 +62,11 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - Store applicable-version captures with pending proposals atomically. Reject stale guidance after inference; unrelated profiles must not invalidate everything. Old reports do not acquire fabricated memory fields.
 - Numbered guide uses shared services, no implicit default Yes on EOF/cancel. Close SQLite connections before temp cleanup. Never treat Linux success as Windows success.
 - Update paired README/memory guides and fact markers together. Explicitly select the delivery ZIP when invoking updater; never ask the user to clean/reset unknown work or hand-edit manifests.
+
+## Workflow-specific authority
+
+- Independent commands keep --send/--fetch semantics. Only explicit workflow grants authorize a bounded multi-call stage; author input/outline adoption remains separate. A model cannot change grants, limits or approval states.
+- Plan queries from the public brief only; never include manuscripts/profile examples or search/model key values in query planning. Source snippets are not fetched snapshots. Preserve static URL/DNS/IP pinning and selection coverage.
+- Store attempts before dispatch and reserve quotas durably. Never silently retry outcome-unknown calls, reset spent counters, steal live leases, or claim end-to-end exactly-once. Changing budgets revokes grants; input refresh preserves historical artifacts.
+- Keep run-private candidate drafts outside official documents until explicit adoption. Existing-article alternatives stay against the official baseline. Use short nested savepoint-safe transactions for local side effects/checkpoints; no network awaits inside.
+- All new tests/demo use synthetic loopback services. Close every SQLite connection before cleaning Windows test directories. Use an explicit delivery ZIP argument; do not require Codex, reset/clean, hand-edited manifests, or updater upgrades.

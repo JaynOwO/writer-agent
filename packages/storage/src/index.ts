@@ -10,6 +10,8 @@ import type {
   WorkspaceInfo, DocumentRecord, Revision, Change, Decision, Snapshot, ProposedEdit, ReviewHint, MemoryCapture, RejectionCategory,
 } from '@writer-agent/core';
 import { APPLICATION_ID, SCHEMA_SQL, SCHEMA_VERSION } from './schema.js';
+import { WorkflowStore } from './workflow.js';
+export { WorkflowStore } from './workflow.js';
 import { WritingMemory } from './memory.js';
 export { WritingMemory } from './memory.js';
 export type { MemoryTaskRun } from './memory.js';
@@ -86,11 +88,14 @@ export class Workspace {
   readonly root: string;
   private readonly db: DatabaseSync;
   private closed = false;
+  private transactionDepth = 0;
+  readonly workflows: WorkflowStore;
   readonly sources: SourceLibrary;
   readonly analysis: AnalysisLedger;
   readonly memory: WritingMemory;
   private constructor(root: string, db: DatabaseSync) {
     this.root = root; this.db = db;
+    this.workflows = new WorkflowStore(db, () => { this.assertOpen(); if (this.schemaVersion() < 5) throw new WriterError('MIGRATION_REQUIRED', 'Workflow tasks need schema v5. Preview and explicitly apply migration first.'); }, fn => this.transaction(fn), this);
     this.sources = new SourceLibrary(db, () => {
       this.assertOpen();
       if (this.schemaVersion() < 2) throw new WriterError('MIGRATION_REQUIRED', 'Sources need schema v2. Run writer migrate <workspace> to preview, then --apply after closing other sessions.');
@@ -106,7 +111,7 @@ export class Workspace {
   }
   private schemaVersion(): number {
     const v = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (v !== 1 && v !== 2 && v !== 3 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
+    if (v !== 1 && v !== 2 && v !== 3 && v !== 4 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
     return v;
   }
 
@@ -152,7 +157,7 @@ export class Workspace {
     try {
       const version = db.prepare('PRAGMA user_version').get();
       const app = db.prepare('PRAGMA application_id').get();
-      if (!version || ![1,2,3,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
+      if (!version || ![1,2,3,4,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
         throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace format/version. No migration or overwrite was attempted.');
       }
       db.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL;');
@@ -169,9 +174,12 @@ export class Workspace {
   }
   private transaction<T>(fn: () => T): T {
     this.assertOpen();
-    this.db.exec('BEGIN IMMEDIATE');
-    try { const value = fn(); this.db.exec('COMMIT'); return value; }
-    catch (error) { this.db.exec('ROLLBACK'); throw error; }
+    const nested = this.transactionDepth > 0, point = `siglum_${this.transactionDepth}`;
+    this.db.exec(nested ? `SAVEPOINT ${point}` : 'BEGIN IMMEDIATE');
+    this.transactionDepth++;
+    try { const value = fn(); this.db.exec(nested ? `RELEASE ${point}` : 'COMMIT'); return value; }
+    catch (error) { this.db.exec(nested ? `ROLLBACK TO ${point}; RELEASE ${point}` : 'ROLLBACK'); throw error; }
+    finally { this.transactionDepth--; }
   }
   info(): WorkspaceInfo {
     this.assertOpen();

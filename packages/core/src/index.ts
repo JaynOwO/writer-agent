@@ -10,3 +10,7 @@ export * from './analysis-types.js';
 export * from './analysis.js';
 export * from './memory-types.js';
 export * from './memory.js';
+
+export * from './workflow-types.js';
+export * from './workflow.js';
+export * from './source-policy.js';

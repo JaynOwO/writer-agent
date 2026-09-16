@@ -37,3 +37,4 @@ jobs:
       - run: pnpm demo:sources
       - run: pnpm demo:review
       - run: pnpm demo:memory
+      - run: pnpm demo:workflow

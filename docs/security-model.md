@@ -2,7 +2,7 @@
 
 ## Trust boundaries
 
-Models and their output are untrusted data. The core, storage and locally installed application/provider code are trusted executable code; this is not a sandbox against malicious plugins or a hostile local account. Prompt instructions ask the model to preserve meaning but do not guarantee it. The program's safety property is that a provider can only submit pending proposals, not accept/reject/revert or execute tools.
+Models and their output are untrusted data. The core, storage and locally installed application/provider code are trusted executable code; this is not a sandbox against malicious plugins or a hostile local account. Prompt instructions ask the model to preserve meaning but do not guarantee it. Providers return untrusted proposals, assessments or workflow candidates. They cannot approve text, alter grants, accept/reject/revert or execute arbitrary tools.
 
 The current application validates at the HTTP/protocol boundary, the application boundary and the transactional storage boundary. A document modified while the model is generating rejects that old response entirely. No network wait happens inside a SQLite transaction. Interrupts, malformed responses and failures do not create partial proposals. Cancelling the client does NOT guarantee the upstream server stops inference or billing.
 
@@ -26,7 +26,7 @@ Requests/responses are limited to 8 MiB (including encoded JSON), and streamed b
 
 ## Storage and rendering
 
-New workspaces use schema v2. Old schema-v1 workspaces remain usable for original manuscript operations; source features require the explicit backed-up migration below. Private workspaces remain separate from the code repository; routine backups remain the user's responsibility. Data is not encrypted. CLI results use JSON escaping so model text is not directly rendered as terminal control sequences. Model-response notes are unverified and transient; user-authored research notes are stored locally; accepted/rejected decisions remain explicit. Do not use the prototype as the sole storage of important manuscripts.
+New workspaces use schema v5. Legacy v1–v4 retain their original feature levels; newer features require the explicit backed-up migration below. Private workspaces remain separate from the code repository; routine backups remain the user's responsibility. Data is not encrypted. CLI results use JSON escaping so model text is not directly rendered as terminal control sequences. Model-response notes are unverified and transient; user-authored research notes are stored locally; accepted/rejected decisions remain explicit. Do not use the prototype as the sole storage of important manuscripts.
 
 Report reproducible bugs without keys or personal text. Supply minimized synthetic examples, command option names, version and error code, not raw provider responses containing secrets.
 
@@ -38,7 +38,7 @@ Raw bytes and extracted text are preserved separately. Snapshots, notes and snip
 
 Only explicit snapshots/excerpts enter model context; raw HTML, notes and local absolute file paths do not. No source is promoted to trusted instructions, and all model output passes the original approval boundary. Context metadata is host-derived and revalidated at atomic proposal insertion. "supplied-not-verified" must not become a source-support verdict. Source bindings are author-created and become stale after same-block edits.
 
-New databases use schema v2. Old databases require explicit backed-up migration for source tables; original editing remains compatible. A cooperative migration lock and data-version recheck detect common concurrent writes. Close older clients before migration. Backups remain on failure; do not overwrite a live database for recovery or automatically remove an unexplained migration lock. No code-updater step migrates user data.
+Source tables were introduced in schema v2; current new databases use v5. Old databases require explicit backed-up migration for newer tables; original editing remains compatible. A cooperative migration lock and data-version recheck detect common concurrent writes. Close older clients before migration. Backups remain on failure; do not overwrite a live database for recovery or automatically remove an unexplained migration lock. No code-updater step migrates user data.
 
 ## v0.0.4 analysis controls
 
@@ -59,3 +59,11 @@ Only selected profiles/languages/tasks and independently authorized examples ent
 Profile import is preview/candidate-only and never auto-attaches. Export defaults to no examples/history IDs and cannot overwrite files; arbitrary rule text is not secret-redacted. The guide strips terminal controls from displayed text and refuses nonTTY mode rather than treating piped input as consent. This is not an OS sandbox or a complete terminal-security audit.
 
 Disable stops new selection only: old snapshots, SQLite backups and service copies can retain text. User data is unencrypted. There is no secure deletion, automatic cross-workspace synchronization or new credential manager. Code update never migrates private workspaces; explicit schema4 migration retains a verified backup and preserves original records.
+
+## v0.0.6 workflow grants and search
+
+Standalone sends/fetches remain individually authorized. A WorkflowGrant is a separate opt-in host record that permits a bounded set of stages/tasks under fixed inputs, endpoint/model, search public brief and resource quotas. No model-controlled next-action, approval, budget increase, path execution or memory activation is trusted. Stage execution is foreground-only.
+
+The query planner receives only the separately approved public brief/language, not private drafts, profile examples, research notes or author follow-up from the outline discussion. Tavily receives bounded queries and approved filters; its key is sent only to the fixed API endpoint. Model credentials never follow search URLs. Discovery strings are untrusted, scores are not credibility, and snippets cannot become fetched evidence. Dynamic result URLs retain existing public-IP validation and DNS pinning, no redirects or scripts.
+
+Checkpointed attempts precede dispatch; expired/revoked workers are generation-fenced. Unknown external outcomes cannot silently replay. Local effects and artifacts share short transactions, no network waits. Author adoption is idempotent; no run/template can approve its own manuscript or permanent rules. Budgets constrain attempts/output/time, not an absolute monetary bill. Cancellation does not guarantee server cancellation/refund. Preserve private historical material and inspect exports before sharing; this is not a security sandbox against the local account owner.
