@@ -9,11 +9,19 @@ import { suggestCommand } from './suggest.js';
 import { sourceCommand } from './source-command.js';
 import { sourcesDemo } from './sources-demo.js';
 import { claimCommand, reviewCommand } from './analysis-command.js';
+import { memoryCommand } from './memory-command.js';
+import { memoryDemo } from './memory-demo.js';
+import { wizardCommand } from './wizard.js';
 import { reviewDemo } from './review-demo.js';
 
-const help = `Siglum v0.0.4 (CLI development preview; no API key needed for demos/tests)
+const help = `Siglum v0.0.5 (CLI development preview; no API key needed for demos/tests)
 
   writer help
+  writer guide <workspace> [--lang zh-CN|en]
+  writer demo:memory
+  writer memory help
+  writer intent help
+  writer profile help
   writer claim help
   writer review help
   writer demo:review
@@ -45,7 +53,7 @@ const help = `Siglum v0.0.4 (CLI development preview; no API key needed for demo
   writer export <workspace> <documentId> <new-output.md>
 
 Run from source with: pnpm writer <command> ... (run pnpm build first).
-See docs/cli.md and docs/providers.md. Only suggest/claim extract/review run --send make model requests. source add/refresh --fetch explicitly retrieves a public page. No command pushes Git.
+See docs/cli.md and docs/providers.md. Only explicitly sent suggest/claim extract/review run/intent draft/memory distill and confirmed guide actions make model requests. source add/refresh --fetch explicitly retrieves a public page. No command pushes Git.
 Product brand: Siglum. pnpm siglum is an alias for pnpm writer; repository and package IDs stay writer-agent.
 `;
 function print(value: unknown): void { console.log(JSON.stringify(value, null, 2)); }
@@ -62,6 +70,9 @@ function requireArgs(args: string[], min: number, max = min): void {
 async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
+  if (command === 'demo:memory') { requireArgs(rest,0); await memoryDemo(); return; }
+  if (command === 'guide') { await wizardCommand(rest); return; }
+  if (command === 'memory' || command === 'intent' || command === 'profile') { await memoryCommand(command,rest); return; }
   if (command === 'claim') { await claimCommand(rest); return; }
   if (command === 'review') { await reviewCommand(rest); return; }
   if (command === 'demo:review') { requireArgs(rest,0); await reviewDemo(); return; }

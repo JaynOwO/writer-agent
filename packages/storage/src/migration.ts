@@ -5,6 +5,7 @@ import { join, resolve } from 'node:path';
 import { WriterError, requireString } from '@writer-agent/core';
 import { APPLICATION_ID, SCHEMA_VERSION } from './schema.js';
 import { SOURCES_SQL } from './source-schema.js';
+import { MEMORY_SQL } from './memory-schema.js';
 import { ANALYSIS_SQL } from './analysis-schema.js';
 function ordinary(path:string,directory:boolean) {
   if(!existsSync(path))throw new WriterError('NOT_FOUND','Workspace path does not exist.');
@@ -13,7 +14,7 @@ function ordinary(path:string,directory:boolean) {
 function versionOf(db:DatabaseSync):number {
   if(db.prepare('PRAGMA application_id').get()?.application_id!==APPLICATION_ID)throw new WriterError('UNSUPPORTED_SCHEMA','Not a Writer Agent / Siglum workspace.');
   const version=db.prepare('PRAGMA user_version').get()?.user_version;
-  if(version!==1&&version!==2&&version!==SCHEMA_VERSION)throw new WriterError('UNSUPPORTED_SCHEMA','Unknown schema; no migration attempted.');return version;
+  if(version!==1&&version!==2&&version!==3&&version!==SCHEMA_VERSION)throw new WriterError('UNSUPPORTED_SCHEMA','Unknown schema; no migration attempted.');return version;
 }
 /** Explicit additive migration. Preview writes no application data. Never triggered by source-code updates. */
 export function migrateWorkspace(directory:string,apply=false) {
@@ -50,7 +51,8 @@ export function migrateWorkspace(directory:string,apply=false) {
     db.exec('PRAGMA foreign_keys=ON; PRAGMA synchronous=FULL; BEGIN IMMEDIATE');inTransaction=true;
     if(versionOf(db)!==version||db.prepare('PRAGMA data_version').get()?.data_version!==before)throw new WriterError('WORKSPACE_BUSY','Workspace changed during backup. Close other sessions and retry; backup retained.');
     if(version===1)db.exec(SOURCES_SQL);
-    db.exec(ANALYSIS_SQL);
+    if(version<3)db.exec(ANALYSIS_SQL);
+    db.exec(MEMORY_SQL);
     if(db.prepare('PRAGMA foreign_key_check').all().length)throw new WriterError('CORRUPT_DATA','Workspace foreign-key check failed.');
     db.exec(`PRAGMA user_version=${SCHEMA_VERSION}; COMMIT`);inTransaction=false;
     return {applied:true,from:version,to:SCHEMA_VERSION,needed:false,backup:backupPath};

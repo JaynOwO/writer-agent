@@ -6,3 +6,5 @@ export * from './mock.js';
 export * from './providers.js';
 
 export * from './analysis-protocol.js';
+
+export * from './memory-protocol.js';

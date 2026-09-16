@@ -64,7 +64,7 @@ export function parseAnalysisArgs(args: string[], task: AnalysisRequest['task'])
     let documentScope = false;
     const specials = new Map<string, string>();
     const pass: string[] = [];
-    const paired = new Set(['--provider', '--model', '--instruction', '--instruction-file', '--base-url', '--key-env', '--sources', '--excerpts', '--timeout-ms', '--max-output-tokens', '--response-format', '--token-parameter']);
+    const paired = new Set(['--provider', '--model', '--instruction', '--instruction-file', '--base-url', '--key-env', '--sources', '--excerpts', '--timeout-ms', '--max-output-tokens', '--response-format', '--token-parameter', '--language', '--preferences', '--examples', '--exceptions-file', '--waive-required']);
     for (let i = 0; i < flags.length; i++) {
         const flag = flags[i]!;
         if (flag === '--document-scope') {
@@ -103,7 +103,9 @@ export function parseAnalysisArgs(args: string[], task: AnalysisRequest['task'])
     const blockIds = ids('--blocks'), changeIds = ids('--changes');
     if (task === 'claim-extraction' && (documentScope === !!blockIds.length) || task === 'semantic-review' && !changeIds.length)
         throw new WriterError('INVALID_INPUT', 'Extraction requires blocks OR document scope; review requires explicit changes.');
-    return { ...parseSuggestArgs([directory, documentId, ...pass]), documentScope, blockIds, changeIds };
+    const options=parseSuggestArgs([directory,documentId,...pass]);
+    if(task==='claim-extraction'&&Object.values(options.memoryOptions).some(v=>Array.isArray(v)?v.length:v!==undefined))throw new WriterError('INVALID_INPUT','Writing-memory selections apply to semantic review, not claim extraction.');
+    return {...options,documentScope,blockIds,changeIds};
 }
 async function modelAnalysisCommand(args: string[], task: AnalysisRequest['task']): Promise<void> {
     const options = parseAnalysisArgs(args, task), workspace = Workspace.open(options.directory), controller = new AbortController(), cancel = () => controller.abort();
@@ -111,7 +113,7 @@ async function modelAnalysisCommand(args: string[], task: AnalysisRequest['task'
         const request = workspace.analysis.prepare(options.documentId, task, options);
         if (!options.send) {
             print({ status: 'preview-only', sent: false, task, provider: options.provider.describe(), documentId: request.documentId, baseRevisionId: request.baseRevisionId,
-                scope: request.scope, blockIds: request.before.blocks.map(b => b.id), documentBlockCount: request.documentBlockCount, requestBytes: Buffer.byteLength(JSON.stringify(request), 'utf8'),
+                writingMemory: request.memory?.packet ?? null, scope: request.scope, blockIds: request.before.blocks.map(b => b.id), documentBlockCount: request.documentBlockCount, requestBytes: Buffer.byteLength(JSON.stringify(request), 'utf8'),
                 sourceSelection: request.sources.map(({ text, ...s }) => ({ ...s, bytes: Buffer.byteLength(text, 'utf8') })), protectedClaimIds: [...new Set(request.protectedClaims.map(c => c.claimId))], excludedProtectedClaimIds: request.excludedProtectedClaimIds,
                 notice: 'No inference was requested. --send transmits the inspected before/after text, brief, explicit sources and listed protected claims. May incur provider charges; loopback does not prove local inference.' });
             return;

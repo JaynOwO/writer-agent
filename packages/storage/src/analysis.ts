@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 import type { DatabaseSync } from 'node:sqlite';
-import { newId, hashBytes, WriterError, analysisString, stringIds, validateCandidate, pinAnchor, captureAnalysisRequest, validateAnalysisOutput, applyChange, validateEvidence, validateSourceQuotes, analysisObservations, exactObject, } from '@writer-agent/core';
-import type { Revision, Change, SourceSelection, Snapshot, ClaimCandidate, ClaimOccurrence, AnalysisRequest, AnalysisRun, AnalysisProviderInfo, AnalysisUsage, ClaimDecision, ClaimDecisionAction, FindingDecision, HumanEvidenceAssessment, EvidenceRelation, SourceQuote, } from '@writer-agent/core';
+import { newId, hashBytes, WriterError, analysisString, stringIds, validateCandidate, pinAnchor, captureAnalysisRequest, validateAnalysisOutput, applyChange, validateEvidence, validateSourceQuotes, analysisObservations, exactObject, optionsFromCapture, } from '@writer-agent/core';
+import type { Revision, Change, SourceSelection, Snapshot, ClaimCandidate, ClaimOccurrence, AnalysisRequest, AnalysisRun, AnalysisProviderInfo, AnalysisUsage, ClaimDecision, ClaimDecisionAction, FindingDecision, HumanEvidenceAssessment, EvidenceRelation, SourceQuote, MemoryOptions, } from '@writer-agent/core';
+import type { WritingMemory } from './memory.js';
 import type { SourceLibrary } from './sources.js';
 interface Host {
     currentRevision(id: string): Revision;
     getRevision(id: string): Revision;
     getChange(id: string): Change;
     readonly sources: SourceLibrary;
+    readonly memory: WritingMemory;
+    info(): {schemaVersion:number};
 }
 const now = () => new Date().toISOString();
 const tables = ['analysis_runs', 'claim_occurrences', 'claim_decisions', 'analysis_feedback', 'claim_evidence'];
@@ -23,7 +26,7 @@ function unpack<T>(row: Record<string, unknown> | undefined): T {
         throw new WriterError('CORRUPT_DATA', 'Stored analysis JSON is invalid.');
     }
 }
-function safeProvider(info: AnalysisProviderInfo): AnalysisProviderInfo {
+export function safeProvider(info: AnalysisProviderInfo): AnalysisProviderInfo {
     exactObject(info, ['providerId', 'model', 'endpoint', 'responseFormat', 'tokenParameter', 'timeoutMs', 'maxOutputTokens']);
     for (const s of [info.providerId, info.model, info.responseFormat])
         analysisString(s, 'provider metadata', 200);
@@ -41,7 +44,7 @@ function safeProvider(info: AnalysisProviderInfo): AnalysisProviderInfo {
         throw new WriterError('INVALID_INPUT', 'Invalid provider metadata.');
     return structuredClone(info);
 }
-function safeUsage(value: AnalysisUsage | null): AnalysisUsage | null {
+export function safeUsage(value: AnalysisUsage | null): AnalysisUsage | null {
     if (value === null)
         return null;
     exactObject(value, ['inputTokens', 'outputTokens', 'totalTokens']);
@@ -156,6 +159,8 @@ export class AnalysisLedger {
         changeIds?: readonly string[];
         documentScope?: boolean;
         selection?: SourceSelection;
+        memoryOptions?: MemoryOptions;
+        useMemory?: boolean;
     }): AnalysisRequest {
         this.ready();
         const revision = this.host.currentRevision(documentId);
@@ -178,9 +183,12 @@ export class AnalysisLedger {
         if (selected.some(id => !revision.snapshot.blocks.some(b => b.id === id)))
             throw new WriterError('NOT_FOUND', 'Selected block not found.');
         const view = (s: Snapshot): Snapshot => ({ blocks: s.blocks.filter(b => selected.includes(b.id)) });
-        const ledger = this.list(documentId), importantIds = [...new Set(ledger.filter(c => c.important).map(c => c.claimId))];
-        const chosen = ledger.filter(c => c.important && c.annotation === 'confirmed' && c.state === 'current' && c.anchors.every(a => selected.includes(a.blockId)));
-        return captureAnalysisRequest({ protocolVersion: 1, task, documentId, baseRevisionId: revision.id, instruction: options.instruction,
+        const memory = task === 'semantic-review' && this.host.info().schemaVersion >= 4 && options.useMemory !== false ? this.host.memory.plan(documentId,'review',options.memoryOptions) : undefined;
+        if(memory?.conflicts.length)throw new WriterError('GUIDANCE_CONFLICT','Resolve conflicting author guidance before analysis.');
+        const intentImportantIds = new Set(memory?.capture.packet.importantClaims.map(c=>c.occurrenceId) ?? []);
+        const ledger = this.list(documentId), importantIds = [...new Set(ledger.filter(c => c.important || intentImportantIds.has(c.id)).map(c => c.claimId))];
+        const chosen = ledger.filter(c => (c.important || intentImportantIds.has(c.id)) && c.annotation === 'confirmed' && c.state === 'current' && c.anchors.every(a => selected.includes(a.blockId)));
+        return captureAnalysisRequest({ ...(memory ? {memory:memory.capture} : {}), protocolVersion: 1, task, documentId, baseRevisionId: revision.id, instruction: options.instruction,
             scope: options.documentScope ? 'document' : 'blocks', documentBlockCount: revision.snapshot.blocks.length, before: view(revision.snapshot), after: task === 'semantic-review' ? view(projected) : null,
             changes: selectedChanges.map(c => ({ id: c.id, hash: hashBytes(JSON.stringify(c)) })), sources: this.host.sources.context(options.selection ?? {}),
             protectedClaims: chosen.map(c => ({ claimId: c.claimId, occurrenceId: c.id, statement: c.statement, anchors: c.anchors.map(({ blockId, start, end, quote }) => ({ blockId, start, end, quote })) })),
@@ -190,7 +198,8 @@ export class AnalysisLedger {
     private verifyRequest(request: AnalysisRequest): void {
         if (this.host.currentRevision(request.documentId).id !== request.baseRevisionId || this.stamp(request.documentId) !== request.ledgerStamp || request.changes.some(c => hashBytes(JSON.stringify(this.host.getChange(c.id))) !== c.hash))
             throw new WriterError('STALE_REVISION', 'Captured analysis inputs are stale. No current report was saved.');
-        const nowRequest = this.prepare(request.documentId, request.task, { instruction: request.instruction, documentScope: request.scope === 'document',
+        if(request.memory)this.host.memory.assertFresh(request.memory);
+        const nowRequest = this.prepare(request.documentId, request.task, { instruction: request.instruction, documentScope: request.scope === 'document', useMemory: request.memory!==undefined, ...(request.memory ? {memoryOptions:optionsFromCapture(request.memory.options)} : {}),
             ...(request.task === 'claim-extraction' && request.scope === 'blocks' ? { blockIds: request.before.blocks.map(b => b.id) } : {}),
             changeIds: request.changes.map(c => c.id), selection: { snapshots: request.sources.filter(s => s.excerptId === null).map(s => s.snapshotId), excerpts: request.sources.filter(s => s.excerptId !== null).map(s => s.excerptId!) } });
         // Preserve source selection order exactly; context() deterministically groups snapshots then excerpts.
@@ -206,7 +215,7 @@ export class AnalysisLedger {
         return this.transaction(() => {
             this.verifyRequest(retained);
             const run: AnalysisRun = { id: newId('run'), documentId: retained.documentId, baseRevisionId: retained.baseRevisionId,
-                request: retained, output: checked, provider: info, usage: tokens, durationMs, promptVersion: 'analysis-v1', status: 'completed', interpretation: 'model-assessment-not-verified', createdAt: now() };
+                request: retained, output: checked, provider: info, usage: tokens, durationMs, promptVersion: retained.memory ? 'analysis-memory-v1' : 'analysis-v1', status: 'completed', interpretation: 'model-assessment-not-verified', createdAt: now() };
             this.insert('analysis_runs', run.id, run, { document_id: run.documentId, revision_id: run.baseRevisionId, task: run.request.task });
             if (checked.task === 'claim-extraction') {
                 const revision = this.host.getRevision(run.baseRevisionId);
@@ -248,13 +257,14 @@ export class AnalysisLedger {
         for (const c of run.request.changes)
             if (hashBytes(JSON.stringify(this.host.getChange(c.id))) !== c.hash)
                 freshness = 'stale';
+        if(run.request.memory){try{this.host.memory.assertFresh(run.request.memory);}catch{freshness='stale';}}
         const feedback = this.db.prepare('SELECT payload,payload_hash FROM analysis_feedback WHERE run_id=? ORDER BY seq').all(id).map(r => unpack<FindingDecision>(r));
         const output = run.output;
         const evidenceView = output.task === 'semantic-review' ? (['before', 'after'] as const).flatMap(side => (side === 'before' ? output.beforeClaims : output.afterClaims).map(c => {
             const assessment = output.assessments.find(a => a.side === side && a.claimRef === c.ref);
             return { side, claimRef: c.ref, relation: assessment?.relation ?? 'not-assessed', origin: assessment ? 'model-assessment-not-verified' : 'no-assessment-returned' };
         })) : [];
-        return { ...run, freshness, observations: analysisObservations(run.request), evidenceView, feedback,
+        return { ...run, freshness, writingGuidance: run.request.memory ? 'captured-not-guaranteed' : 'not-captured', observations: analysisObservations(run.request), evidenceView, feedback,
             notice: 'Model findings/mappings/evidence relations are assessments, not facts. Missing assessments mean not-assessed. Empty findings do not mean safe to accept. Review feedback does not alter text.' };
     }
     feedback(runId: string, findingRef: string, action: FindingDecision['action'], reason: string, correction: string | null = null): FindingDecision {

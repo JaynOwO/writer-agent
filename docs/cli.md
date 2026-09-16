@@ -89,3 +89,9 @@ pnpm writer export ../my-writing doc_实际ID ../final.md
 ## v0.0.4 claims and review
 
 `writer claim help` and `writer review help` expose the independent annotation/analysis commands. See [review.md](review.md) or [简体中文](review.zh-CN.md) for exact flag and JSON examples. `writer demo:review` is a scripted fake-provider walkthrough. Existing text commands and source workflows remain separate and unchanged.
+
+## v0.0.5 intent, profiles, memory and guide
+
+`pnpm siglum guide <workspace> --lang zh-CN` starts numbered menus; `--lang en` switches menu language. The workspace must exist; schema4 migration is offered only with explicit backup/upgrade confirmation. Use `init` for a new empty workspace. Interactive mode refuses pipes/nonTTY; 0/blank returns from menus and q/Ctrl+C exits without implicit consent.
+
+`profile`, `intent` and `memory` each accept help. Manual save/add explicitly activates; model drafts/imports create candidates needing confirmation. `suggest` and `review run` accept --language, --preferences, --examples, --exceptions-file and --waive-required. These flags are not available for claim extraction. Rules keep their language/task scope; title is a scope label only, not a new title command. See paired memory guides for exact JSON/IDs, preview vs send, optional feedback and profile export/import.

@@ -1,4 +1,4 @@
-# 论断与语义审稿 — Siglum v0.0.4
+# 论断与语义审稿 — Siglum v0.0.5
 
 [English](review.md) | [简体中文](review.zh-CN.md)
 
@@ -16,7 +16,7 @@ Windows PowerShell 如果拦截了 pnpm 的 .ps1 启动器，可以使用 `pnpm.
 
 ## 工作区升级
 
-新工作区采用 schema v3。更新代码不会自动更新私人文稿数据库；v1 仍可用原有文稿操作，v2 仍可用来源功能，新论断/审稿功能需要明确升级：
+新工作区采用 schema v4，分析仍至少要求 v3，记忆要求 v4。更新代码不会自动更新私人文稿数据库；v1 仍可用原有文稿操作，v2 仍可用来源功能，新论断/审稿功能需要明确升级：
 
 ```sh
 pnpm siglum migrate ../my-writing

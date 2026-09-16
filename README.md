@@ -2,23 +2,23 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.4 -->
+<!-- siglum:version=0.0.5 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 A local-first agent harness for research, writing, and review.
 
 **Models propose. Sources stay traceable. Authors decide.**
 
-**v0.0.4** · CLI development preview · **Apache-2.0**
+**v0.0.5** · CLI development preview · **Apache-2.0**
 
-Siglum keeps manuscript revisions, review decisions and immutable source snapshots locally. It can ask a configured model to propose edits using explicitly selected source text. A model response cannot accept its own changes. This is a working development core, not a finished writing IDE or an autonomous researcher.
+Keep manuscript revisions, source snapshots, claim annotations, review reports and author-confirmed writing guidance in your own workspace. A model may draft intent, suggest preferences, propose edits or review changes; it cannot approve its own output. This is not a complete desktop writing IDE or an autonomous researcher.
 
-The product is now **Siglum**. The repository remains `JaynOwO/writer-agent`, workspace state remains `.writer`, and internal packages remain `@writer-agent/*` so existing automation continues to work.
+The product is Siglum. Repository `JaynOwO/writer-agent`, package IDs `@writer-agent/*`, `.writer` data path and delivery filenames stay compatible with the existing updater. `pnpm siglum` and `pnpm writer` are equivalent.
 
 <!-- section:quickstart -->
-## Try the offline demonstrations
+## Try without a model key
 
-Use Node.js **22.16+** (CI targets the 22 and 24 lines) and **pnpm 10.11.0**. Install development dependencies once; demonstrations and tests then use synthetic sources, scripted responses and loopback HTTP only. No model account, API key or Ollama installation is needed for these checks.
+Use Node.js **22.16+** and pinned **pnpm 10.11.0**. CI targets Node 22/24 on Linux/Windows. First installation needs internet; the default tests/demos use synthetic text, scripted fixtures and loopback HTTP, not paid providers or automatic model downloads.
 
 ```sh
 pnpm install --frozen-lockfile
@@ -27,120 +27,135 @@ pnpm demo
 pnpm demo:provider
 pnpm demo:sources
 pnpm demo:review
+pnpm demo:memory
 ```
 
-In Windows PowerShell, use the `.cmd` shim when `.ps1` execution is restricted; there is no need to change execution policy:
+Windows PowerShell can use `pnpm.cmd` when its `.ps1` shim is restricted. No execution-policy change is required:
 
 ```powershell
-pnpm.cmd install --frozen-lockfile
 pnpm.cmd check
-pnpm.cmd demo:sources
-pnpm.cmd demo:review
+pnpm.cmd demo:memory
 ```
 
-Expected demonstration markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`. The source demo captures a synthetic HTML fixture, saves an excerpt and note, supplies that excerpt to a scripted provider, records provenance, accepts/reverts a proposal and exports the preserved source. **These markers are software checks, not evidence of real model quality.**
+Expected markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`, `MEMORY_DEMO_OK`. **They validate software workflows, not real-model editing quality or memory learning accuracy.**
 
-<!-- section:sources -->
-## Keep sources, not just URLs
+<!-- section:writing-memory -->
+## Intent and writing memory, with author control
 
-Each capture has its own snapshot ID, original response/file bytes, extracted text, SHA-256 hashes, capture time, extractor version and reported metadata. Missing author/publication fields stay `null`. Recapturing a URL appends a new snapshot; it does not rewrite the one an older proposal referenced.
+Describe the article in a few sentences, or use a template in the numbered guide. Model-authored intent cards remain drafts until confirmed. Manual save is an explicit confirmation. Choose a reusable profile; rules are scoped to that profile, language and task. No profile is chosen automatically.
 
 ```sh
 pnpm build
 pnpm siglum init ../my-writing "My writing workspace"
+pnpm siglum import ../my-writing ./examples/sample.md "Test article"
+pnpm siglum guide ../my-writing --lang en
+```
+
+For Simplified Chinese menus:
+
+```sh
+pnpm siglum guide ../my-writing --lang zh-CN
+```
+
+The guide selects documents, profiles, pending edits, reports and preference candidates by number, not copied IDs. It supports returning/cancelling and has no default model-send or approval. Rejection reasons are optional. Preference distillation runs only when explicitly requested on selected reasoned feedback; its output stays candidate-only until you choose to activate it. Repeated reasonless rejection is not evidence of a style preference.
+
+One-request exceptions override ordinary article/profile defaults without rewriting them. Conflicting required structured rules need an explicit exact-rule waiver; free-text conflicts are not automatically understood. Selection uses deterministic profile/language/task filtering, priority and stable IDs: at most 20 profile rules, 3 separately authorized examples and 24,000 serialized UTF-8 bytes. Required/explicit content is never silently truncated. No embedding database or extra retrieval-model call is used.
+
+Usage snapshots show exactly which intent/rule versions were supplied. Applicable guidance changes invalidate captured requests/reports, while unrelated profiles do not. Literal phrase/code-point checks are mechanical; style and meaning remain model assessments. See the [memory guide](docs/memory.md), [protocol](docs/memory-protocol.md) and [Chinese guide](docs/memory.zh-CN.md).
+
+<!-- section:sources -->
+## Keep sources, not just URLs
+
+Capture a selected public URL or import UTF-8 HTML, Markdown or text. Preserve raw bytes, extracted text, reported metadata, capture time, extractor version and hashes. Refresh appends a snapshot instead of rewriting old evidence. Unknown metadata remains null.
+
+```sh
 pnpm siglum source import ../my-writing ./examples/research-fixture.html
 pnpm siglum source list ../my-writing
 pnpm siglum source search ../my-writing "correlation"
 pnpm siglum source help
 ```
 
-`pnpm siglum` and `pnpm writer` are equivalent. `source add <workspace> <url>` only previews; add `--fetch` to contact a public site. Excerpts use 1-based inclusive line numbers in the **extracted text**, not HTML line numbers or PDF pages. Local `source search` searches saved latest snapshots, not the internet.
-
-Use the [source guide](docs/sources.md) for capture, refresh, excerpts, notes, paragraph links and exports. Exports contain `raw.bin`, `text.txt` and metadata; raw HTML is not opened or executed. Do not use this preview as the only copy of important research.
+`source add`/`refresh` previews until `--fetch`; local search is not web search. Excerpts identify lines in extracted text, not original HTML coordinates or PDF pages. Notes stay local and are not silently converted into preferences or sent to models. See the [source guide](docs/sources.md).
 
 <!-- section:models -->
-## Supply selected evidence to a model
+## Models propose; you approve
 
-Model adapters: `ollama` and `openai-compatible` (Chat Completions, not Responses API).
+Adapters: `ollama` and `openai-compatible` (Chat Completions, not Responses API). Set up a compatible model/server yourself; no model or API balance is bundled.
 
 ```sh
 pnpm siglum model
 pnpm siglum help
 ```
 
-`suggest` accepts `--sources <snapshotId,...>` and `--excerpts <excerptId,...>`. No source is selected automatically; private research notes are not added to model context. The preview shows the endpoint, model, manuscript size and selected source IDs/byte counts without printing the bodies. `--send` transmits the selected manuscript, editing instruction and source context. Remote inference also requires `--allow-remote` and may incur provider charges.
+`suggest` previews the destination, source choices and writing-guidance plan. `--send` authorizes one inference request; remote inference also requires `--allow-remote`. Intent drafting, preference drafting and semantic review each require their own explicit send. The guide previews the exact selected data and obtains confirmation. No automatic retry, repair call, provider switch or extra judge is hidden in a request.
 
-Successful inference creates **pending** changes only. `changes`, `accept`, `reject` and `revert` remain explicit author actions. `provenance <workspace> <changeId>` reports exactly which selected texts were supplied to that request, with snapshot/excerpt identifiers and hashes. **Supplied does not mean used, cited, true or supportive of a claim.**
-
-See [provider instructions](docs/providers.md) and the [proposal protocol](docs/provider-protocol.md). Provider credentials are read from named process environment variables; they do not belong in manuscripts, source snapshots, Git or chat messages.
+A successful edit request stores pending proposals and the selected source/guidance snapshot atomically; manuscript text is unchanged. Accept/reject/revert remain separate author actions. `provenance` means supplied-not-verified, not necessarily used, cited or supportive. Secrets come only from named process environment variables, never from literal key flags. See [provider instructions](docs/providers.md).
 
 <!-- section:semantic-review -->
 ## Claim ledger and semantic review
 
-Annotate claims manually or explicitly ask a model to extract candidate assertions, anchored to exact text in a pinned revision. Confirming an annotation means “this describes my wording,” not “this assertion is true.” Important claims are explicit author choices, not inferred memory.
-
-`review run` inspects selected pending changes. The host builds the proposed text in memory; a separate model task assesses claim mappings, certainty, attribution, scope, numbers/time, causality and selected-evidence relations. By default it sees the affected blocks; full-document scope requires an explicit choice. Missing material/assessments mean **not-assessed**, not unsupported.
+Extract candidate claims or annotate manually; exact quotations and offsets are checked against pinned text. Confirming an annotation does not certify its truth. Important claims and intent constraints are explicit author choices.
 
 ```sh
 pnpm siglum claim help
 pnpm siglum review help
+pnpm siglum memory help
 ```
 
-Each extraction/review previews by default and needs its own `--send`. Reports distinguish exact text observations from `model-assessment-not-verified` interpretations. Agreeing, disagreeing or correcting a finding does not accept/revert a text change; mappings and evidence assessments also accept separate feedback. Later manuscript, pending-change or claim-decision changes mark semantic reports stale while preserving their input. A different brief requires a new run; old reports remain about their old brief. JSON exports include private text: keep them out of Git.
+Review selected pending changes with an independently selected model, optionally in full-document scope. Reports distinguish mechanical observations, `model-assessment-not-verified` interpretations and author feedback. Guidance-aware review adds possible intent/style deviations; it cannot change manuscript approval. Exact quotes do not prove sound reasoning, and no findings is not a safe-to-accept verdict.
 
-See the [review guide](docs/review.md) and [protocol](docs/analysis-protocol.md). The offline demo uses scripted fake responses; extraction/review quality with real models is **not yet validated**. The 80 Chinese/English evaluation labels are drafts awaiting human review, not a validated benchmark.
+Reports retain their input/version history. Later relevant document, pending-change, claim or guidance changes make them stale. Older reports that predate memory retain absent guidance, not invented historical preferences. See [review guide](docs/review.md). Real-model quality is unvalidated; the 80 bilingual evaluation cases have draft labels pending human review.
 
 <!-- section:status -->
-## Implemented and deliberately not implemented
+## Included, with clear boundaries
 
-| Area | Available in this preview |
+| Area | Implemented |
 | --- | --- |
-| <!-- feature:revisions --> Revisions | Local SQLite, block-level proposals, exact-text/version conflict checks, accept/reject/revert and decision reasons |
-| <!-- feature:providers --> Models | Scripted Mock, native Ollama chat, OpenAI Chat Completions-compatible adapter |
-| <!-- feature:sources --> Sources | Explicit URL capture and local UTF-8 HTML/Markdown/text import; immutable snapshots and local substring search |
-| <!-- feature:excerpts --> Excerpts | Exact source-text line ranges and quote hashes |
-| <!-- feature:notes --> Research notes | Locally stored notes bound to a snapshot or excerpt; not automatic memory |
-| <!-- feature:provenance --> Proposal context | Atomic recording of source text supplied with pending model proposals |
-| <!-- feature:bindings --> Paragraph links | Author-created excerpt links pinned to a block version; edits make old links visibly stale |
-| <!-- feature:claims --> Claim ledger | Manual/candidate annotations, exact anchors, confirmation/correction and explicit important claims |
-| <!-- feature:semantic-review --> Semantic review | Separate protocol, model claim mappings, selected-evidence assessments, version-bound reports and author feedback |
-| <!-- feature:bilingual --> Documentation | English and Simplified Chinese README, paired source guides and mechanical README parity checks |
+| <!-- feature:revisions --> Revisions | SQLite, exact block/text/version checks, pending proposals and independent-block accept/reject/revert |
+| <!-- feature:providers --> Models | Scripted Mock, native Ollama chat, Chat Completions-compatible adapters |
+| <!-- feature:sources --> Sources | Explicit URL/file intake, immutable snapshots, local substring search |
+| <!-- feature:excerpts --> Excerpts | Exact extracted-text lines/offsets and quote hashes |
+| <!-- feature:notes --> Notes | Local snapshot/excerpt notes; not silently supplied to models |
+| <!-- feature:provenance --> Provenance | Atomic selected-source context for proposals |
+| <!-- feature:bindings --> Links | Version-pinned paragraph/source links; changed blocks make them stale |
+| <!-- feature:claims --> Claims | Manual/candidate annotations, author decisions, protected claims |
+| <!-- feature:semantic-review --> Review | Separate task, selected-evidence assessments, historical reports and author feedback |
+| <!-- feature:intent --> Intent | Versioned manual/model-draft cards, templates, confirmation and existing important-claim references |
+| <!-- feature:writing-memory --> Memory | Scoped profiles, candidate approvals, request exceptions, bounded selection and exact usage history |
+| <!-- feature:terminal-guide --> Guide | English/Simplified Chinese numbered menus, cancellation and explicit send/approval |
+| <!-- feature:bilingual --> Docs | Paired README/source/review/memory guides and mechanical parity checks |
 
-<!-- limit:no-gui --> **No GUI or packaged desktop app yet.** Use the CLI and demonstrations.
+<!-- limit:no-gui --> **No GUI or packaged desktop editor.** The guide is an interactive terminal, not a visual rich-text editor.
 
-<!-- limit:no-web-search --> **No global web search, crawler or autonomous research loop.** Provide individual URLs or files; source search is local.
+<!-- limit:no-web-search --> **No autonomous web research or global search.** Provide URLs/files; saved-source search is local.
 
-<!-- limit:no-semantic-verdict --> **Semantic review is an attributed model assessment, not factual certification.** The initial ledger/review protocol is implemented; accuracy is unvalidated. Correct quotation coordinates do not prove correct reasoning.
+<!-- limit:no-semantic-verdict --> **No factual certification or guaranteed intent understanding.** Mechanical checks cannot validate model conclusions or all free-text conflicts.
 
-<!-- limit:block-edits --> **Edits still replace whole text blocks.** Reverting an older same-block edit conflicts rather than erasing later work. A reverted block's previous source link remains stale until explicitly linked again.
+<!-- limit:block-edits --> **Text changes remain whole-block operations.** Fine-grained sentence-level rollback is not implemented.
 
-<!-- limit:static-extraction --> **Static extraction is limited.** UTF-8 HTML/text/Markdown only; no PDFs, JavaScript rendering, logins, embedded resources, compressed responses or redirects. The small extractor is not a full HTML parser, article reader or visual page snapshot; uncommon named entities and page layout may differ. Check original bytes when quoting.
+<!-- limit:static-extraction --> **Static UTF-8 extraction only.** No PDF, JS rendering, browser login, compression, redirects or full HTML5 parser.
 
-<!-- limit:manual-migration --> **Existing workspaces are not silently upgraded.** v1 workspaces retain original editing and v2 retains sources; new claim/review features require an explicit backed-up schema-v3 migration. Updating source code never migrates manuscripts.
+<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v4. Old v1/v2/v3 retain their existing editing/source/analysis capabilities; memory needs explicit backed-up migration. Updating source code never upgrades private manuscripts.
 
-<!-- limit:no-memory-tools --> **No learned writing preferences, Skills or MCP execution yet.** Research notes and refusal reasons are records, not learned rules.
+<!-- limit:no-background-learning --> **No background learning, fine-tuning, vectors or Skills/MCP execution.** Candidate inference requires an explicit request; author activation is separate. Title is a rule-scope tag, not a new title-generation command.
+
+<!-- limit:memory-retention --> **Disable is not erase.** Old requests, databases, backups and remote services may retain past content. Export excludes examples by default, not secrets manually typed into rule text. Review what you export/send. This version does not promise secure deletion.
 
 <!-- section:privacy -->
-## Privacy and trust boundaries
+## Local storage, explicit transmission
 
-Local-first describes storage, not a guarantee of local inference. A loopback model server may itself relay to a cloud service. Only send documents and source content you are authorized to transmit. Source snapshots and exported files are not encrypted.
+Local-first is not a guarantee of local inference: a loopback model server can relay to the cloud. Memory examples require separate per-request selection. Export/import is explicit; imported preferences start as candidates in a new profile and do not attach or activate themselves. Model/page text never grants filesystem, SQL, approval or credential privileges.
 
-Public-page intake rejects local/private/special-use addresses, checks every DNS answer and pins one approved address for the connection. It does not follow redirects or run source instructions. This reduces network risk; it is not a substitute for egress controls or a security audit. Source text is always untrusted model context, and no model is given filesystem, SQL or approval capabilities.
-
-Close other programs using an old workspace before running the migration preview and then explicitly applying it. A verified SQLite backup is retained under `.writer/backups/`. See [migration and recovery](docs/sources.md#existing-workspaces) and the [security model](docs/security-model.md).
+Private databases and exports are unencrypted; do not commit them. Network source intake has bounded bodies, DNS/IP checks and address pinning, but is not a network sandbox. Close other sessions before migrating. Backups remain under `.writer/backups/`; never copy a backup over an open SQLite/WAL database.
 
 <!-- section:development -->
-## Development
+## Development and validation
 
-[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.4 specification](docs/v0.0.4-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+No new third-party runtime dependency was added. Existing pnpm lockfile is retained. Node's SQLite, test runner, fetch and readline are used through bounded code paths. Default tests never call paid providers; real OS/model/install results must be reported separately.
 
-The repository still has no third-party runtime dependencies. The dependency lockfile is unchanged from v0.0.3. CI is configured for Windows/Linux and Node 22/24; report actual job results separately. Real provider/public-site smoke tests are opt-in and separate from offline regression tests.
-
-Update both READMEs together. `docs:check` checks versions, license, declared sections/features/limitations, command parity and local link targets. It does not prove translation accuracy or validate prose claims.
+[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.5 specification](docs/v0.0.5-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## License
 
-Licensed under the **Apache License, Version 2.0**. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [license notes](docs/license-status.md).
-
-This software license does not relicense your manuscripts, imported sources, models or third-party services. Project packages stay `private: true` to prevent accidental npm publication; this does not remove Apache-2.0 rights. No trademark registration or exclusive rights in the product name are claimed here.
+**Apache-2.0** — see [LICENSE](LICENSE), [NOTICE](NOTICE) and [license notes](docs/license-status.md). All project packages stay `private: true` to prevent accidental npm publication; this does not restrict the license. The software license does not automatically license your manuscripts, imported research, models or external services.

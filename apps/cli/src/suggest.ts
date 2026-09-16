@@ -1,28 +1,39 @@
 // SPDX-License-Identifier: Apache-2.0
 import { readFileSync, statSync } from 'node:fs';
-import { requireString, WriterError } from '@writer-agent/core';
-import type { Change, SourceSelection } from '@writer-agent/core';
+import { requireString, WriterError, normalizeMemoryOptions, optionsFromCapture, checkWritingRules, applyChange, renderMarkdown } from '@writer-agent/core';
+import type { SourceSelection, MemoryOptions, WritingLanguage, WritingRule, MemoryCapture } from '@writer-agent/core';
 import { Workspace } from '@writer-agent/storage';
-import { OpenAICompatibleProvider, OllamaProvider, captureRequest, validateModelResponse, checkCancelled } from '@writer-agent/models';
+import { OpenAICompatibleProvider, OllamaProvider, captureRequest, validateModelResponse, checkCancelled, parseAnalysisJson } from '@writer-agent/models';
 import type { ModelProvider, ModelRequest, ProviderOptions, OpenAICompatibleOptions } from '@writer-agent/models';
 
+export interface SuggestionCapture {readonly request:ModelRequest;readonly memory:MemoryCapture|null}
+export function prepareSuggestion(workspace:Workspace,documentId:string,instruction:string,selection:SourceSelection={},memoryOptions:MemoryOptions={}):SuggestionCapture {
+  const revision=workspace.currentRevision(documentId),sources=workspace.sources.context(selection);
+  const plan=workspace.info().schemaVersion>=4?workspace.memory.plan(documentId,'revise',memoryOptions):null;
+  if(workspace.info().schemaVersion<4 && Object.values(memoryOptions).some(v=>Array.isArray(v)?v.length: v!==undefined))throw new WriterError('MIGRATION_REQUIRED','Explicit writing guidance needs schema v4.');
+  if(plan?.conflicts.length)throw new WriterError('GUIDANCE_CONFLICT','Resolve author-guidance conflicts before sending.');
+  const request=captureRequest({documentId,baseRevisionId:revision.id,snapshot:revision.snapshot,instruction,...(sources.length?{sources}:{}),...(plan?{guidance:plan.capture.packet}:{})});
+  return {request,memory:plan?.capture??null};
+}
+export async function submitSuggestion(workspace:Workspace,capture:SuggestionCapture,provider:ModelProvider,signal?:AbortSignal) {
+  checkCancelled(signal);const request=captureRequest(capture.request),memory=capture.memory?structuredClone(capture.memory):null,providerId=provider.id;
+  if(workspace.currentRevision(request.documentId).id!==request.baseRevisionId)throw new WriterError('STALE_REVISION','Document changed since the request preview.');
+  workspace.sources.verifyContext(request.sources??[]);
+  if(memory){workspace.memory.assertFresh(memory);if(JSON.stringify(request.guidance)!==JSON.stringify(memory.packet))throw new WriterError('INVALID_INPUT','Writing guidance differs from its capture.');}
+  else if(request.guidance)throw new WriterError('INVALID_INPUT','Writing guidance requires a host capture.');
+  const response:unknown=await provider.propose(structuredClone(request),signal);
+  checkCancelled(signal);const checked=validateModelResponse(response,request,providerId);
+  const changes=workspace.proposeChanges(request.documentId,request.baseRevisionId,checked.edits,providerId,
+    request.sources?.length?{items:request.sources,instruction:request.instruction}:undefined,memory?{capture:memory,instruction:request.instruction}:undefined);
+  let projected=request.snapshot;for(const c of changes)projected=applyChange(projected,c);
+  return {changes,notes:checked.notes,mechanicalChecks:memory?checkWritingRules(renderMarkdown(projected),memory.packet):null};
+}
 /** No transaction stays open across the network. A stale result is rejected again by storage. */
-export async function suggestChanges(workspace: Workspace, documentId: string, instruction: string,
-  provider: ModelProvider, signal?: AbortSignal, selection: SourceSelection = {}): Promise<{ changes: Change[]; notes: readonly string[] }> {
-  checkCancelled(signal);
-  const revision = workspace.currentRevision(documentId);
-  const sources = workspace.sources.context(selection);
-  const request: ModelRequest = captureRequest({documentId,baseRevisionId:revision.id,snapshot:revision.snapshot,instruction,...(sources.length ? {sources} : {})});
-  const providerId = provider.id;
-  // Keep an independent application-owned baseline even if a provider mutates its input.
-  const response: unknown = await provider.propose(structuredClone(request),signal);
-  checkCancelled(signal);
-  const checked = validateModelResponse(response,request,providerId);
-  const changes = workspace.proposeChanges(documentId,request.baseRevisionId,checked.edits,providerId,request.sources?.length ? {items:request.sources,instruction:request.instruction} : undefined);
-  return {changes,notes:checked.notes};
+export async function suggestChanges(workspace:Workspace,documentId:string,instruction:string,provider:ModelProvider,signal?:AbortSignal,selection:SourceSelection={},memoryOptions:MemoryOptions={}) {
+  return submitSuggestion(workspace,prepareSuggestion(workspace,documentId,instruction,selection,memoryOptions),provider,signal);
 }
 const valueFlags = new Set(['--provider','--model','--base-url','--key-env','--instruction','--instruction-file',
-  '--timeout-ms','--max-output-tokens','--response-format','--token-parameter','--sources','--excerpts']);
+  '--timeout-ms','--max-output-tokens','--response-format','--token-parameter','--sources','--excerpts','--language','--preferences','--examples','--exceptions-file','--waive-required']);
 const boolFlags = new Set(['--send','--allow-remote']);
 export function parseSuggestArgs(args: string[]) {
   const [directory,documentId,...flags] = args;
@@ -86,7 +97,18 @@ export function parseSuggestArgs(args: string[]) {
     return parts;
   };
   const selection:SourceSelection={snapshots:ids('--sources'),excerpts:ids('--excerpts')};
-  return {directory,documentId,instruction,provider:selected,send:booleans.has('--send'),selection};
+  const memoryOptions:MemoryOptions={
+    ...(values.has('--language')?{language:values.get('--language') as WritingLanguage}:{}),
+    selectedPreferenceIds:ids('--preferences'),examplePreferenceIds:ids('--examples'),waiveRequiredRefs:ids('--waive-required'),
+    ...(values.has('--exceptions-file')?{exceptions:readExceptionFile(values.get('--exceptions-file')!)}:{}),
+  };
+  normalizeMemoryOptions(memoryOptions);
+  return {directory,documentId,instruction,provider:selected,send:booleans.has('--send'),selection,memoryOptions};
+}
+function readExceptionFile(path:string):readonly WritingRule[] {
+  const stat=statSync(path);if(!stat.isFile()||stat.size>50000)throw new WriterError('INVALID_INPUT','Exception file must be an ordinary JSON file <=50000 bytes.');
+  const v=parseAnalysisJson(new TextDecoder('utf-8',{fatal:true}).decode(readFileSync(path)));
+  return optionsFromCapture(normalizeMemoryOptions({exceptions:v as WritingRule[]})).exceptions!;
 }
 export async function suggestCommand(args: string[]): Promise<void> {
   const options=parseSuggestArgs(args);
@@ -96,17 +118,18 @@ export async function suggestCommand(args: string[]): Promise<void> {
   try {
     const revision=workspace.currentRevision(options.documentId);
     const sourceContext=workspace.sources.context(options.selection);
+    const memory=workspace.info().schemaVersion>=4?workspace.memory.plan(options.documentId,'revise',options.memoryOptions):null;
     const documentBytes=Buffer.byteLength(workspace.markdown(options.documentId),'utf8');
     if (!options.send) {
       console.log(JSON.stringify({status:'preview-only',sent:false,provider:options.provider.describe(),documentId:options.documentId,
         baseRevisionId:revision.id,documentBytes,blocks:revision.snapshot.blocks.length,
-        sourceContext:{items:sourceContext.map(({text,...item})=>({...item,bytes:Buffer.byteLength(text,'utf8')})),serializedBytes:Buffer.byteLength(JSON.stringify(sourceContext),'utf8'),verification:'unverified'},
+        writingMemory:memory,sourceContext:{items:sourceContext.map(({text,...item})=>({...item,bytes:Buffer.byteLength(text,'utf8')})),serializedBytes:Buffer.byteLength(JSON.stringify(sourceContext),'utf8'),verification:'unverified'},
         notice:'No request sent. Add --send to transmit the entire selected document, instruction and explicitly selected source text to this endpoint. Remote inference may cost money. Loopback describes the connection, not the server\'s own privacy policy.'},null,2));
       return;
     }
     process.once('SIGINT',cancel);process.once('SIGTERM',cancel);
-    const result=await suggestChanges(workspace,options.documentId,options.instruction,options.provider,controller.signal,options.selection);
-    console.log(JSON.stringify({status:'pending-review',manuscriptChanged:false,changes:result.changes,
+    const result=await suggestChanges(workspace,options.documentId,options.instruction,options.provider,controller.signal,options.selection,options.memoryOptions);
+    console.log(JSON.stringify({status:'pending-review',manuscriptChanged:false,changes:result.changes,mechanicalChecks:result.mechanicalChecks,
       sourceProvenance:{verification:'supplied-not-verified',selectedItems:sourceContext.length,queryCommand:'writer provenance <workspace> <changeId>'},
       modelNotes:{verified:false,persisted:false,notes:result.notes}},null,2));
   } finally {

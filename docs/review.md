@@ -1,4 +1,4 @@
-# Claims and semantic review — Siglum v0.0.4
+# Claims and semantic review — Siglum v0.0.5
 
 [English](review.md) | [简体中文](review.zh-CN.md)
 
@@ -16,7 +16,7 @@ In Windows PowerShell, use `pnpm.cmd` instead of `pnpm` if the PowerShell shim i
 
 ## Prepare a workspace
 
-New workspaces use schema v3. Updating code does not update any private writing database. Existing v1 workspaces retain original text operations; v2 retains sources. New claim/review operations require an explicit migration:
+New workspaces use schema v4; analysis still requires at least schema v3, and memory requires v4. Updating code does not update any private writing database. Existing v1 workspaces retain original text operations; v2 retains sources. New claim/review operations require an explicit migration:
 
 ```sh
 pnpm siglum migrate ../my-writing

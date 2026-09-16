@@ -1,4 +1,4 @@
-# Source library — Siglum v0.0.4
+# Source library — Siglum v0.0.5
 
 [English](sources.md) | [简体中文](sources.zh-CN.md)
 
@@ -108,7 +108,7 @@ Snapshots, excerpts, notes, bindings and context records use append-only tables.
 <a id="existing-workspaces"></a>
 ## Existing workspaces
 
-Installing v0.0.4 or running the source-code updater does **not** migrate any writing workspace. New workspaces use schema v3. Existing v2 workspaces still support sources without migration; analysis features require v3. Old schema-v1 workspaces still support original manuscript operations and source-free suggestions; source operations return `MIGRATION_REQUIRED` until explicitly upgraded.
+Installing v0.0.5 or running the source-code updater does **not** migrate any writing workspace. New workspaces use schema v4; analysis still requires at least schema v3, and memory requires v4. Existing v2 workspaces still support sources without migration; analysis features require v3. Old schema-v1 workspaces still support original manuscript operations and source-free suggestions; source operations return `MIGRATION_REQUIRED` until explicitly upgraded.
 
 Close all programs using the old workspace, especially older versions of Writer Agent. Then:
 

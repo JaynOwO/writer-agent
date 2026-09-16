@@ -29,7 +29,7 @@ export async function sourcesDemo():Promise<void> {
     w.accept(change.id,'接受润色');assert.equal(w.sources.bindings(d.id)[0]?.state,'stale');
     w.revert(change.id,'保留初稿');assert.equal(w.markdown(d.id).split('\n')[0],first.text);
     const exported=exportSource(w,imported.snapshot.id,join(root,'source-export'));
-    console.log('Siglum v0.0.4 — offline source workflow (synthetic source / scripted model; no network)');
+    console.log('Siglum v0.0.5 — offline source workflow (synthetic source / scripted model; no network)');
     console.log(JSON.stringify({workspace:w.root,sourceId:imported.source.id,snapshotId:imported.snapshot.id,excerptId:excerpt.id,
       provenance:'supplied-not-verified',bindingAfterEditAndRevert:'stale; no automatic re-approval',exported},null,2));
     console.log('SOURCES_DEMO_OK');
