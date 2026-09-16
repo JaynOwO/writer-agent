@@ -58,6 +58,9 @@ export async function runWizard(w:Workspace,io:WizardIO,lang:MenuLanguage='zh-CN
   }
   async function provider():Promise<OpenAICompatibleProvider|OllamaProvider>{
     if(lastProvider&&await yes(io,tr('沿用本次会话刚选择的模型？','Reuse the model selected in this guide session?')))return lastProvider;
+    const {ConnectionStore}=await import('./application/presets.js');const store=new ConnectionStore();
+    const {chooseModelPreset}=await import('./product-guide.js');const saved=await chooseModelPreset(io,lang,store);
+    if(saved){const {modelFromPreset}=await import('./application/connections-runtime.js');lastProvider=modelFromPreset(store,saved.id,saved.version);return lastProvider;}
     const [kind]=await menuChoose(io,tr('选择模型接口','Choose provider'),['ollama','openai-compatible'] as const,x=>x);if(!kind)throw new WizardCancelled();
     const model=await io.ask(tr('模型 ID（需自行已有访问权限）: ','Model ID (must already be available): '));
     const base=await io.ask(tr('API 基址（留空用该接口默认地址）: ','API base (empty for provider default): '));

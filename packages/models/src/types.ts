@@ -24,6 +24,10 @@ export interface ModelProvider {
   propose(request: ModelRequest, signal?: AbortSignal): Promise<ModelResponse>;
 }
 export interface ProviderOptions {
+  /** Host-only freshness guard, called before and after inference; never serialized. */
+  readonly assertCurrent?:()=>void;
+  /** Trusted host resolver; not serialized, returned by describe(), or supplied to the model. */
+  readonly credential?: (endpoint:string)=>Promise<string|undefined>;
   /** Optional environment-variable NAME. Never put an API key in this object. */
   readonly apiKeyEnv?: string;
   readonly model: string;

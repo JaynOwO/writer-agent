@@ -1,12 +1,14 @@
 {
   "name": "@writer-agent/cli",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
   "dependencies": {
     "@writer-agent/core": "workspace:*",
     "@writer-agent/models": "workspace:*",
-    "@writer-agent/storage": "workspace:*"
+    "@writer-agent/storage": "workspace:*",
+    "@modelcontextprotocol/client": "2.0.0",
+    "@napi-rs/keyring": "2.1.0"
   }
 }

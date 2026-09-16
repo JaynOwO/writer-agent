@@ -99,3 +99,7 @@ pnpm writer export ../my-writing doc_实际ID ../final.md
 ## v0.0.7 extension commands
 
 `pnpm siglum extensions help` documents skill import/list/show/enable/disable/read, mcp register/list/show/trust/revoke/discover/catalog, research query and citations show/export. `extensions guide` adds numbered bilingual management; existing workflow guide adds exact tool/skill/chapter selection. `demo:extensions` is a local fixture, not real inference. See extensions.md and extensions.zh-CN.md for actual syntax and compatibility.
+
+## v0.0.8 connections, diagnostics and reading reports
+
+See the paired [product guide](product.md)/[简中指南](product.zh-CN.md). `product help`, `product doctor [workspace]`, `product presets`, `product guide <workspace> [--lang zh-CN|en]`, `product recovery <workspace> <runId>` and `product report <workspace> run|document <id> <new.html> [--text] [--sources] [--guidance] [--lang zh-CN|en]` are implemented. Default doctor is local metadata only. `product demo` uses owned fixtures and a fake OS-store backend. Real tests, OS writes and preset binding are explicit numbered-guide actions, not auto-generated shell commands. `mcp renew` previews an updated registration hash; `--apply` creates the new untrusted record.

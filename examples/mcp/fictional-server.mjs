@@ -38,7 +38,7 @@ export function responseFor(message, mode='normal'){
     case 'resources/read':result={contents:[{uri:resource.uri,mimeType:'text/plain',text:fictionalText}]};break;
     default:return {jsonrpc:'2.0',id:message.id,error:{code:-32601,message:'Unknown method'}};
   }
-  return {jsonrpc:'2.0',id:message.id,...(mode==='wrong-id'?{id:999999}:{}),result:{...(modern?{resultType:'complete'}:{}),...result}};
+  return {jsonrpc:'2.0',id:message.id,...(mode==='wrong-id'?{id:999999}:{}),result:{...(modern?{resultType:'complete',...(['tools/list','resources/list','resources/read'].includes(message.method)?{ttlMs:0,cacheScope:'private'}:{})}:{}),...result}};
 }
 function serve(){
   const mode=process.argv[2]??'normal';const rl=createInterface({input:process.stdin,crlfDelay:Infinity});

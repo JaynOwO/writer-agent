@@ -23,18 +23,28 @@ export async function runWorkflowGuide(w:Workspace,io:WizardIO,lang:'zh-CN'|'en'
     if(template==='new-article'){const [mode]=await menuChoose(io,tr('资料模式','Research mode'),['web','selected'] as const,x=>x==='web'?tr('Tavily 真实联网搜索（需要自己的 Key）','Real Tavily web search (your own key required)'):tr('只使用明确选择的已保存资料','Use selected saved sources only'));if(!mode)return;research=mode;if(mode==='web')publicBrief=await io.ask(tr('可以公开交给搜索规划与搜索服务的问题: ','PUBLIC brief approved for query planning and search: '));}
     let profileId:string|null=null;if(template==='new-article'&&w.memory.profiles().length){const [p]=await menuChoose(io,tr('写作档案（0 表示不用）','Profile (0 for none)'),w.memory.profiles(),p=>p.name);profileId=p?.id??null;}
     const items=w.sources.list().filter(x=>x.latestSnapshotId!==null);const selected=items.length?await menuChoose(io,tr('选定已保存来源（0 表示不选；完整内容超限会停止）','Select saved sources (0 for none; oversized full text is refused)'),items,x=>x.source.locator,true):[];
+    const {chooseModelPreset}=await import('./product-guide.js');
+    const {ConnectionStore,attachPreset}=await import('./application/presets.js');
+    const connectionStore=new ConnectionStore();
+    const savedModel=await chooseModelPreset(io,lang,connectionStore);
+    let settings:WorkflowModel;
+    if(savedModel&&savedModel.settings.kind==='model')settings=structuredClone(savedModel.settings.model);
+    else{
     const [provider]=await menuChoose(io,tr('模型接口','Model provider'),['ollama','openai-compatible'] as const,x=>x);if(!provider)return;
     const model=await io.ask(tr('模型 ID: ','Model ID: '));
     const baseURL=(await io.ask(tr('API 基址（空用默认）: ','API base (empty for default): ')))||(provider==='ollama'?'http://127.0.0.1:11434':'https://api.openai.com/v1');
     const apiKeyEnv=(await io.ask(tr('模型密钥环境变量名（不是密钥，空用默认）: ','Model key environment NAME, not value (empty default): ')))||null;
     const allowRemote=await yes(io,tr('允许这个模型连接远端／云端？','Permit this model endpoint to access remote/cloud inference?'));
     let responseFormat:WorkflowModel['responseFormat']='json-schema';if(provider==='openai-compatible'){const [f]=await menuChoose(io,tr('返回格式，不自动降级','Response mode; no automatic fallback'),['json-schema','json','prompt'] as const,x=>x);if(!f)return;responseFormat=f;}
-    const c:WorkflowConfig={template,title,goal,publicBrief,language,research,documentId,changeIds,selection:{snapshots:selected.map(x=>x.latestSnapshotId!)},profileId,intent:null,memoryOptions:{language},model:{provider,model,baseURL,apiKeyEnv,allowRemote,responseFormat,tokenParameter:'max_completion_tokens',timeoutMs:120000,maxOutputTokens:8192},searchKeyEnv:'TAVILY_API_KEY',domains:[],timeRange:null,autoRevision:template==='review-changes'?false:await yes(io,tr('预先允许最多一轮修订？保留原候选，不自动采用','Permit at most one revision? Preserve originals; no auto-adoption')),budget:{...DEFAULT_WORKFLOW_BUDGET}};
+
+    settings={provider,model,baseURL,apiKeyEnv,allowRemote,responseFormat,tokenParameter:'max_completion_tokens',timeoutMs:120000,maxOutputTokens:8192};
+    }
+    const c:WorkflowConfig={template,title,goal,publicBrief,language,research,documentId,changeIds,selection:{snapshots:selected.map(x=>x.latestSnapshotId!)},profileId,intent:null,memoryOptions:{language},model:settings,searchKeyEnv:'TAVILY_API_KEY',domains:[],timeRange:null,autoRevision:template==='review-changes'?false:await yes(io,tr('预先允许最多一轮修订？保留原候选，不自动采用','Permit at most one revision? Preserve originals; no auto-adoption')),budget:{...DEFAULT_WORKFLOW_BUDGET}};
     if(research==='web'){const domains=(await io.ask(tr('域名限制（逗号分隔；留空不限公共域名）: ','Domain allowlist (comma separated, empty any public domain): '))).trim();c.domains=domains?domains.split(',').map(s=>s.trim()):[];const name=await io.ask(tr('搜索 Key 环境变量名（留空 TAVILY_API_KEY）: ','Search key environment NAME (empty TAVILY_API_KEY): '));if(name)c.searchKeyEnv=name;}
     if(await yes(io,tr('调整默认次数／活跃时间预算？','Adjust default attempt/time budgets?'))){for(const key of ['models','searches','fetches','activeMs'] as const){const raw=await io.ask(`${key} [${c.budget[key]}]: `);if(raw.trim())c.budget[key]=Number(raw);}}
     if(w.info().schemaVersion>=6)c.extensions={skills:[],calls:[],chapterDrafting:false};
     validateWorkflowConfig(c);makeWorkflowModel(c.model);show(io,c);
-    if(await yes(io,tr('保存这个任务？尚不调用任何外部服务','Save this task? No external service is called yet')))show(io,s.create(c));
+    if(await yes(io,tr('保存这个任务？尚不调用任何外部服务','Save this task? No external service is called yet'))){const r=s.create(c);show(io,savedModel?attachPreset(w,r.id,savedModel,connectionStore):r);}
   }
   async function manage(id:string){
     for(;;){const run=s.run(id);io.line(`${run.config.title} — ${run.state} / ${run.stage}`);io.line(run.notice);
@@ -62,8 +72,8 @@ export async function runWorkflowGuide(w:Workspace,io:WizardIO,lang:'zh-CN'|'en'
       }catch(e){if(e instanceof WizardCancelled||io.signal?.aborted)throw new WizardCancelled();io.line((e instanceof Error?e.message:'Workflow action failed.')+'\n'+tr('操作停止；没有跳过安全检查。','Stopped; no guard was bypassed.'));}
     }
   }
-  for(;;){const [action]=await menuChoose(io,tr('Siglum 写作工作流','Siglum writing workflows'),['create','list','extensions'] as const,x=>x==='create'?tr('创建任务','Create task'):x==='list'?tr('打开／恢复任务','Open / resume task'):tr('Skill与MCP扩展管理','Skills and MCP management'));if(!action)return;
-    try{if(action==='create')await create();else if(action==='extensions')await runExtensionsGuide(w,io,lang);else{const [r]=await menuChoose(io,tr('选择任务','Choose task'),s.list(),r=>`${r.config.title} — ${r.state}`);if(r)await manage(r.id);}}
+  for(;;){const [action]=await menuChoose(io,tr('Siglum 写作工作流','Siglum writing workflows'),['create','list','extensions','product'] as const,x=>x==='create'?tr('创建任务','Create task'):x==='list'?tr('打开／恢复任务','Open / resume task'):x==='product'?tr('连接／验证／摘要／HTML报告','Connections / checks / summaries / HTML reports'):tr('Skill与MCP扩展管理','Skills and MCP management'));if(!action)return;
+    try{if(action==='create')await create();else if(action==='extensions')await runExtensionsGuide(w,io,lang);else if(action==='product')await(await import('./product-guide.js')).runProductGuide(w,io,lang);else{const [r]=await menuChoose(io,tr('选择任务','Choose task'),s.list(),r=>`${r.config.title} — ${r.state}`);if(r)await manage(r.id);}}
     catch(e){if(e instanceof WizardCancelled||io.signal?.aborted)throw new WizardCancelled();io.line(e instanceof Error?e.message:'Workflow guide action failed.');}
   }
 }

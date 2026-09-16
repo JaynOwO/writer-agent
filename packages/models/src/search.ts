@@ -7,18 +7,19 @@ export class SearchError extends Error {constructor(readonly code:string,message
 export interface SearchProvider {search(input:SearchRequest,signal?:AbortSignal):Promise<SearchResult>}
 /** No SDK, no automatic parameters or answer generation. Test endpoint override is loopback only. */
 export class TavilySearch implements SearchProvider {
-  private readonly endpoint:string;private readonly keyEnv:string;
-  constructor(options:{keyEnv?:string;testEndpoint?:string}={}){
+  private readonly endpoint:string;private readonly keyEnv:string; private readonly credential:((endpoint:string)=>Promise<string|undefined>)|undefined;
+  constructor(options:{keyEnv?:string;testEndpoint?:string;credential?:(endpoint:string)=>Promise<string|undefined>}={}){
+    this.credential=options.credential;
     this.keyEnv=options.keyEnv??'TAVILY_API_KEY';if(!/^[A-Za-z_][A-Za-z0-9_]{0,127}$/.test(this.keyEnv))throw new SearchError('SEARCH_CONFIG','Expected a key environment-variable name.');
     this.endpoint=options.testEndpoint??'https://api.tavily.com/search';
     if(options.testEndpoint){const u=new URL(this.endpoint);if(!['127.0.0.1','[::1]'].includes(u.hostname)||!['http:','https:'].includes(u.protocol)||u.username||u.password||u.search||u.hash)throw new SearchError('SEARCH_CONFIG','Only literal loopback is permitted for test endpoint injection.');}
   }
-  preflight(){const key=process.env[this.keyEnv];if(!key||key.length>8192||!/^[\x21-\x7e]+$/.test(key))throw new SearchError('SEARCH_AUTH','Search key missing/invalid in the configured environment variable. No search was sent.');}
+  preflight(){if(this.credential)return;const key=process.env[this.keyEnv];if(!key||key.length>8192||!/^[\x21-\x7e]+$/.test(key))throw new SearchError('SEARCH_AUTH','Search key missing/invalid in the configured environment variable. No search was sent.');}
   async search(input:SearchRequest,signal?:AbortSignal):Promise<SearchResult>{
     validateSearchRequest(input);this.preflight();
     const body={query:input.query,search_depth:'basic',auto_parameters:false,include_answer:false,include_raw_content:false,include_images:false,include_usage:true,max_results:input.maxResults,topic:'general',language:input.language.toLowerCase(),filter_by_language:false,...(input.domains.length?{include_domains:input.domains}:{}),...(input.timeRange?{time_range:input.timeRange}:{})};
     let response:unknown;
-    try{response=await postJson({endpoint:this.endpoint,apiKeyEnv:this.keyEnv,timeoutMs:20000,maxResponseBytes:500000},body,signal);}
+    try{response=await postJson({endpoint:this.endpoint,apiKeyEnv:this.credential?undefined:this.keyEnv,...(this.credential?{credential:this.credential}:{}),timeoutMs:20000,maxResponseBytes:500000},body,signal);}
     catch(e){if(e instanceof ProviderError){const status=e.httpStatus??null;const code=status===432||status===433?'SEARCH_QUOTA':e.code.replace('PROVIDER_','SEARCH_');throw new SearchError(code,'Search failed; no automatic retry, depth escalation or billing change was made.',status);}throw e;}
     return parseSearchResponse(response,input);
   }

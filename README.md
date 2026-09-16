@@ -2,14 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.7 -->
+<!-- siglum:version=0.0.8 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 A local-first agent harness for research, writing, and review.
 
 **Models propose. Sources stay traceable. Authors decide.**
 
-**v0.0.7** · CLI development preview · **Apache-2.0**
+**v0.0.8** · CLI development preview · **Apache-2.0**
 
 Keep manuscript revisions, source snapshots, claim annotations, review reports and author-confirmed writing guidance in your own workspace. A model may draft intent, suggest preferences, propose edits or review changes; it cannot approve its own output. Bounded, author-authorized templates now coordinate research and writing; this is not a complete desktop IDE or an unrestricted autonomous agent.
 
@@ -74,7 +74,7 @@ pnpm eval:retrieval
 
 Enhanced new tasks search across bounded saved text with deterministic Latin/Han matching and neighboring passages, instead of always taking the first40 lines. Plans disclose actual coverage and omissions; retrieval ranking is not reliability. Chapter drafting is opt-in, uses the approved outline/global intent and frozen chapter evidence, and ends with a bounded whole-candidate review. Each chapter is a budgeted model request.
 
-Host-generated footnotes and citation maps keep stable source/excerpt identities and exact offsets while display numbers can change. They associate source-entry quotation candidates, not proven claim support; later manuscript changes make maps stale. The actual stdio/HTTP integration tests use owned synthetic servers, **not independent interoperability certification**. The native client has a restricted JSON Schema/frontmatter subset; the official SDK was evaluated but not installed in the DNS-blocked build environment. Read the [English guide](docs/extensions.md), [简中指南](docs/extensions.zh-CN.md) and [compatibility matrix](docs/extensions-protocol.md) before connecting programs/services.
+Host-generated footnotes and citation maps keep stable source/excerpt identities and exact offsets while display numbers can change. They associate source-entry quotation candidates, not proven claim support; later manuscript changes make maps stale. The actual stdio/HTTP integration tests use owned synthetic servers, **not independent interoperability certification**. The installed official SDK handles MCP protocol execution; host JSON Schema/frontmatter and capability restrictions remain. Read the [English guide](docs/extensions.md), [简中指南](docs/extensions.zh-CN.md) and [compatibility matrix](docs/extensions-protocol.md) before connecting programs/services.
 
 <!-- section:writing-memory -->
 ## Intent and writing memory, with author control
@@ -143,6 +143,30 @@ Review selected pending changes with an independently selected model, optionally
 
 Reports retain their input/version history. Later relevant document, pending-change, claim or guidance changes make them stale. Older reports that predate memory retain absent guidance, not invented historical preferences. See [review guide](docs/review.md). Real-model quality is unvalidated; the 80 bilingual evaluation cases have draft labels pending human review.
 
+<!-- section:product -->
+## Connections, verification and reading reports
+
+```sh
+pnpm demo:product
+pnpm siglum product doctor
+pnpm siglum product guide ../extensions-playground --lang en
+pnpm siglum product guide ../extensions-playground --lang zh-CN
+```
+
+The existing writing workspace must already exist; do not initialize over private material. Saved model presets are also available in the writing/workflow guide. The product guide manages user-local connections, masked credential input, explicit keyring/service tests, optional navigation summaries and static HTML export. It does not execute probes or unlock keys by default.
+
+| Capability | Implemented boundary |
+|---|---|
+| <!-- feature:connection-presets --> Connections | Versioned local defaults, explicit task binding; no automatic permission |
+| <!-- feature:os-credentials --> Secrets | Lazy OS keyring adapter, separate references, explicit environment/session alternatives |
+| <!-- feature:navigation-summaries --> Summaries | Optional, budgeted navigation notes; original selected evidence retained |
+| <!-- feature:html-reports --> Reading | Static bilingual HTML snapshots, opt-in private groups, no scripts or remote assets |
+| <!-- feature:validation-guide --> Verification | Local metadata by default; bounded live probes separately authorized and recorded |
+
+<!-- limit:product-validation --> **Implementation is not platform/provider certification.** OS binding tests, application tests, official SDK server fixtures and independent service tests are distinct. No credentials are supplied; missing/unsupported/not-run is never a pass. Summaries may increase total input and cost. HTML is read-only and frozen, not a GUI editor or live status screen.
+
+See [product guide](docs/product.md) and [dependency / compatibility notes](docs/dependencies.md). SDK2.0.0 and keyring2.1.0 are now locked dependencies. Workspace schema stays6; user-level nonsecret configuration has its own schema1. Old MCP registrations need an explicit current-adapter registration/trust/discovery, not an automatic protocol fallback.
+
 <!-- section:status -->
 ## Included, with clear boundaries
 
@@ -187,7 +211,7 @@ Reports retain their input/version history. Later relevant document, pending-cha
 
 <!-- limit:memory-retention --> **Disable is not erase.** Old requests, databases, backups and remote services may retain past content. Export excludes examples by default, not secrets manually typed into rule text. Review what you export/send. This version does not promise secure deletion.
 
-<!-- limit:extension-subset --> **Extension support is bounded, not universal.** Skills do not run scripts. MCP uses an explicit native protocol/schema subset and author-selected parameters, not arbitrary callbacks or a sandbox. Independent third-party services and real-model quality need separate tests.
+<!-- limit:extension-subset --> **Extension support is bounded, not universal.** Skills do not run scripts. MCP uses the official SDK with an explicit host capability/schema subset and author-selected parameters, not arbitrary callbacks or a sandbox. Independent third-party services and real-model quality need separate tests.
 
 <!-- section:privacy -->
 ## Local storage, explicit transmission
@@ -199,9 +223,9 @@ Private databases and exports are unencrypted; do not commit them. Network sourc
 <!-- section:development -->
 ## Development and validation
 
-No new third-party runtime dependency was added. Existing pnpm lockfile is retained. Node's SQLite, test runner, fetch and readline are used through bounded code paths. Default tests never call paid providers; real OS/model/install results must be reported separately.
+Pinned official MCP SDK and OS credential binding dependencies are added; the lockfile is genuinely generated by pnpm. See docs/dependencies.md. Node's SQLite, test runner, fetch and readline are used through bounded code paths. Default tests never call paid providers; real OS/model/install results must be reported separately.
 
-[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.7 specification](docs/v0.0.7-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.8 specification](docs/v0.0.8-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## License

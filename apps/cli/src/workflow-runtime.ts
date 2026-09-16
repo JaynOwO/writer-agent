@@ -1,3 +1,8 @@
+import { navigationPacket, scopeNavigation, validateNavigationRequest } from '@writer-agent/core';
+import type { NavigationRequest, NavigationPacket } from '@writer-agent/core';
+import { validateNavigationResponse } from '@writer-agent/models';
+import type { NavigationProvider } from '@writer-agent/models';
+import { ProductError } from './application/secrets.js';
 // SPDX-License-Identifier: Apache-2.0
 import { WriterError, workflowHash as hash, validateWorkflowConfig, validateWorkflowOutput, validateSourceContext, lineCount, lineRange, applyChange, checkWritingRules, renderMarkdown, validateWorkflowRequest, rankDiscoveries, joinChapterDrafts, researchTerms } from '@writer-agent/core';
 import type { WorkflowConfig, WorkflowRun, WorkflowModel, WorkflowRequest, WorkflowContentRequest, WorkflowOutput, WorkflowArtifact, WorkflowAttempt, WorkflowKind, QueryOutput, OutlineOutput, DraftOutput, DraftReviewOutput, SourceContextItem, SearchResult, SearchRequest, SourceMediaType, AnalysisRun, ApprovedMcpCall } from '@writer-agent/core';
@@ -6,14 +11,14 @@ import { OllamaProvider, OpenAICompatibleProvider, TavilySearch, ProviderError, 
 import type { WorkflowProvider, ModelProvider, AnalysisProvider, SearchProvider } from '@writer-agent/models';
 import { fetchSource } from './source-http.js';
 import { McpClient, McpError, mcpLaunchHash, type McpTextResult } from './mcp-client.js';
-export type RuntimeModel=WorkflowProvider&ModelProvider&AnalysisProvider;
+export type RuntimeModel=WorkflowProvider&ModelProvider&AnalysisProvider&Partial<NavigationProvider>;
 export interface WorkflowDependencies {
-  model:RuntimeModel; search?:SearchProvider;
+  model:RuntimeModel; search?:SearchProvider; assertCurrent?:()=>void;
   mcpCall?:(call:ApprovedMcpCall,signal:AbortSignal)=>Promise<McpTextResult>;
   fetchPage?:(url:string,options:{signal:AbortSignal})=>Promise<{url:string;raw:Uint8Array;mediaType:SourceMediaType}>;
 }
-export function makeWorkflowModel(c:WorkflowModel):OpenAICompatibleProvider|OllamaProvider {
-  const options={model:c.model,baseURL:c.baseURL,allowRemote:c.allowRemote,...(c.apiKeyEnv===null?{}:{apiKeyEnv:c.apiKeyEnv}),timeoutMs:c.timeoutMs,maxOutputTokens:c.maxOutputTokens};
+export function makeWorkflowModel(c:WorkflowModel,credential?: (endpoint:string)=>Promise<string|undefined>,assertCurrent?:()=>void):OpenAICompatibleProvider|OllamaProvider {
+  const options={...(assertCurrent?{assertCurrent}:{}),...(credential?{credential}:{}),model:c.model,baseURL:c.baseURL,allowRemote:c.allowRemote,...(c.apiKeyEnv===null?{}:{apiKeyEnv:c.apiKeyEnv}),timeoutMs:c.timeoutMs,maxOutputTokens:c.maxOutputTokens};
   return c.provider==='ollama'?new OllamaProvider(options):new OpenAICompatibleProvider({...options,responseFormat:c.responseFormat,tokenParameter:c.tokenParameter});
 }
 export function workflowDependencies(c:WorkflowConfig):WorkflowDependencies {return {model:makeWorkflowModel(c.model),search:new TavilySearch({keyEnv:c.searchKeyEnv}),fetchPage:fetchSource};}
@@ -23,8 +28,8 @@ export function preflightWorkflow(c:WorkflowConfig,stage:WorkflowRun['stage']):v
   if(d.apiKeyEnv){const key=process.env[d.apiKeyEnv];if(!key||key.length>8192||!/^[\x21-\x7e]+$/.test(key))throw new ProviderError('PROVIDER_AUTH','Model key missing/invalid in configured environment variable. No model request was sent.');}
   if(stage==='research'&&c.research==='web')new TavilySearch({keyEnv:c.searchKeyEnv}).preflight();
 }
-function safeCode(error:unknown):string {const c=error instanceof WriterError||error instanceof ProviderError||error instanceof SearchError||error instanceof McpError?error.code:'WORKFLOW_STEP_FAILED';return /^[A-Z0-9_]{1,80}$/.test(c)?c:'WORKFLOW_STEP_FAILED';}
-function unknownOutcome(error:unknown):boolean{if(error instanceof McpError)return !['MCP_CONFIG','MCP_AUTH','MCP_CHANGED','MCP_PROTOCOL_UNSUPPORTED'].includes(error.code);return !['ProviderError','WriterError','SearchError','McpError'].includes((error as Error)?.name??'')||/NETWORK|TIMEOUT|CANCEL|BUSY|BUDGET|UNKNOWN/.test(safeCode(error));}
+function safeCode(error:unknown):string {const c=error instanceof WriterError||error instanceof ProviderError||error instanceof SearchError||error instanceof McpError||error instanceof ProductError?error.code:'WORKFLOW_STEP_FAILED';return /^[A-Z0-9_]{1,80}$/.test(c)?c:'WORKFLOW_STEP_FAILED';}
+function unknownOutcome(error:unknown):boolean{if(error instanceof McpError)return !['MCP_CONFIG','MCP_AUTH','MCP_CHANGED','MCP_PROTOCOL_UNSUPPORTED'].includes(error.code);return !['ProviderError','WriterError','SearchError','McpError','ProductError'].includes((error as Error)?.name??'')||/NETWORK|TIMEOUT|CANCEL|BUSY|BUDGET|UNKNOWN/.test(safeCode(error));}
 function capGapNotices(items:string[]):string[]{return items.length<=60?items:[...items.slice(0,59),`${items.length-59} additional omission notices are retained in step/source selection artifacts; this is not complete source coverage.`];}
 function bounded<T>(promise:Promise<T>,signal:AbortSignal):Promise<T>{
   if(signal.aborted)return Promise.reject(new WriterError('WORKFLOW_UNKNOWN','Execution cancelled after a possible external send.'));
@@ -37,13 +42,16 @@ interface ReviewArtifact {reportId:string;findings:number;request:unknown}
 /** One foreground worker, fixed templates, value-only model inputs and durable attempts. */
 export async function executeWorkflow(w:Workspace,runId:string,dependencies?:WorkflowDependencies,signal?:AbortSignal):Promise<WorkflowRun>{
   const store=w.workflows,initial=store.run(runId);store.assertFresh(initial);
-  if(!dependencies)preflightWorkflow(initial.config,initial.stage);
-  const deps=dependencies??workflowDependencies(initial.config);
+  let selectedDependencies=dependencies;
+  if(!selectedDependencies&&initial.config.connectionRefs){const {presetDependencies}=await import('./application/connections-runtime.js');selectedDependencies=presetDependencies(w,initial);}
+  if(!selectedDependencies)preflightWorkflow(initial.config,initial.stage);
+  const deps=selectedDependencies??workflowDependencies(initial.config);
+  deps.assertCurrent?.();
   const expectedId=`${initial.config.model.provider}/${initial.config.model.model}`;
   if(deps.model.id!==expectedId)throw new WriterError('WORKFLOW_PERMISSION','Runtime provider differs from the authorized model.');
   if(signal?.aborted)throw new WriterError('WORKFLOW_PERMISSION','Cancelled before acquiring a run.');
   // Preflight local fingerprints and configured credential presence without connecting or running code.
-  if(!dependencies?.mcpCall) for(const call of initial.capture.extensions?.calls??[]){
+  if(!deps.mcpCall) for(const call of initial.capture.extensions?.calls??[]){
     if(await mcpLaunchHash(call.config)!==call.serverHash)throw new McpError('MCP_CHANGED','MCP executable/configuration changed since trust. Re-register and explicitly trust the new version.');
     if(call.config.transport==='http'&&call.config.tokenEnv&&!process.env[call.config.tokenEnv])throw new McpError('MCP_AUTH','MCP token environment variable is missing; no connection attempted.');
   }
@@ -53,7 +61,7 @@ export async function executeWorkflow(w:Workspace,runId:string,dependencies?:Wor
   const heartbeat=setInterval(()=>{try{store.pulse(lease);}catch(e){pulseError=e;controller.abort();}},2000);
   const stageGrant=store.grant(initial.grantId!);
   let finished=false;
-  const pulse=()=>{if(pulseError)throw pulseError;if(controller.signal.aborted)throw new WriterError('WORKFLOW_UNKNOWN','Workflow stopped; inspect attempt outcomes before retrying.');store.pulse(lease);};
+  const pulse=()=>{deps.assertCurrent?.();if(pulseError)throw pulseError;if(controller.signal.aborted)throw new WriterError('WORKFLOW_UNKNOWN','Workflow stopped; inspect attempt outcomes before retrying.');store.pulse(lease);};
   async function step(kind:WorkflowKind,task:string,request:unknown,type:string,call:()=>Promise<{value:unknown;usage?:WorkflowAttempt['usage']}>,parents:string[]=[],effect?:(value:unknown,attemptId:string)=>unknown):Promise<WorkflowArtifact>{
     pulse();const cacheInput=task==='query-plan'?{request,model:initial.config.model}:task==='search'?{request,provider:'tavily',keyEnv:initial.config.searchKeyEnv}:task==='fetch'?request:{epoch:initial.epoch,model:initial.config.model,request};const key=`${task}:v1:${hash(cacheInput)}`,existing=store.find(runId,key);
     if(existing){if(existing.inputHash!==hash(request))throw new WriterError('CORRUPT_DATA','Cached step input differs.');return existing;}
@@ -67,7 +75,7 @@ export async function executeWorkflow(w:Workspace,runId:string,dependencies?:Wor
     }catch(error){try{store.fail(lease,attempt.id,safeCode(error),kind==='tool'&&!(error instanceof McpError&&['MCP_CONFIG','MCP_AUTH','MCP_CHANGED','MCP_PROTOCOL_UNSUPPORTED'].includes(error.code))?true:unknownOutcome(error));}catch{/* Lease loss leaves the durable dispatched attempt for explicit recovery. */}throw error;}
     finally{clearTimeout(deadline);}
   }
-  function content(task:WorkflowContentRequest['task'],sources:SourceContextItem[],extra:Partial<Pick<WorkflowContentRequest,'gaps'|'feedback'|'outline'|'draft'|'review'|'section'>>={}):WorkflowContentRequest{
+  function content(task:WorkflowContentRequest['task'],sources:SourceContextItem[],extra:Partial<Pick<WorkflowContentRequest,'gaps'|'feedback'|'outline'|'draft'|'review'|'section'|'navigation'>>={}):WorkflowContentRequest{
     const r=store.run(runId);const data={protocolVersion:1 as const,task,runId,requestId:'pending',goal:r.config.goal,language:r.config.language,guidance:task==='draft-review'?r.capture.review:r.capture.writing,sources,gaps:[],feedback:'',outline:null,draft:null,review:null,...(r.capture.extensions?{skills:r.capture.extensions.skills}:{}),...extra};
     return {...data,requestId:hash({data,epoch:r.epoch})};
   }
@@ -159,12 +167,20 @@ export async function executeWorkflow(w:Workspace,runId:string,dependencies?:Wor
       if(!sources.some(s=>s.text.trim())){
         store.checkpoint(lease,{state:'blocked',notice:'No usable saved source text. Search snippets are not evidence. Add selected sources, refresh inputs and reauthorize.'});finished=true;return store.run(runId);
       }
-      const request=content('outline',sources,{gaps:capGapNotices(gaps)});const a=await generate(request,parents);
+      let navigation:NavigationPacket|undefined;
+      if(initial.config.navigationSummary){
+        if(!deps.model.summarizeNavigation)throw new WriterError('WORKFLOW_PERMISSION','This provider does not implement navigation summaries. No implicit fallback was used.');
+        const nr:NavigationRequest={protocolVersion:1,task:'navigation-summary',runId,requestId:hash({sources,goal:initial.config.goal,epoch:initial.epoch}),question:initial.config.goal,language:initial.config.language,sources};validateNavigationRequest(nr);
+        const nav=await step('model','navigation-summary',nr,'navigation-summary',async()=>{const raw=await deps.model.summarizeNavigation!(structuredClone(nr),controller.signal);const result=validateNavigationResponse(raw,nr,expectedId);return {value:{request:nr,output:result.output,promptVersion:'navigation-v1',originalBytes:Buffer.byteLength(JSON.stringify(sources)),summaryBytes:Buffer.byteLength(JSON.stringify(result.output)),interpretation:'derived-navigation-not-evidence'},usage:result.usage};},parents);
+        navigation=navigationPacket((nav.value as {output:import('@writer-agent/core').NavigationOutput}).output);parents.push(nav.id);
+      }
+      const request=content('outline',sources,{gaps:capGapNotices(gaps),...(navigation?{navigation}:{})});const a=await generate(request,parents);
       store.checkpoint(lease,{state:'waiting-approval',outlineId:a.id,notice:'Review/answer the proposed direction and outline. Approve its exact version before authorizing composition.'});
     }else if(initial.stage==='compose'){
       if(!initial.selectedOutlineId)throw new WriterError('WORKFLOW_PERMISSION','No author-approved outline.');
       const oa=store.artifact(initial.selectedOutlineId),saved=oa.value as ContentArtifact,outline=saved.output as OutlineOutput,sources=saved.request.sources;
       w.sources.verifyContext(sources);validateWorkflowOutput(outline,saved.request);
+      const nav=saved.request.navigation;
       let a:WorkflowArtifact;
       if(initial.capture.extensions?.chapterDrafting){
         const chapters:{heading:string;draft:DraftOutput;sources:SourceContextItem[]}[]=[],chapterIds:string[]=[];
@@ -176,17 +192,18 @@ export async function executeWorkflow(w:Workspace,runId:string,dependencies?:Wor
           picked.sort((a,b)=>a-b);const local=picked.map(n=>sources[n]!);
           // Preserve the approved global direction/headings; only omit evidence outside this chapter packet.
           const scopedOutline={...outline,sections:outline.sections.map(s=>({...s,sourceQuotes:s.sourceQuotes.filter(q=>picked.includes(q.itemIndex)).map(q=>({...q,itemIndex:picked.indexOf(q.itemIndex)}))}))};
-          const request=content('draft',local,{outline:scopedOutline,gaps:capGapNotices([...saved.request.gaps,`Chapter ${i+1}/${outline.sections.length}; supplied ${local.length}/${sources.length} frozen evidence selections; other evidence was not sent for this chapter.`]),section:{index:i,total:outline.sections.length,heading:section.heading,approvedOutlineHash:hash(outline)}});
+          const chapterNav=scopeNavigation(nav,picked);
+          const request=content('draft',local,{...(chapterNav?{navigation:chapterNav}:{}),outline:scopedOutline,gaps:capGapNotices([...saved.request.gaps,`Chapter ${i+1}/${outline.sections.length}; supplied ${local.length}/${sources.length} frozen evidence selections; other evidence was not sent for this chapter.`]),section:{index:i,total:outline.sections.length,heading:section.heading,approvedOutlineHash:hash(outline)}});
           const chapter=await generate(request,[oa.id]);chapterIds.push(chapter.id);chapters.push({heading:section.heading,draft:(chapter.value as ContentArtifact).output as DraftOutput,sources:local});
         }
-        const request=content('draft',sources,{outline,gaps:saved.request.gaps});
+        const request=content('draft',sources,{outline,gaps:saved.request.gaps,...(nav?{navigation:nav}:{})});
         const output=joinChapterDrafts(initial.config.title,chapters,sources,{runId,requestId:request.requestId});
         a=store.deriveDraft(lease,`chapter-assembly:v1:${hash({parents:chapterIds,request})}`,request,output,[oa.id,...chapterIds]);
-      }else a=await generate(content('draft',sources,{outline,gaps:saved.request.gaps}),[oa.id]);
+      }else a=await generate(content('draft',sources,{outline,gaps:saved.request.gaps,...(nav?{navigation:nav}:{})}),[oa.id]);
       const draft=(a.value as ContentArtifact).output as DraftOutput;
-      const review=await generate(content('draft-review',sources,{outline,draft,gaps:saved.request.gaps}),[oa.id,a.id]);const critique=(review.value as ContentArtifact).output as DraftReviewOutput;
+      const review=await generate(content('draft-review',sources,{outline,draft,gaps:saved.request.gaps,...(nav?{navigation:nav}:{})}),[oa.id,a.id]);const critique=(review.value as ContentArtifact).output as DraftReviewOutput;
       const candidates=[a.id];
-      if(initial.config.autoRevision&&critique.needsRevision){const b=await generate(content('draft-revision',sources,{outline,draft,review:critique,gaps:saved.request.gaps}),[oa.id,a.id,review.id]);candidates.push(b.id);}
+      if(initial.config.autoRevision&&critique.needsRevision){const b=await generate(content('draft-revision',sources,{outline,draft,review:critique,gaps:saved.request.gaps,...(nav?{navigation:nav}:{})}),[oa.id,a.id,review.id]);candidates.push(b.id);}
       store.checkpoint(lease,{state:'waiting-approval',candidateIds:candidates,reportIds:[review.id],notice:'Candidates are not manuscripts. Inspect exact A/B text, limitations and sources; adopt explicitly. Candidate B, when present, has not received an extra hidden review.'});
     }else{
       const documentId=initial.config.documentId!;

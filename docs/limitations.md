@@ -1,4 +1,16 @@
-# Known limitations — Siglum v0.0.6
+# Known limitations — Siglum v0.0.8
+
+This is a developer preview, not a certified writing assistant, general MCP client or finished desktop editor. The current authoritative boundaries below supersede the older version-specific notes retained in the rest of this document.
+
+- Official MCP SDK2.0.0 is now installed and used. Supported host schema/capability limits remain; OAuth, arbitrary callbacks, binary/media and implicit retries are not supported. Old registrations require explicit renewal/trust/discovery. SDK-to-SDK fixtures are not independent service certification.
+- OS credentials are implemented with keyring2.1.0 and an explicit Linux Secret Service choice. Uploaded Windows preparation tests validate the binding, not the complete application. No plaintext fallback, OS sandbox or encrypted manuscripts/backups are claimed. Session presets lose their value on process exit; removing a local item is not provider revocation.
+- Navigation summaries are optional derived notes over selected original passages, not proof or guaranteed compression. This implementation retains original evidence and may cost more. Live effect/accuracy/cost measurements require separately authorized providers.
+- HTML is a private, static read-only snapshot, not a GUI. Escaped Markdown is shown as text, full before/after is not minimal word diff. Content-group exclusions are structural, not a detector for secrets already repeated in prose. Output publication requires a suitable local filesystem and a new file.
+- Workspace schema remains6; user-local nonsecret configuration has independent schema1. Code installation does not migrate or discover private workspaces. Diagnostics do not unlock or connect by default; explicit probes may call real services and must not be labelled successful when skipped/unconfigured.
+- No new real search/model quality claim, independent third-party MCP interoperability claim or full Windows/macOS application certification is made by an offline regression suite. Browser rendering via injected exact HTML is not file:// policy or Windows Edge validation.
+
+## Historical limitations before v0.0.8 (read with the updates above)
+
 
 1. **CLI preview, not a finished IDE.** Numbered bilingual guide is implemented; no GUI/desktop package, streaming, unrestricted autonomous agents, PDF/JS rendering, Skills/MCP or model downloads.
 2. **Memory is explicitly controlled, not passive learning.** Draft intent/preferences require an explicit model call and author activation. Scope selection is deterministic, not semantic retrieval; profile names/priority are author choices. Rejected wording does not prove a general dislike, even with an explanation.

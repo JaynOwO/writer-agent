@@ -3,6 +3,7 @@ import { ProviderError, checkCancelled } from './errors.js';
 import { MAX_WIRE_BYTES } from './protocol.js';
 
 export interface HttpSettings {
+  readonly credential?: (endpoint:string)=>Promise<string|undefined>;
   readonly endpoint: string;
   readonly timeoutMs: number;
   readonly maxResponseBytes: number;
@@ -42,7 +43,9 @@ export async function postJson(settings: HttpSettings, body: unknown, signal?: A
   checkCancelled(signal);
   const serialized = JSON.stringify(body);
   if (Buffer.byteLength(serialized,'utf8') > MAX_WIRE_BYTES) throw new ProviderError('PROVIDER_TOO_LARGE','Encoded model request exceeds 8 MiB. Use a smaller document.');
-  const key = apiKey(settings.apiKeyEnv);
+  const key = settings.credential ? await settings.credential(settings.endpoint) : apiKey(settings.apiKeyEnv);
+  if(key!==undefined&&(!key||key.length>8192||!/[\x21-\x7e]/.test(key)||/[^\x21-\x7e]/.test(key)))throw new ProviderError('PROVIDER_AUTH','Invalid host credential.');
+  checkCancelled(signal);
   const controller = new AbortController();
   let timedOut = false;
   const abort = () => controller.abort();

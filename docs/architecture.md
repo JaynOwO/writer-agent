@@ -1,4 +1,4 @@
-# Architecture — Siglum v0.0.7
+# Architecture — Siglum v0.0.8
 
 ## Dependencies and authority
 
@@ -9,7 +9,7 @@ apps/cli -> storage -> core
 
 `core` validates text, revisions, source value types, static extraction and bounded source context. `storage` owns one SQLite database and all transactions. `models` receives immutable value snapshots and returns untrusted proposals; it has no database or approval handles. CLI source HTTP is a host capability invoked only by explicit `source add/refresh --fetch`. It is not a model tool or autonomous crawler.
 
-The product name is Siglum. Repository `JaynOwO/writer-agent`, workspace directory `.writer`, pnpm packages `@writer-agent/*` and `writer` command alias stay unchanged. `pnpm siglum` is an additional root script. There are no new package dependencies or lockfile changes. NodeNext ESM/project references, Node's built-in test runner/SQLite, and the existing compiler remain in use.
+The product name is Siglum. Repository `JaynOwO/writer-agent`, workspace directory `.writer`, pnpm packages `@writer-agent/*` and `writer` command alias stay unchanged. `pnpm siglum` is an additional root script. v0.0.8 adds pinned official MCP SDK and OS credential binding dependencies with a genuine pnpm lockfile update. NodeNext ESM/project references, Node's built-in test runner/SQLite, and the existing compiler remain in use.
 
 ## Manuscript rules retained
 
@@ -79,7 +79,7 @@ Search planning sees only the public brief. Search results remain discoveries; f
 
 ## v0.0.7 extension/research layer
 
-Optional config.extensions enables immutable Skill captures and explicit MCP call descriptors in the existing WorkflowStore fingerprint. Core defines constrained schemas and research/citation value transformations; ExtensionStore stores packages, activation/trust/catalogue events, original third-party provenance, derived index cache and citation maps in the same schema6 database. Existing source/model/memory APIs remain authoritative. Native MCP transport is an isolated CLI host adapter, not a model capability handle. It uses explicit protocol dates and a documented strict subset without new npm dependencies. Unsupported schema assertions exclude tools.
+Optional config.extensions enables immutable Skill captures and explicit MCP call descriptors in the existing WorkflowStore fingerprint. Core defines constrained schemas and research/citation value transformations; ExtensionStore stores packages, activation/trust/catalogue events, original third-party provenance, derived index cache and citation maps in the same schema6 database. Existing source/model/memory APIs remain authoritative. SDK-backed MCP transport is an isolated CLI host adapter, not a model capability handle. It uses explicit protocol dates and a documented host capability/schema subset. Unsupported schema assertions exclude tools.
 
 Workflow research uses the existing reserve/dispatched/complete path for MCP reads as well as built-in fetch/search. MCP attempts share the fetch/read quota and have exact author-selected arguments. Discovery is performed before actual calls; observed relevant changes revoke old descriptor usability. The client cannot prevent a server from lying or constrain a trusted child with user OS access. Returned text is imported as a file-kind source with an immutable source_provenance row and origin in SourceContext; it is not a Siglum direct web capture. No result URL or source instruction executes a new capability.
 
@@ -87,4 +87,16 @@ Enhanced research indexes complete bounded saved source text. Search discovery i
 
 Chapter requests retain author-approved global outline/guidance and selected chapter source identities. Chapters each consume a model attempt. Host assembly maps local display references onto the frozen master selection, then saves a host artifact and citation map atomically. Whole-candidate review is bounded; no silent partial-review success. Citation-map sourceEntry quote associations are candidates, not per-claim support. Marker/neighbor offsets are structural, not a natural-language/Markdown parser. Adoption creates the manuscript/map/checkpoint together; later manuscript revisions mark maps stale.
 
-Old tasks omit extension fields and retain old hashes/behavior. Migration1..5->6 is additive and explicit, never run by code installation. SDK/independent-server conformance, Windows subprocess cleanup and real-model research quality require separate evidence. See extensions-protocol.md and the paired extension guides.
+Old tasks omit extension fields and retain old hashes/behavior. Migration1..5->6 is additive and explicit, never run by code installation. Independent-server conformance, Windows subprocess cleanup and real-model research quality require separate evidence. See extensions-protocol.md and the paired extension guides.
+
+## v0.0.8 shared product services
+
+CLI product commands, numbered guides, and future view adapters share applications under apps/cli/src/application. This is incremental extraction, not a second runtime or a new network server. The existing foreground runner owns grants, lease fencing, attempts and transactions.
+
+ConnectionStore owns user-level connections.sqlite schema1, independent of workspace schema6. Versioned settings have a credential mode/ref, not a key. A local binding fixes workspace identity/path, run, slot, preset version and destination hash; merely importing a reference cannot unlock local credentials. Host-only resolver/assertCurrent callbacks check local versions before/after inference and during workflow pulses, and are omitted from provider descriptions and prompts. No network wait holds either database transaction. OS writes use random entry journals; compensation removes only this operation's unreferenced item. Explicit self-tests have their own recoverable journal. Session credentials are process-local, and Linux OS storage requires Secret Service explicitly.
+
+Official MCP SDK2.0.0 owns Client/lifecycle. Host bounded Transport/fetch maintains byte limits, strict schema assertions, callback rejection, endpoint policy and limited child environment. Former native protocol execution is removed; old fingerprints cannot silently authorize the new adapter. Ordinary models and offline commands do not require loading a keyring or connecting SDK transports.
+
+Optional workflow navigationSummary adds one successful cached navigation artifact per input through the existing budgeted attempt mechanism. It pins source quotes and fallible notes. Selected original evidence remains in outline/draft/review requests; summary adds navigation, not a promised net compression or fact certificate. Chapter projection drops notes missing any referenced source. Legacy omitted fields keep original decoding/hash behavior.
+
+Static report snapshots are assembled from explicit content-group flags, escaped, rendered without JS/remote resources and published without overwriting. Generated status is frozen, not real time. Source/guidance fields are omitted when not selected, but model/manuscript prose may already reproduce private content; this is not semantic redaction. Product diagnostics use metadata only by default. Explicit probes have nonsecret durable state; model trials use disposable synthetic workspaces, MCP checks do discovery only, and keyring self-test never enumerates other apps.

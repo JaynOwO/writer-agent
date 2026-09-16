@@ -23,3 +23,7 @@ Read docs/memory-protocol.md and the paired guide. Preserve explicit candidate a
 ## Workflow contributions (v0.0.6)
 
 Retain all previous regressions, stage consent and source privacy. Add failure-injection tests for any change to attempt budgets, lease generations, unknown-outcome retry or nested checkpoint side effects. Defaults must not use real Tavily/model accounts; keep the standalone `demo:workflow` covered by default tests. Update paired workflow guides and README facts, and state whether Windows/live services were actually exercised. Do not turn static templates into arbitrary executable plugins without a new scope decision.
+
+## v0.0.8 integration gate
+
+Run `pnpm demo:product` alongside the earlier checks. Use exact dependency versions and pnpm-generated integrity lock entries. Do not vendor downloaded node_modules or native binaries into the source bundle. Tests use the official SDK server as a first-party fixture; do not label it independent interoperability. Default tests must not write to a real OS keyring. Report uploaded Windows binding tests separately from application/CI runs. Never change private user presets, credentials or an installed updater during development.

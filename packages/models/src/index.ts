@@ -11,3 +11,4 @@ export * from './memory-protocol.js';
 
 export * from './workflow-protocol.js';
 export * from './search.js';
+export * from './navigation-protocol.js';

@@ -1,3 +1,4 @@
+import { validateNavigationPacket } from './navigation.js';
 // SPDX-License-Identifier: Apache-2.0
 import { validateWorkflowExtensions, validateLoadedSkills } from './extensions.js';
 import { mapCitations } from './research.js';
@@ -25,7 +26,14 @@ export function validateWorkflowModel(v:unknown):asserts v is WorkflowModel {
   wfInteger(v.timeoutMs,10,600000);wfInteger(v.maxOutputTokens,128,32768);
 }
 export function validateWorkflowConfig(v:unknown):asserts v is WorkflowConfig {
-  exactObject(v,['template','title','goal','publicBrief','language','research','documentId','changeIds','selection','profileId','intent','memoryOptions','model','searchKeyEnv','domains','timeRange','autoRevision','budget',...(isRecord(v)&&Object.hasOwn(v,'extensions')?['extensions']:[])]);
+  exactObject(v,['template','title','goal','publicBrief','language','research','documentId','changeIds','selection','profileId','intent','memoryOptions','model','searchKeyEnv','domains','timeRange','autoRevision','budget',...(isRecord(v)&&Object.hasOwn(v,'extensions')?['extensions']:[]),...(isRecord(v)&&Object.hasOwn(v,'connectionRefs')?['connectionRefs']:[]),...(isRecord(v)&&Object.hasOwn(v,'navigationSummary')?['navigationSummary']:[])]);
+  if(Object.hasOwn(v,'connectionRefs')){
+    if(!isRecord(v.connectionRefs)||Object.keys(v.connectionRefs).some(k=>!['model','search','mcp'].includes(k)))wfError('Invalid connection reference fields.');
+    const refs=[v.connectionRefs.model,v.connectionRefs.search];
+    if(v.connectionRefs.mcp!==undefined){if(!isRecord(v.connectionRefs.mcp)||Object.keys(v.connectionRefs.mcp).length>5)wfError('Invalid MCP credential mappings.');for(const [server,ref]of Object.entries(v.connectionRefs.mcp)){text(server,200);refs.push(ref);}}
+    for(const ref of refs){if(ref===undefined)continue;exactObject(ref,['id','version']);if(typeof ref.id!=='string'||!/^preset_[a-f0-9]{32}$/.test(ref.id)||typeof ref.version!=='string'||!/^pv_[a-f0-9]{32}$/.test(ref.version))wfError('Invalid local connection reference.');}
+  }
+  if(Object.hasOwn(v,'navigationSummary')&&(typeof v.navigationSummary!=='boolean'||v.template!=='new-article'))wfError('Navigation summary applies only to new article research.');
   if (Object.hasOwn(v,'extensions')) { validateWorkflowExtensions(v.extensions); if (v.template !== 'new-article' && (v.extensions.calls.length || v.extensions.chapterDrafting)) wfError('MCP research and chapter drafting are only available in the new-article template.'); }
   if(!['new-article','revise-article','review-changes'].includes(v.template as string)||!['zh-CN','en'].includes(v.language as string)||!['web','selected'].includes(v.research as string)||typeof v.autoRevision!=='boolean')wfError('Unknown workflow template/language/mode.');
   text(v.title,200);text(v.goal,10000);text(v.publicBrief,4000,true);stringIds(v.changeIds,100);
@@ -43,7 +51,7 @@ export function validateWorkflowConfig(v:unknown):asserts v is WorkflowConfig {
   if(Buffer.byteLength(JSON.stringify(v))>160000)wfError('Workflow config too large.');
 }
 export function workflowStage(template:WorkflowTemplate):WorkflowStage{return template==='new-article'?'research':template==='revise-article'?'edit':'audit';}
-export function stageTasks(stage:WorkflowStage, withTools=false):string[]{const tasks:string[]=({research:['query-plan','search','fetch','outline'],compose:['draft','draft-review','draft-revision'],edit:['propose','semantic-review','revise-proposal'],audit:['semantic-review']} as const)[stage].slice(); return stage==='research'&&withTools?[...tasks,'mcp-tool','mcp-resource']:tasks;}
+export function stageTasks(stage:WorkflowStage, withTools=false, withSummary=false):string[]{const tasks:string[]=({research:['query-plan','search','fetch','outline'],compose:['draft','draft-review','draft-revision'],edit:['propose','semantic-review','revise-proposal'],audit:['semantic-review']} as const)[stage].slice(); if(stage==='research'&&withTools)tasks.push('mcp-tool','mcp-resource');if(stage==='research'&&withSummary)tasks.push('navigation-summary');return tasks;}
 export function publicResultUrl(value:string,domains:readonly string[]):string {
   const u=normalizeSourceUrl(value);
   if(domains.length&&!domains.some(d=>u.hostname===d||u.hostname.endsWith('.'+d)))throw new WriterError('SOURCE_BLOCKED','Result outside approved domain scope.');
@@ -55,11 +63,11 @@ export function validateWorkflowRequest(v:unknown):asserts v is WorkflowRequest 
   if(v.task==='query-plan'){
     exactObject(v,['protocolVersion','task','runId','requestId','publicBrief','language','maxQueries']);text(v.publicBrief,4000);wfInteger(v.maxQueries,1,3);
   }else{
-    exactObject(v,['protocolVersion','task','runId','requestId','goal','language','guidance','sources','gaps','feedback','outline','draft','review',...(Object.hasOwn(v,'skills')?['skills']:[]),...(Object.hasOwn(v,'section')?['section']:[])]);
+    exactObject(v,['protocolVersion','task','runId','requestId','goal','language','guidance','sources','gaps','feedback','outline','draft','review',...(Object.hasOwn(v,'skills')?['skills']:[]),...(Object.hasOwn(v,'section')?['section']:[]),...(Object.hasOwn(v,'navigation')?['navigation']:[])]);
     if(Object.hasOwn(v,'skills')) validateLoadedSkills(v.skills);
     if(Object.hasOwn(v,'section')) { exactObject(v.section,['index','total','heading','approvedOutlineHash']); wfInteger(v.section.index,0,19); wfInteger(v.section.total,1,20); if(Number(v.section.index)>=Number(v.section.total)||v.task!=='draft')wfError('Invalid chapter target.');text(v.section.heading,300); if(typeof v.section.approvedOutlineHash!=='string'||!/^[a-f0-9]{64}$/.test(v.section.approvedOutlineHash))wfError('Missing approved outline identity.'); }
     if(!['outline','draft','draft-review','draft-revision'].includes(v.task as string))wfError('Unknown workflow task.');text(v.goal,10000);text(v.feedback,4000,true);
-    if(v.guidance!==null)validateMemoryPacket(v.guidance);validateSourceContext(v.sources);stringList(v.gaps,60,2000);
+    if(v.guidance!==null)validateMemoryPacket(v.guidance);validateSourceContext(v.sources);if(Object.hasOwn(v,'navigation'))validateNavigationPacket(v.navigation,v.sources);stringList(v.gaps,60,2000);
     if(v.task!=='outline'&&v.outline===null)wfError('Writing needs an approved outline.');
     if((v.task==='draft-review'||v.task==='draft-revision')&&v.draft===null)wfError('Review/revision needs an actual candidate.');
     if(v.task==='draft-revision'&&v.review===null)wfError('Revision needs its parent review.');

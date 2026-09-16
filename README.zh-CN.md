@@ -2,14 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.7 -->
+<!-- siglum:version=0.0.8 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 面向研究、写作与审稿的本地优先 Agent Harness。
 
 **模型提出建议，来源可追溯，作者保留最终决定权。**
 
-**v0.0.7** · 命令行开发预览版 · **Apache-2.0**
+**v0.0.8** · 命令行开发预览版 · **Apache-2.0**
 
 在自己的工作区保存文稿版本、来源快照、论断标注、审稿报告与经过作者确认的写作要求。模型可以起草意图、归纳候选偏好、提出修改或分析变化，但不能批准自己的输出。现在可按阶段授权执行有界研究写作；仍不是完整桌面 IDE 或无限制自主 Agent。
 
@@ -74,7 +74,7 @@ pnpm eval:retrieval
 
 增强任务在有界的完整已保存文本中，以确定性的英文词／中文双字匹配和邻接上下文找材料，不再总取前40行。计划披露实际范围与遗漏；相关性不是可信度。逐章生成是可选项，遵守已确认大纲与全局意图，使用固定章节证据，并在合稿后做有界整稿审阅；每章单独计入模型预算。
 
-宿主脚注与引用图记录稳定源快照／片段和精确偏移，编号可以重排。关联的是来源条目的候选引文，不是已证明的论据支持；文稿新版本会让旧映射过期。实际 stdio／HTTP 测试使用本项目自己编写的假服务，**不是独立互操作认证**。原生客户端使用受限 JSON Schema／frontmatter 子集；评估过官方 SDK，但 DNS 受限的构建环境没有装入它。连接外部程序前阅读[英文指南](docs/extensions.md)、[简中指南](docs/extensions.zh-CN.md)和[兼容矩阵](docs/extensions-protocol.md)。
+宿主脚注与引用图记录稳定源快照／片段和精确偏移，编号可以重排。关联的是来源条目的候选引文，不是已证明的论据支持；文稿新版本会让旧映射过期。实际 stdio／HTTP 测试使用本项目自己编写的假服务，**不是独立互操作认证**。本版使用实际安装的官方 SDK，宿主仍限制 JSON Schema／frontmatter 与工具能力；不是完整协议认证。连接外部程序前阅读[英文指南](docs/extensions.md)、[简中指南](docs/extensions.zh-CN.md)和[兼容矩阵](docs/extensions-protocol.md)。
 
 <!-- section:writing-memory -->
 ## 意图与写作记忆，由作者掌控
@@ -143,6 +143,30 @@ pnpm siglum memory help
 
 报告保留输入版本历史。相关文稿、待审修改、论断决策或写作要求变化后，报告标为过期。记忆功能之前的旧报告保持“未记录要求”，不伪造过去已经应用的偏好。参见[审稿指南](docs/review.zh-CN.md)。真实模型质量尚未验证，80 条双语评估案例的标签仍是等待人工审阅的草案。
 
+<!-- section:product -->
+## 连接、验证与阅读报告
+
+```sh
+pnpm demo:product
+pnpm siglum product doctor
+pnpm siglum product guide ../extensions-playground --lang en
+pnpm siglum product guide ../extensions-playground --lang zh-CN
+```
+
+上面的写作工作区需已存在；不要在私人稿件目录重复初始化。原来的改稿／工作流向导也可选已保存模型。产品向导管理本机连接、遮蔽密钥输入、明确凭据库／服务自检、可选导航摘要与静态 HTML 导出。默认诊断不会解锁密钥或测试真实服务。
+
+| 能力 | 已实现边界 |
+|---|---|
+| <!-- feature:connection-presets --> 连接预设 | 本机版本记录、明确任务绑定；不是自动授权 |
+| <!-- feature:os-credentials --> 系统凭据 | 延迟加载 OS 后端、引用与 Key 分离，可明确选择环境变量／会话 |
+| <!-- feature:navigation-summaries --> 导航摘要 | 可选、计预算，帮助阅读；选定原文仍完整保留 |
+| <!-- feature:html-reports --> 阅读报告 | 静态双语 HTML、分别选择私人内容，无脚本与外部资源 |
+| <!-- feature:validation-guide --> 验证向导 | 默认仅本地元数据，真实验证分别授权并记录 |
+
+<!-- limit:product-validation --> **程序实现不等于平台／服务认证。** 凭据绑定测试、应用测试、官方 SDK 服务夹具与独立服务互操作分别记录。软件不附送凭据；缺配置／不支持／未测试不会显示通过。摘要可能增加总输入与费用。HTML 只读且冻结，不是 GUI 编辑器或实时状态页。
+
+见[产品指南](docs/product.zh-CN.md)与[依赖／兼容说明](docs/dependencies.md)。官方 SDK2.0.0、凭据绑定2.1.0 已成为锁定依赖。工作区保持 schema6；本机非秘密配置单独使用 schema1。旧 MCP 连接需明确为当前适配器重新注册、信任和发现，不自动降级协议执行。
+
 <!-- section:status -->
 ## 已实现能力与边界
 
@@ -187,7 +211,7 @@ pnpm siglum memory help
 
 <!-- limit:memory-retention --> **停用不等于擦除。** 旧请求、数据库、备份和远端服务可能保留过去内容。导出默认去掉示例，但不会识别规则里手打的秘密；导出／发送前需检查内容。本版不承诺安全删除。
 
-<!-- limit:extension-subset --> **扩展不是全面兼容。** Skill 不执行脚本，MCP 使用明确的原生协议／schema 子集和作者预设参数，不支持任意回调，也不是系统沙箱。独立第三方服务与真实模型质量需要另行测试。
+<!-- limit:extension-subset --> **扩展不是全面兼容。** Skill 不执行脚本，MCP 使用官方 SDK 与明确的宿主能力／schema 子集和作者预设参数，不支持任意回调，也不是系统沙箱。独立第三方服务与真实模型质量需要另行测试。
 
 <!-- section:privacy -->
 ## 本地保存，明确发送
@@ -199,9 +223,9 @@ pnpm siglum memory help
 <!-- section:development -->
 ## 开发与验证
 
-没有新增第三方运行时依赖，保留原依赖锁文件。通过有界代码使用 Node 的 SQLite、测试器、fetch 与 readline。默认测试不调用收费模型；操作系统、模型和安装结果必须分别报告。
+新增官方 MCP SDK 与系统凭据绑定，依赖版本精确锁定；锁文件由真实 pnpm 安装生成。通过有界代码使用 Node 的 SQLite、测试器、fetch 与 readline。默认测试不调用收费模型；操作系统、模型和安装结果必须分别报告。
 
-[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.7 规格](docs/v0.0.7-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
+[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.8 规格](docs/v0.0.8-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## 许可证

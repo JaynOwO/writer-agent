@@ -1,4 +1,4 @@
-# 工具与研究 — Siglum v0.0.7
+# 工具与研究 — Siglum v0.0.8
 
 [English](extensions.md) | [简体中文](extensions.zh-CN.md)
 
@@ -38,7 +38,7 @@ pnpm siglum skill disable ../extensions-playground SKILL_ID
 
 ## 3．信任连接，不等于授权全部工具
 
-本版是**有界的原生 MCP 客户端**，不是完整协议实现。评估过官方 SDK，但作者环境 DNS 受限，未能安装；没有加入 SDK／JSON Schema／YAML 依赖，也没有伪造锁文件。具体范围见[兼容矩阵](extensions-protocol.md)；不支持的 schema 断言会让该工具被排除，而不是忽略限制继续执行。
+本版已切换到实际安装的官方 MCP SDK2.0.0，仍由宿主限制字节、权限、schema 与回调范围；不是全协议认证。旧连接指纹需要明确重新注册与信任，见[产品指南](product.zh-CN.md)。凭据可通过本机系统库预设管理，stdio仍只继承明确允许的环境变量。具体支持表见[兼容矩阵](extensions-protocol.md)。
 
 stdio 需要明确指定已经安装的可执行文件、参数数组和工作目录。启动的程序具有**当前用户的操作系统权限**：MCP 不是沙箱，环境变量白名单或目录设置不能限制恶意程序。只信任已知程序。不自动 npx 下载、不运行安装器、不拼接 shell 字符串。指纹覆盖可执行文件和参数中直接引用的文件，不认证完整依赖树；已信任的恶意程序仍可能主动读取磁盘秘密。
 
@@ -117,7 +117,7 @@ pnpm siglum migrate ../existing-writing --apply
 
 新工作区为 schema6；旧 schema1–5 保留各自原能力。扩展需明确、先备份的升级，代码更新不会打开或迁移私稿。迁移前关闭其他会话，备份私人且未加密。旧工作流记录不会被伪造成已经使用了新工具和索引。
 
-保留回归测试并运行七个演示；现有 Updater 仍执行 check 与原来的演示，CI 另显式运行 `demo:extensions`。实际 stdio／HTTP 测试使用**本项目自己编写的假服务**，不证明 SDK／第三方互操作。Windows、Node24、真实 Tavily／模型／独立 MCP 服务分别报告。十二条检索比较是字符串夹具，不是有代表性的研究质量基准。
+保留回归测试并运行八个演示；现有 Updater 仍执行 check 与原来的演示，CI 另显式运行 `demo:extensions`。实际 stdio／HTTP 测试使用**本项目自己编写的假服务**，不证明独立第三方互操作。Windows、Node24、真实 Tavily／模型／独立 MCP 服务分别报告。十二条检索比较是字符串夹具，不是有代表性的研究质量基准。
 
 参见[兼容与协议](extensions-protocol.md)、[架构](architecture.md)、[安全](security-model.md)、[工作流](workflows.zh-CN.md)和 [v0.0.7 范围](v0.0.7-spec.md)。
 
