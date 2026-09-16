@@ -1,3 +1,4 @@
+import { validateMemoryCapture } from './memory.js';
 // SPDX-License-Identifier: Apache-2.0
 import { WriterError, isRecord, requireString } from './errors.js';
 import { validateText, validateSnapshot } from './document.js';
@@ -113,7 +114,8 @@ function candidates(value: unknown, snapshot: Snapshot): Map<string, ClaimCandid
     return refs;
 }
 export function captureAnalysisRequest(value: AnalysisRequest): AnalysisRequest {
-    exactObject(value, ['protocolVersion', 'task', 'documentId', 'baseRevisionId', 'instruction', 'scope', 'documentBlockCount', 'before', 'after', 'changes', 'sources', 'protectedClaims', 'excludedProtectedClaimIds', 'ledgerStamp']);
+    exactObject(value, ['protocolVersion', 'task', 'documentId', 'baseRevisionId', 'instruction', 'scope', 'documentBlockCount', 'before', 'after', 'changes', 'sources', 'protectedClaims', 'excludedProtectedClaimIds', 'ledgerStamp', ...(value.memory !== undefined ? ['memory'] : [])]);
+    if(value.memory !== undefined){validateMemoryCapture(value.memory);if(value.memory.documentId!==value.documentId||value.memory.task!=='review'||value.task!=='semantic-review')fail();}
     if (value.protocolVersion !== 1 || !['claim-extraction', 'semantic-review'].includes(value.task) || !['blocks', 'document'].includes(value.scope))
         fail();
     for (const id of [value.documentId, value.baseRevisionId])

@@ -49,3 +49,13 @@ Independent host validation checks exact quote coordinates, local candidate refe
 Reports retain full selected text inside the private, unencrypted workspace. JSON exports are explicit and refuse existing paths; they are not sanitized for public distribution. Never commit them. Provider diagnostics do not include raw error bodies or keys. Returned usage is recorded, not estimated money; cancellation may not prevent upstream billing. Successful records are append-only with hashes, not tamper-proof against an owner of the database.
 
 Feedback can target historical reports and records the current manuscript revision at the time of feedback. It is not a reanalysis or approval of the current text. Changed briefs require a new run, and absence of findings is not a safety signal.
+
+## v0.0.5 author-guidance boundaries
+
+Stored rules are data, not tools, code, factual proof or system-permission changes. Only author confirmation activates model/import candidates. A webpage, quoted example, repeated rejection or model output cannot directly activate preferences. Each intent draft, preference draft, writing request and review has separate explicit send authorization. Existing keys, source-only permission, no retries/redirects and bounded transport stay intact.
+
+Only selected profiles/languages/tasks and independently authorized examples enter requests. Reasons without selected contrast permission omit manuscript before/after text. No background preference mining or OS/global file scanning occurs. Important claim changes, intent or applicable rule changes invalidate captured work before persistence; no transaction spans a network wait. Changes/usage are saved atomically. Neither feedback nor mechanical-rule warnings approve or silently rewrite text.
+
+Profile import is preview/candidate-only and never auto-attaches. Export defaults to no examples/history IDs and cannot overwrite files; arbitrary rule text is not secret-redacted. The guide strips terminal controls from displayed text and refuses nonTTY mode rather than treating piped input as consent. This is not an OS sandbox or a complete terminal-security audit.
+
+Disable stops new selection only: old snapshots, SQLite backups and service copies can retain text. User data is unencrypted. There is no secure deletion, automatic cross-workspace synchronization or new credential manager. Code update never migrates private workspaces; explicit schema4 migration retains a verified backup and preserves original records.

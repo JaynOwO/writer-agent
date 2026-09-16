@@ -56,3 +56,9 @@ The host retains its own captured baseline, validates the response as before and
 ## v0.0.4 separate analysis protocols
 
 Proposal Protocol v1 remains unchanged. Claim extraction and semantic review use their own task-specific schemas/methods; do not pass analysis JSON to propose. See [analysis-protocol.md](analysis-protocol.md). Review findings do not authorize text changes.
+
+## v0.0.5 optional author guidance
+
+ModelRequest can include guidance: MemoryPacket v1 selected and captured by the host. The proposal response remains v1 and has no memory activation, authorization or mutation fields. Drafted preferences use separate draftIntent/draftPreferences tasks, never hidden extra propose calls. Old requests without guidance stay valid.
+
+Schema4 suggestion flow captures the effective intent/profile/active-rule/example selection before inference. Provider receives a copy; the host verifies current memory before send and again in the proposal transaction, storing exact usage with pending proposals. No memory selection happens through the model. Mechanical warnings after a response are informational. See memory-protocol.md for limits, candidate confirmation and retention.

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5 — intent and author-controlled writing memory
+
+Added versioned confirmed/draft intent cards, workspace profiles, scoped preference versions and selective candidate approvals, optional rejection categories, explicit evidence-based distillation, bounded deterministic guidance selection, required structured overrides, private example selection, exact proposal/review usage and freshness checks. Added a bilingual numbered terminal guide, profile preview/import/export, additive verified-backup schema4 migration, memory-specific protocols and MEMORY_DEMO_OK. No new dependencies, passive learning, vector database, autonomous tools or real-model accuracy claim.
+
 ## 0.0.4 — claim ledger and semantic review preview
 
 Added manual and model-candidate claim annotations, exact UTF-16 anchors, explicit important-claim decisions, separate extraction/review task protocols, model claim mappings and selected-evidence assessments, immutable reports and author feedback. Added schema-v3 migration with verified backups, CLI review workflows, REVIEW_DEMO_OK, regression tests and an 80-case bilingual draft evaluation scaffold. No new dependencies, model fees, GUI, automatic fact certification or sentence-level text editing. Real-model semantic quality is not yet established.

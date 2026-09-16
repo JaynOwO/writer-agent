@@ -8,3 +8,5 @@ export * from './source-text.js';
 
 export * from './analysis-types.js';
 export * from './analysis.js';
+export * from './memory-types.js';
+export * from './memory.js';

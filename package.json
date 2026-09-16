@@ -1,9 +1,9 @@
 {
   "name": "writer-agent",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "private": true,
   "type": "module",
-  "description": "Siglum: local-first writing with traceable sources, claim annotations and reviewable semantic assessments",
+  "description": "Siglum: local-first writing with author-confirmed intent, scoped memory and reviewable model proposals",
   "license": "Apache-2.0",
   "packageManager": "pnpm@10.11.0",
   "engines": {
@@ -23,7 +23,8 @@
     "demo:sources": "node scripts/sources-demo.mjs",
     "docs:check": "node scripts/check-readme-parity.mjs",
     "demo:review": "node scripts/review-demo.mjs",
-    "eval:score": "node scripts/score-review-eval.mjs"
+    "eval:score": "node scripts/score-review-eval.mjs",
+    "demo:memory": "node scripts/memory-demo.mjs"
   },
   "devDependencies": {
     "@types/node": "22.19.7",

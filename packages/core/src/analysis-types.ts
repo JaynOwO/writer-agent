@@ -1,8 +1,9 @@
+import type { MemoryCapture } from './memory-types.js';
 // SPDX-License-Identifier: Apache-2.0
 import type { Snapshot, SourceContextItem } from './index.js';
 export const CLAIM_KINDS = ['testable', 'inference', 'attributed', 'value-judgment', 'unclassified'] as const;
 export type ClaimKind = typeof CLAIM_KINDS[number];
-export const FINDING_CATEGORIES = ['certainty', 'attribution', 'scope', 'time', 'numeric', 'causality', 'claim-added', 'claim-unmapped', 'claim-reversed', 'claim-reformulated', 'evidence-shift', 'protected-claim'] as const;
+export const FINDING_CATEGORIES = ['certainty', 'attribution', 'scope', 'time', 'numeric', 'causality', 'claim-added', 'claim-unmapped', 'claim-reversed', 'claim-reformulated', 'evidence-shift', 'protected-claim', 'intent-drift', 'style-guidance'] as const;
 export const EVIDENCE_RELATIONS = ['not-assessed', 'supports', 'partially-supports', 'contradicts', 'insufficient', 'uncertain'] as const;
 export type EvidenceRelation = typeof EVIDENCE_RELATIONS[number];
 export const MAPPING_RELATIONS = ['equivalent', 'reformulated', 'reversed', 'split', 'merged', 'removed', 'added', 'uncertain'] as const;
@@ -48,6 +49,8 @@ export interface ProtectedClaim {
     readonly anchors: readonly TextAnchor[];
 }
 export interface AnalysisRequest {
+    /** Absent in old reports; never synthesize old memory on read. */
+    readonly memory?: MemoryCapture;
     readonly protocolVersion: 1;
     readonly task: 'claim-extraction' | 'semantic-review';
     readonly documentId: string;
@@ -135,7 +138,7 @@ export interface AnalysisRun {
     readonly provider: AnalysisProviderInfo;
     readonly usage: AnalysisUsage | null;
     readonly durationMs: number;
-    readonly promptVersion: 'analysis-v1';
+    readonly promptVersion: 'analysis-v1' | 'analysis-memory-v1';
     readonly status: 'completed';
     readonly interpretation: 'model-assessment-not-verified';
     readonly createdAt: string;

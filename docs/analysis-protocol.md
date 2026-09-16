@@ -95,3 +95,9 @@ Only successful analyses are stored. Authentication failures, refusal, cancellat
 6,000,000 serialized UTF-8 bytes for an analysis packet/output, at most 100 candidates per side/findings, 200 mappings/assessments, 8 anchors/quotes per item, 16000 quote characters, 2000 statement/explanation characters, 20 notes of 2000 characters. Source context retains 8 items/80000 bytes, original document and transport limits remain enforced. These are safety caps, not promises that every model accepts such a request. No automatic batching/truncation happens.
 
 Correct coordinates, valid JSON, source hashes or agreement between models do not establish semantic correctness. An empty finding list is not a guarantee of unchanged meaning. Exact text observation uses a single prefix/suffix-delimited span per changed block; “quote absent in inspected scope” is not a document-wide deletion verdict. See [evaluation scaffold](../evaluation/README.md) for the explicitly unreviewed 80-case draft.
+
+## v0.0.5 memory-aware captures
+
+New semantic-review captures may include memory: MemoryCapture v1, task review, with host-owned version/options/stamp and exact author-guidance packet. It adds intent-drift/style-guidance categories, not permission to edit text. Host-local full capture is validated/rebuilt; the model messages use only its selected packet. promptVersion is analysis-memory-v1 for such runs and analysis-v1 for legacy captures.
+
+Applicable intent/profile/rule changes make the report stale. Old captures with no memory property remain unchanged and must not be represented as compliance checks of later guidance. A valid quote is still only an accurate quote, and a required guidance rule is not a certified semantic guarantee. No additional judge request or automatic repair is triggered. See memory-protocol.md.

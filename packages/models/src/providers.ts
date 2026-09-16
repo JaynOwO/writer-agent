@@ -1,6 +1,8 @@
+import { memoryMessages, memorySchema, parseMemory } from './memory-protocol.js';
+import type { MemoryProvider, MemoryResponse } from './memory-protocol.js';
 // SPDX-License-Identifier: Apache-2.0
-import { isRecord, captureAnalysisRequest } from '@writer-agent/core';
-import type { AnalysisRequest } from '@writer-agent/core';
+import { isRecord, captureAnalysisRequest, captureMemoryTask } from '@writer-agent/core';
+import type { AnalysisRequest, MemoryTaskRequest } from '@writer-agent/core';
 import { analysisMessages, analysisSchema, parseAnalysis, completionUsage } from './analysis-protocol.js';
 import type { AnalysisProvider, AnalysisResponse } from './analysis-protocol.js';
 import type { ModelProvider, ModelRequest, ModelResponse, ProviderOptions, OpenAICompatibleOptions } from './types.js';
@@ -36,7 +38,7 @@ function messageContent(message: unknown): string {
   return message.content;
 }
 /** OpenAI Chat Completions compatibility, not the Responses API or every provider/model. */
-export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider {
+export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider, MemoryProvider {
   readonly id: string;
   readonly #settings: Settings;
   readonly #format: 'json-schema' | 'json' | 'prompt';
@@ -47,6 +49,14 @@ export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider
     this.#tokenParameter = options.tokenParameter ?? 'max_completion_tokens';
     if (!['json-schema','json','prompt'].includes(this.#format) || !['max_completion_tokens','max_tokens'].includes(this.#tokenParameter)) throw new ProviderError('PROVIDER_CONFIG','Unknown response-format or token-parameter option.');
     this.id = `openai-compatible/${this.#settings.model}`;
+  }
+  async draftIntent(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'intent-draft',signal);}
+  async draftPreferences(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'preference-draft',signal);}
+  private async memoryTask(input:MemoryTaskRequest,task:MemoryTaskRequest['task'],signal?:AbortSignal):Promise<MemoryResponse> {
+    checkCancelled(signal);const request=captureMemoryTask(input);
+    if(request.task!==task)throw new ProviderError('PROVIDER_INVALID_MEMORY','Memory task mismatch.');
+    const completion=await this.complete(memoryMessages(request),memorySchema(task),task==='intent-draft'?'siglum_intent_v1':'siglum_preferences_v1',signal);
+    checkCancelled(signal);return parseMemory(completion.text,request,this.id,completion.usage);
   }
   async extractClaims(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'claim-extraction',signal); }
   async reviewChanges(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'semantic-review',signal); }
@@ -82,12 +92,20 @@ export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider
   }
 }
 /** Native /api/chat, non-streaming and schema-constrained. Server/model must be installed separately. */
-export class OllamaProvider implements ModelProvider, AnalysisProvider {
+export class OllamaProvider implements ModelProvider, AnalysisProvider, MemoryProvider {
   readonly id: string;
   readonly #settings: Settings;
   constructor(options: ProviderOptions) {
     this.#settings = configure(options,'http://127.0.0.1:11434','/api/chat',false);
     this.id = `ollama/${this.#settings.model}`;
+  }
+  async draftIntent(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'intent-draft',signal);}
+  async draftPreferences(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'preference-draft',signal);}
+  private async memoryTask(input:MemoryTaskRequest,task:MemoryTaskRequest['task'],signal?:AbortSignal):Promise<MemoryResponse> {
+    checkCancelled(signal);const request=captureMemoryTask(input);
+    if(request.task!==task)throw new ProviderError('PROVIDER_INVALID_MEMORY','Memory task mismatch.');
+    const completion=await this.complete(memoryMessages(request),memorySchema(task),signal);
+    checkCancelled(signal);return parseMemory(completion.text,request,this.id,completion.usage);
   }
   async extractClaims(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'claim-extraction',signal); }
   async reviewChanges(input:AnalysisRequest,signal?:AbortSignal):Promise<AnalysisResponse> { return this.analysis(input,'semantic-review',signal); }

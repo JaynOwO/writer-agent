@@ -1,4 +1,4 @@
-# Architecture — Siglum v0.0.4
+# Architecture — Siglum v0.0.5
 
 ## Dependencies and authority
 
@@ -41,7 +41,7 @@ This is not a network sandbox or a complete SSRF audit. Public addresses may sti
 
 Old schema-v1 workspaces can still use original editing, v2 still supports sources; analysis features request an explicit v3 migration. The migration previews by default, retains a verified VACUUM INTO backup, checks a cooperative lock/data version, adds tables transactionally and preserves all existing content rows. Unknown formats are refused. Source-code update bundles never migrate user data. See the paired source guides for backup and recovery boundaries.
 
-Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, automatic tool execution, Skills/MCP, inferred intent, learned memory and factual certification are not implemented here.
+Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, automatic tool execution, Skills/MCP, passive learning and factual certification are not implemented. v0.0.5 adds explicit author-confirmed intent and candidate-based memory below.
 
 ## v0.0.4 analysis layer
 
@@ -54,3 +54,13 @@ Before persistence, the host reconstructs the capture and checks document, pendi
 Exact prefix/suffix replacement spans are mechanical observations, not a minimal diff algorithm or semantic judgments. Reports display model mappings/findings/assessments separately. Feedback on a finding, mapping or assessment is immutable and never changes a manuscript approval. Later manuscript revisions or selected pending-status changes invalidate current review status; extraction reports retain candidate history. An important-claim decision changes the review stamp. An unrelated source refresh leaves old pinned-material analysis about the old material, not an evaluation of the new material.
 
 The input/response cap is 6,000,000 serialized UTF-8 bytes, not a context-window guarantee. There are at most 100 candidates per side/findings, 200 mappings/assessments, 8 anchors per item and 80,000 bytes of selected source context. Small local models may not reliably output exact offsets or the schema; there is no silent repair or fallback. See analysis-protocol.md and review.md.
+
+## v0.0.5 intent and writing memory
+
+Schema4 adds writing_profiles, profile_bindings, intent_versions/intent_confirmations, preference_versions, memory_task_runs, guidance_uses/change_guidance and decision_reasons. Existing manuscript/source/analysis tables and IDs are not rebuilt. The shared transaction boundary protects model proposals plus selected source/guidance provenance. DB bindings/versions are immutable records with integrity hashes; the database owner can still tamper with storage, so hashes are not adversarial authenticity proofs.
+
+WritingMemory uses existing ledger claims for important occurrences rather than inventing another claim identity. A confirmed card persists across edits, but stale referenced occurrences require an explicit card/annotation change. Profile rules are scoped by author-chosen language/task. Defaults never mean all profiles. buildMemoryPlan is a pure bounded deterministic selector; singleton conflicts are exact-value comparisons, not semantic entailment.
+
+Model tasks draftIntent/draftPreferences are separate from propose/analyze. Validation permits only selected feedback IDs/quoted brief spans and explicit suggestion labels. Outputs remain drafts/candidates. Model requests never receive the store. Ordinary suggestions/semantic analysis get pinned guidance; unrelated profile changes do not invalidate them, applicable changes do. Legacy analysis input without guidance is retained unchanged, not falsely upgraded.
+
+The numbered guide calls the same CLI service functions, captures a request before confirmation and submits that exact capture, not a fresh unnoticed selection. readline is terminal-only; EOF/Ctrl+C cancels, control sequences are filtered at the interactive display boundary. No full-screen TUI, GUI, background task or runtime Git is added. See memory-protocol.md and the paired memory guides.

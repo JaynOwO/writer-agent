@@ -103,3 +103,9 @@ Real smoke evidence should name the provider, exact model, selected modes, serve
 ## v0.0.3：明确提供来源资料
 
 `suggest` 新增 `--sources <snapshotId,...>` 与 `--excerpts <excerptId,...>`，先用 `source` 命令采集并选定资料。默认仍只预览，`--send` 才发送。最多 8 项、序列化后 80000 UTF-8 字节；不会自动截断或发送笔记。`writer provenance <workspace> <changeId>` 查询当次提供的原文和来源 ID，标记为 `supplied-not-verified`，不证明内容为真或足以支持某条断言。完整例子见[简中来源指南](sources.zh-CN.md)。
+
+## v0.0.5 drafting intent and preference candidates
+
+The same two adapters expose independently authorized intent-draft and preference-draft tasks. CLI `intent draft` and `memory distill` preview until --send; the guide has a separate final confirmation for each call. No API key is needed for default tests or `pnpm.cmd demo:memory`, which uses synthetic fixed responses. Ordinary guidance selection is local deterministic code, not a hidden model request.
+
+No real-model preference fidelity is guaranteed: schema/quote checks reject malformed data but cannot prove that a candidate represents the author's preference. Candidate confirmation is mandatory. Credentials remain named process environment variables; the guide remembers only nonsecret settings for its current session. A loopback service may still relay to cloud inference. See docs/memory.md for selected-feedback and separate-example consent.

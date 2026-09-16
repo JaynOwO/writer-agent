@@ -15,3 +15,7 @@ Keep English/Simplified Chinese READMEs and paired source guides aligned. Run `p
 ## Review contributions
 
 Update both review guides and READMEs. Add tests for exact anchors, source references, stale-run rejection and non-mutating feedback. Never interpret a valid schema or agreeing models as truth. Draft evaluation labels need independent human review before benchmark claims; synthetic predictions are not live evaluations. Default CI must remain key-free and use fixtures/loopback HTTP only.
+
+## Intent/memory changes
+
+Read docs/memory-protocol.md and the paired guide. Preserve explicit candidate activation, reasonless-rejection boundaries, scoped examples and request freshness. Add regressions for every change to selection, conflict or consent behavior; never introduce background inference to make a demo look intelligent. Keep both README and memory guide command examples aligned. Close all secondary SQLite handles before test fixture cleanup, especially on Windows. Use pnpm demo:memory in addition to the existing checks/demos.

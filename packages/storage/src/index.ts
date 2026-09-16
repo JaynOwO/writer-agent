@@ -7,9 +7,12 @@ import {
   parseSnapshot, validateSnapshot, newId, reviewTextChange, applyChange, revertChange,
 } from '@writer-agent/core';
 import type {
-  WorkspaceInfo, DocumentRecord, Revision, Change, Decision, Snapshot, ProposedEdit, ReviewHint,
+  WorkspaceInfo, DocumentRecord, Revision, Change, Decision, Snapshot, ProposedEdit, ReviewHint, MemoryCapture, RejectionCategory,
 } from '@writer-agent/core';
 import { APPLICATION_ID, SCHEMA_SQL, SCHEMA_VERSION } from './schema.js';
+import { WritingMemory } from './memory.js';
+export { WritingMemory } from './memory.js';
+export type { MemoryTaskRun } from './memory.js';
 import { SourceLibrary } from './sources.js';
 import { AnalysisLedger } from './analysis.js';
 export { AnalysisLedger } from './analysis.js';
@@ -85,12 +88,17 @@ export class Workspace {
   private closed = false;
   readonly sources: SourceLibrary;
   readonly analysis: AnalysisLedger;
+  readonly memory: WritingMemory;
   private constructor(root: string, db: DatabaseSync) {
     this.root = root; this.db = db;
     this.sources = new SourceLibrary(db, () => {
       this.assertOpen();
       if (this.schemaVersion() < 2) throw new WriterError('MIGRATION_REQUIRED', 'Sources need schema v2. Run writer migrate <workspace> to preview, then --apply after closing other sessions.');
     }, fn => this.transaction(fn));
+    this.memory = new WritingMemory(db, () => {
+      this.assertOpen();
+      if (this.schemaVersion() < 4) throw new WriterError('MIGRATION_REQUIRED', 'Writing memory requires schema v4. Preview writer migrate, then explicitly --apply.');
+    }, fn => this.transaction(fn), this);
     this.analysis = new AnalysisLedger(db, () => {
       this.assertOpen();
       if (this.schemaVersion() < 3) throw new WriterError('MIGRATION_REQUIRED', 'Analysis requires schema v3. Preview writer migrate, then --apply after backup and closing other sessions.');
@@ -98,7 +106,7 @@ export class Workspace {
   }
   private schemaVersion(): number {
     const v = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (v !== 1 && v !== 2 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
+    if (v !== 1 && v !== 2 && v !== 3 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
     return v;
   }
 
@@ -144,7 +152,7 @@ export class Workspace {
     try {
       const version = db.prepare('PRAGMA user_version').get();
       const app = db.prepare('PRAGMA application_id').get();
-      if (!version || ![1,2,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
+      if (!version || ![1,2,3,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
         throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace format/version. No migration or overwrite was attempted.');
       }
       db.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL;');
@@ -220,7 +228,7 @@ export class Workspace {
     return this.db.prepare(`SELECT d.* FROM decisions d JOIN changes c ON c.id=d.change_id WHERE c.document_id=? ORDER BY d.seq`).all(documentId).map(decodeDecision);
   }
 
-  proposeChanges(documentId: string, baseRevisionId: string, edits: readonly ProposedEdit[], providerId = 'manual', context?: ProposalContextInput): Change[] {
+  proposeChanges(documentId: string, baseRevisionId: string, edits: readonly ProposedEdit[], providerId = 'manual', context?: ProposalContextInput, guidance?: { capture: MemoryCapture; instruction: string }): Change[] {
     requireString(baseRevisionId, 'baseRevisionId'); requireString(providerId, 'providerId', 200); validateEdits(edits);
     return this.transaction(() => {
       const doc = this.getDocument(documentId);
@@ -249,6 +257,10 @@ export class Workspace {
           .run(contextId, documentId, baseRevisionId, providerId, context.instruction, JSON.stringify(context.items), new Date().toISOString());
         for (const change of changes) this.db.prepare('INSERT INTO change_contexts(change_id,context_id) VALUES(?,?)').run(change.id, contextId);
       }
+      if (guidance !== undefined) {
+        if (guidance.capture.documentId !== documentId || guidance.capture.task !== 'revise') throw new WriterError('INVALID_INPUT', 'Wrong writing guidance target/task.');
+        this.memory.saveUse(guidance.capture, baseRevisionId, guidance.instruction, providerId, changes.map(c => c.id));
+      }
       return changes;
     });
   }
@@ -259,13 +271,14 @@ export class Workspace {
   revert(changeId: string, reason = ''): Revision {
     return this.decideContent(changeId, 'reverted', reason);
   }
-  reject(changeId: string, reason = ''): Change {
+  reject(changeId: string, reason = '', category?: RejectionCategory): Change {
     this.validateReason(reason);
     return this.transaction(() => {
       const change = this.getChange(changeId);
       if (change.status !== 'pending') throw new WriterError('INVALID_TRANSITION', 'Only pending changes can be rejected. Use revert for accepted changes.');
       this.db.prepare("UPDATE changes SET status='rejected' WHERE id=?").run(changeId);
-      this.appendDecision(changeId, 'rejected', reason, this.getDocument(change.documentId).headRevisionId);
+      const decisionId = this.appendDecision(changeId, 'rejected', reason, this.getDocument(change.documentId).headRevisionId);
+      if (category !== undefined) this.memory.recordRejectionCategory(decisionId, category);
       return this.getChange(changeId);
     });
   }
@@ -293,8 +306,10 @@ export class Workspace {
     this.db.prepare('INSERT INTO revisions(id,document_id,parent_id,kind,change_id,snapshot_json,created_at) VALUES(?,?,?,?,?,?,?)').run(revision.id,documentId,parentId,kind,changeId,JSON.stringify(snapshot),revision.createdAt);
     return revision;
   }
-  private appendDecision(changeId: string, action: Decision['action'], reason: string, revisionId: string): void {
-    this.db.prepare('INSERT INTO decisions(id,change_id,action,reason,revision_id,created_at) VALUES(?,?,?,?,?,?)').run(newId('dec'),changeId,action,reason,revisionId,new Date().toISOString());
+  private appendDecision(changeId: string, action: Decision['action'], reason: string, revisionId: string): string {
+    const decisionId = newId('dec');
+    this.db.prepare('INSERT INTO decisions(id,change_id,action,reason,revision_id,created_at) VALUES(?,?,?,?,?,?)').run(decisionId,changeId,action,reason,revisionId,new Date().toISOString());
+    return decisionId;
   }
   private validateReason(reason: string): void {
     validateText(reason, 'reason');

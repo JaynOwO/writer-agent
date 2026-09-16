@@ -44,3 +44,11 @@ The application implements a conservative prototype policy and fixture tests, no
 Reference review date: 2026-09-15 (retrieval limitations below). Runtime interoperability is independently limited to the actual tested fixtures/environments. Schema support does not validate semantic correctness.
 
 The v0.0.4 authoring session retrieved the SQLite VACUUM, OpenAI structured-output and Ollama structured-output pages. The versioned Node documentation page could not be retrieved in that session; Node behavior was checked against the installed v22.16.0 runtime and existing regression tests instead. Links are not proof of live provider compatibility.
+
+## v0.0.5 implementation references
+
+- Node readline/promises and question cancellation: https://nodejs.org/api/readline.html
+- Node AbortController/AbortSignal: https://nodejs.org/api/globals.html
+- SQLite transactional backup primitive already used by this project: https://sqlite.org/lang_vacuum.html
+
+No new dependency or API version is selected from a claim that it is latest. Validation uses the installed Node22.16.0 runtime and exact existing compiler/types. Documentation retrieval does not substitute for runtime tests or Windows/real-provider validation; some versioned Node URLs were not retrievable during this session.

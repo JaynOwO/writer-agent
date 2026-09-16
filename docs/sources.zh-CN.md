@@ -1,4 +1,4 @@
-# 来源库 — Siglum v0.0.4
+# 来源库 — Siglum v0.0.5
 
 [English](sources.md) | [简体中文](sources.zh-CN.md)
 
@@ -108,7 +108,7 @@ pnpm writer source export ../my-writing <snapshotId> ../saved-source
 <a id="existing-workspaces"></a>
 ## 已有工作区
 
-安装 v0.0.4 或运行代码更新工具**不会迁移任何写作工作区**。新工作区使用 schema v3；已有 v2 无需迁移即可继续使用来源库，新的分析功能要求 v3；旧 schema v1 仍支持原有文稿操作和无来源改稿。只有来源操作需要先明确迁移，否则会提示 `MIGRATION_REQUIRED`。
+安装 v0.0.5 或运行代码更新工具**不会迁移任何写作工作区**。新工作区使用 schema v4，分析仍至少要求 v3，记忆要求 v4；已有 v2 无需迁移即可继续使用来源库，新的分析功能要求 v3；旧 schema v1 仍支持原有文稿操作和无来源改稿。只有来源操作需要先明确迁移，否则会提示 `MIGRATION_REQUIRED`。
 
 先关闭使用旧工作区的所有程序，特别是旧版 Writer Agent，再执行：
 
