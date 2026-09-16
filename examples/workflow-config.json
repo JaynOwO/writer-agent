@@ -1,0 +1,37 @@
+{
+  "template": "new-article",
+  "title": "Browser caching explainer",
+  "goal": "Explain HTTP caching to beginners, including limitations. Preserve uncertainty.",
+  "publicBrief": "Browser HTTP cache validation Cache-Control ETag Last-Modified",
+  "language": "en",
+  "research": "web",
+  "documentId": null,
+  "changeIds": [],
+  "selection": {},
+  "profileId": null,
+  "intent": null,
+  "memoryOptions": {
+    "language": "en"
+  },
+  "model": {
+    "provider": "ollama",
+    "model": "YOUR_INSTALLED_MODEL",
+    "baseURL": "http://127.0.0.1:11434",
+    "apiKeyEnv": null,
+    "allowRemote": false,
+    "responseFormat": "json-schema",
+    "tokenParameter": "max_completion_tokens",
+    "timeoutMs": 120000,
+    "maxOutputTokens": 8192
+  },
+  "searchKeyEnv": "TAVILY_API_KEY",
+  "domains": [],
+  "timeRange": null,
+  "autoRevision": true,
+  "budget": {
+    "models": 8,
+    "searches": 3,
+    "fetches": 5,
+    "activeMs": 900000
+  }
+}

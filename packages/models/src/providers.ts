@@ -1,3 +1,6 @@
+import { workflowMessages, workflowSchema, parseWorkflow } from './workflow-protocol.js';
+import type { WorkflowProvider, WorkflowResponse } from './workflow-protocol.js';
+import type { WorkflowRequest } from '@writer-agent/core';
 import { memoryMessages, memorySchema, parseMemory } from './memory-protocol.js';
 import type { MemoryProvider, MemoryResponse } from './memory-protocol.js';
 // SPDX-License-Identifier: Apache-2.0
@@ -38,7 +41,7 @@ function messageContent(message: unknown): string {
   return message.content;
 }
 /** OpenAI Chat Completions compatibility, not the Responses API or every provider/model. */
-export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider, MemoryProvider {
+export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider, MemoryProvider, WorkflowProvider {
   readonly id: string;
   readonly #settings: Settings;
   readonly #format: 'json-schema' | 'json' | 'prompt';
@@ -49,6 +52,11 @@ export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider
     this.#tokenParameter = options.tokenParameter ?? 'max_completion_tokens';
     if (!['json-schema','json','prompt'].includes(this.#format) || !['max_completion_tokens','max_tokens'].includes(this.#tokenParameter)) throw new ProviderError('PROVIDER_CONFIG','Unknown response-format or token-parameter option.');
     this.id = `openai-compatible/${this.#settings.model}`;
+  }
+  async workflowTask(input:WorkflowRequest,signal?:AbortSignal):Promise<WorkflowResponse> {
+    checkCancelled(signal); const request=structuredClone(input);
+    const result=await this.complete(workflowMessages(request),workflowSchema(request.task),'siglum_workflow_v1',signal);
+    checkCancelled(signal); return parseWorkflow(result.text,request,this.id,result.usage);
   }
   async draftIntent(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'intent-draft',signal);}
   async draftPreferences(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'preference-draft',signal);}
@@ -92,12 +100,17 @@ export class OpenAICompatibleProvider implements ModelProvider, AnalysisProvider
   }
 }
 /** Native /api/chat, non-streaming and schema-constrained. Server/model must be installed separately. */
-export class OllamaProvider implements ModelProvider, AnalysisProvider, MemoryProvider {
+export class OllamaProvider implements ModelProvider, AnalysisProvider, MemoryProvider, WorkflowProvider {
   readonly id: string;
   readonly #settings: Settings;
   constructor(options: ProviderOptions) {
     this.#settings = configure(options,'http://127.0.0.1:11434','/api/chat',false);
     this.id = `ollama/${this.#settings.model}`;
+  }
+  async workflowTask(input:WorkflowRequest,signal?:AbortSignal):Promise<WorkflowResponse> {
+    checkCancelled(signal); const request=structuredClone(input);
+    const result=await this.complete(workflowMessages(request),workflowSchema(request.task),signal);
+    checkCancelled(signal); return parseWorkflow(result.text,request,this.id,result.usage);
   }
   async draftIntent(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'intent-draft',signal);}
   async draftPreferences(input:MemoryTaskRequest,signal?:AbortSignal):Promise<MemoryResponse> {return this.memoryTask(input,'preference-draft',signal);}

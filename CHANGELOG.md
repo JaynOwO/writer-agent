@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.6 — phase-authorized writing workflows
+
+Added three fixed foreground templates, native Tavily basic Search, separated public query planning, durable attempts/phase grants/quotas, generation-fenced leases, explicit unknown-outcome recovery, outline approval, candidate A/review/optional B, A/B comparison, idempotent author adoption, bilingual workflow menus/guides and additive backed-up schema5. Original editing/source/analysis/memory commands and genuine dependency lockfile retained. No new runtime dependency.
+
+No real-service/real-model quality claim; no GUI/daemon/Skills/MCP. Existing-document templates use selected saved sources. Candidate review is fallible; search snippets are not evidence. Updates never migrate private workspaces.
+
+
 ## 0.0.5 — intent and author-controlled writing memory
 
 Added versioned confirmed/draft intent cards, workspace profiles, scoped preference versions and selective candidate approvals, optional rejection categories, explicit evidence-based distillation, bounded deterministic guidance selection, required structured overrides, private example selection, exact proposal/review usage and freshness checks. Added a bilingual numbered terminal guide, profile preview/import/export, additive verified-backup schema4 migration, memory-specific protocols and MEMORY_DEMO_OK. No new dependencies, passive learning, vector database, autonomous tools or real-model accuracy claim.

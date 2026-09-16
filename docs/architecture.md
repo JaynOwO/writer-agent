@@ -1,4 +1,4 @@
-# Architecture — Siglum v0.0.5
+# Architecture — Siglum v0.0.6
 
 ## Dependencies and authority
 
@@ -64,3 +64,15 @@ WritingMemory uses existing ledger claims for important occurrences rather than 
 Model tasks draftIntent/draftPreferences are separate from propose/analyze. Validation permits only selected feedback IDs/quoted brief spans and explicit suggestion labels. Outputs remain drafts/candidates. Model requests never receive the store. Ordinary suggestions/semantic analysis get pinned guidance; unrelated profile changes do not invalidate them, applicable changes do. Legacy analysis input without guidance is retained unchanged, not falsely upgraded.
 
 The numbered guide calls the same CLI service functions, captures a request before confirmation and submits that exact capture, not a fresh unnoticed selection. readline is terminal-only; EOF/Ctrl+C cancels, control sequences are filtered at the interactive display boundary. No full-screen TUI, GUI, background task or runtime Git is added. See memory-protocol.md and the paired memory guides.
+
+## v0.0.6 fixed writing workflows
+
+Schema5 adds workflow_runs, workflow_grants, workflow_attempts, workflow_artifacts and workflow_events; it does not rebuild earlier tables. Workspace.workflows owns durable state. Runs/attempts evolve with integrity hashes; artifacts/events are append-only. The private Workspace transaction helper uses SAVEPOINTs for nested local units of work, so a source/proposal/report/manuscript side effect and its workflow checkpoint commit atomically. Network calls never execute inside these transactions.
+
+The foreground host runner is apps/cli/src/workflow-runtime.ts, shared by commands and the numbered guide. Pure core types/validators define stage tasks, source policy and output schemas. Models add workflowTask, which has no persistence/approval capabilities. TavilySearch adds one fixed API capability: direct basic Search, with no account mutation or SDK. Extracted public URL policy is shared with original source-http; the pinned-DNS/connection implementation is retained.
+
+Each stage grant captures exact input/guidance, model settings, source scope, optional revision and remaining attempt/time limits. A saved outline is approved separately from composition consent. New drafts are artifacts, not documents; explicit adoption creates a document/profile/intent and an adoption event atomically. Repeated adoption returns the same document. Existing-article alternatives retain the original baseline; review-only creates no edit.
+
+One run has an owner/generation/45-second lease. Every result checks it plus input freshness before commit. Attempt state is persisted as reserved then dispatched before external effects; recovery labels abandoned dispatched attempts outcome-unknown and fences old writers. Explicit retry records acknowledgement and preserves spent quotas. Completed artifacts are keyed by request/task version, model settings and relevant epoch; matching public discovery/fetch steps can survive a private direction refresh. Budget-only changes need a fresh grant but preserve result cache keys. Late/untrusted/invalid outputs cannot approve text or become current artifacts.
+
+Search planning sees only the public brief. Search results remain discoveries; fetched page bytes/excerpts use the existing SourceLibrary. A capped selection with omission reasons, not snippets, reaches content tasks. Query-plan, outline, draft, draft-review and draft-revision are separate structured requests; parent outputs and quotations are validated. Workflow code does not call shell/Git, load scripts from sources or activate preferences. See workflow-protocol.md and paired workflows guides.

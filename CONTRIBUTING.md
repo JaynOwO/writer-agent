@@ -19,3 +19,7 @@ Update both review guides and READMEs. Add tests for exact anchors, source refer
 ## Intent/memory changes
 
 Read docs/memory-protocol.md and the paired guide. Preserve explicit candidate activation, reasonless-rejection boundaries, scoped examples and request freshness. Add regressions for every change to selection, conflict or consent behavior; never introduce background inference to make a demo look intelligent. Keep both README and memory guide command examples aligned. Close all secondary SQLite handles before test fixture cleanup, especially on Windows. Use pnpm demo:memory in addition to the existing checks/demos.
+
+## Workflow contributions (v0.0.6)
+
+Retain all previous regressions, stage consent and source privacy. Add failure-injection tests for any change to attempt budgets, lease generations, unknown-outcome retry or nested checkpoint side effects. Defaults must not use real Tavily/model accounts; keep the standalone `demo:workflow` covered by default tests. Update paired workflow guides and README facts, and state whether Windows/live services were actually exercised. Do not turn static templates into arbitrary executable plugins without a new scope decision.

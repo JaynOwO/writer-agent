@@ -2,16 +2,16 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.5 -->
+<!-- siglum:version=0.0.6 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 面向研究、写作与审稿的本地优先 Agent Harness。
 
 **模型提出建议，来源可追溯，作者保留最终决定权。**
 
-**v0.0.5** · 命令行开发预览版 · **Apache-2.0**
+**v0.0.6** · 命令行开发预览版 · **Apache-2.0**
 
-在自己的工作区保存文稿版本、来源快照、论断标注、审稿报告与经过作者确认的写作要求。模型可以起草意图、归纳候选偏好、提出修改或分析变化，但不能批准自己的输出。这还不是完整桌面写作 IDE，也不是自主研究员。
+在自己的工作区保存文稿版本、来源快照、论断标注、审稿报告与经过作者确认的写作要求。模型可以起草意图、归纳候选偏好、提出修改或分析变化，但不能批准自己的输出。现在可按阶段授权执行有界研究写作；仍不是完整桌面 IDE 或无限制自主 Agent。
 
 产品名称为 Siglum。仓库 `JaynOwO/writer-agent`、包名 `@writer-agent/*`、`.writer` 数据路径和交付文件名保留兼容；`pnpm siglum` 与 `pnpm writer` 等价。
 
@@ -28,6 +28,7 @@ pnpm demo:provider
 pnpm demo:sources
 pnpm demo:review
 pnpm demo:memory
+pnpm demo:workflow
 ```
 
 Windows PowerShell 拦截 `.ps1` 时可使用 `pnpm.cmd`，不用修改执行策略：
@@ -37,7 +38,26 @@ pnpm.cmd check
 pnpm.cmd demo:memory
 ```
 
-预期标记：`DEMO_OK`、`PROVIDER_DEMO_OK`、`SOURCES_DEMO_OK`、`REVIEW_DEMO_OK`、`MEMORY_DEMO_OK`。**这些标记验证程序流程，不代表真实模型的改稿质量或学习偏好的准确率。**
+预期标记：`DEMO_OK`、`PROVIDER_DEMO_OK`、`SOURCES_DEMO_OK`、`REVIEW_DEMO_OK`、`MEMORY_DEMO_OK`, `WORKFLOW_DEMO_OK`。**这些标记验证程序流程，不代表真实模型的改稿质量或学习偏好的准确率。**
+
+<!-- section:workflows -->
+## 按阶段授权的写作工作流
+
+提供资料写新稿、修改已有文章、只审查待采用修改三个固定模板。阶段授权固定输入、模型、接口、资料范围与次数上限；执行器在批准范围内推进，到大纲和最终采用检查点停下。原有独立命令仍保留逐次授权。
+
+```sh
+pnpm siglum workflow help
+pnpm siglum workflow guide ../my-writing --lang en
+pnpm siglum workflow guide ../my-writing --lang zh-CN
+```
+
+新稿联网研究需要你自己的 Tavily Key（`TAVILY_API_KEY`）与兼容模型，不附送账户或余额。查询规划只拿单独批准的公开 brief；搜索固定 basic，关闭自动参数、自动答案、raw content 和图片。实际获取的网页保存为不可变来源快照；无法读取就记录缺口，不把搜索摘要冒充已读证据。查看资料选择范围与遗漏说明。
+
+批准大纲不等于批准写作阶段。候选 A、审稿与可选候选 B 都先作为私人产物；明确采用才建立文稿。旧稿的替代提案仍针对保留的正式基线。每项任务最多成功执行一轮自动修订，不按自评分循环。
+
+默认总预算为 8 次模型尝试、3 次搜索、5 次页面尝试和 900000 毫秒活跃执行时间，另有阶段上限。匹配的已保存结果可复用；结果未知的请求需明确确认才可重新尝试，可能重复调用／计费。过期执行锁需要明确恢复，两个终端不能提交同一步。没有后台守护进程或自动重试；缺可靠计费数据就显示费用未知。
+
+见[工作流指南](docs/workflows.zh-CN.md)、[English guide](docs/workflows.md)与[工作流协议](docs/workflow-protocol.md)。真实搜索／模型互操作和写作质量尚需主动实测，演示使用本机假服务。
 
 <!-- section:writing-memory -->
 ## 意图与写作记忆，由作者掌控
@@ -124,10 +144,13 @@ pnpm siglum memory help
 | <!-- feature:writing-memory --> 记忆 | 分范围档案、候选确认、本次例外、有界筛选与精确使用记录 |
 | <!-- feature:terminal-guide --> 向导 | 英文／简中编号菜单、取消、明确发送和批准 |
 | <!-- feature:bilingual --> 文档 | 双语 README／来源／审稿／记忆指南及机械一致性检查 |
+| <!-- feature:workflows --> 工作流 | 阶段授权、三个模板、独立候选产物与明确采用 |
+| <!-- feature:web-search --> 搜索 | Tavily basic、公开查询隔离与来源记录 |
+| <!-- feature:durable-resume --> 恢复 | 持久尝试、预算、租约防并发、未知结果与本地幂等采用 |
 
 <!-- limit:no-gui --> **没有 GUI 或打包桌面编辑器。** 向导是交互式终端，不是可视化富文本编辑器。
 
-<!-- limit:no-web-search --> **没有自动全网研究或全局搜索。** 需要给定 URL／文件；来源搜索只查本地。
+<!-- limit:bounded-web-search --> **真实搜索有明确边界，不是无限浏览。** 新稿研究接入 Tavily Search 与公共静态网页；搜索摘要不是已获取的证据。已有文章的改稿／审稿模板使用明确选定的本地来源。
 
 <!-- limit:no-semantic-verdict --> **不认证事实，也不保证理解原意。** 机械检查不能验证模型结论或发现全部自由文字冲突。
 
@@ -135,7 +158,7 @@ pnpm siglum memory help
 
 <!-- limit:static-extraction --> **只做静态 UTF-8 提取。** 无 PDF、JS 渲染、浏览器登录、压缩、重定向或完整 HTML5 解析。
 
-<!-- limit:manual-migration --> **不隐式迁移数据。** 新工作区使用 schema v4，旧 v1／v2／v3 保留各自已有的文稿／来源／分析能力；记忆功能需要明确备份升级。安装代码不会升级私人文稿。
+<!-- limit:manual-migration --> **不自动迁移私人数据。** 新工作区使用 schema v5，旧 v1–v4 保留各自已有功能；工作流需要明确授权、先备份再升级。更新代码不迁移私人稿件。
 
 <!-- limit:no-background-learning --> **没有后台学习、微调、向量库或 Skills／MCP 执行。** 归纳候选需主动请求，启用需作者确认。title 只是规则适用标签，不是新的标题生成命令。
 
@@ -153,7 +176,7 @@ pnpm siglum memory help
 
 没有新增第三方运行时依赖，保留原依赖锁文件。通过有界代码使用 Node 的 SQLite、测试器、fetch 与 readline。默认测试不调用收费模型；操作系统、模型和安装结果必须分别报告。
 
-[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.5 规格](docs/v0.0.5-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
+[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.6 规格](docs/v0.0.6-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## 许可证

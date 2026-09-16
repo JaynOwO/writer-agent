@@ -8,3 +8,6 @@ export * from './providers.js';
 export * from './analysis-protocol.js';
 
 export * from './memory-protocol.js';
+
+export * from './workflow-protocol.js';
+export * from './search.js';

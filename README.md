@@ -2,16 +2,16 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.5 -->
+<!-- siglum:version=0.0.6 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 A local-first agent harness for research, writing, and review.
 
 **Models propose. Sources stay traceable. Authors decide.**
 
-**v0.0.5** · CLI development preview · **Apache-2.0**
+**v0.0.6** · CLI development preview · **Apache-2.0**
 
-Keep manuscript revisions, source snapshots, claim annotations, review reports and author-confirmed writing guidance in your own workspace. A model may draft intent, suggest preferences, propose edits or review changes; it cannot approve its own output. This is not a complete desktop writing IDE or an autonomous researcher.
+Keep manuscript revisions, source snapshots, claim annotations, review reports and author-confirmed writing guidance in your own workspace. A model may draft intent, suggest preferences, propose edits or review changes; it cannot approve its own output. Bounded, author-authorized templates now coordinate research and writing; this is not a complete desktop IDE or an unrestricted autonomous agent.
 
 The product is Siglum. Repository `JaynOwO/writer-agent`, package IDs `@writer-agent/*`, `.writer` data path and delivery filenames stay compatible with the existing updater. `pnpm siglum` and `pnpm writer` are equivalent.
 
@@ -28,6 +28,7 @@ pnpm demo:provider
 pnpm demo:sources
 pnpm demo:review
 pnpm demo:memory
+pnpm demo:workflow
 ```
 
 Windows PowerShell can use `pnpm.cmd` when its `.ps1` shim is restricted. No execution-policy change is required:
@@ -37,7 +38,26 @@ pnpm.cmd check
 pnpm.cmd demo:memory
 ```
 
-Expected markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`, `MEMORY_DEMO_OK`. **They validate software workflows, not real-model editing quality or memory learning accuracy.**
+Expected markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`, `MEMORY_DEMO_OK`, `WORKFLOW_DEMO_OK`. **They validate software workflows, not real-model editing quality or memory learning accuracy.**
+
+<!-- section:workflows -->
+## Phase-authorized writing workflows
+
+Three fixed templates: research a new article, revise an existing article, or review selected pending changes. Explicit phase consent fixes the inputs, model, endpoint, source scope and quotas. The runtime advances within that phase and stops for an outline decision or final adoption. Independent commands keep their original per-call consent.
+
+```sh
+pnpm siglum workflow help
+pnpm siglum workflow guide ../my-writing --lang en
+pnpm siglum workflow guide ../my-writing --lang zh-CN
+```
+
+New-article web mode uses your own Tavily key (`TAVILY_API_KEY`) and compatible model; no account/balance is included. Only the separate public brief reaches query planning. Search uses fixed basic depth with automatic parameters, generated answers/raw content/images disabled. Actual fetched pages become immutable source snapshots; unavailable pages remain unavailable, not proof from snippets. Inspect selection coverage and gaps.
+
+Outline approval grants no implicit composition permission. Candidate A, critique and optional candidate B remain private artifacts; author adoption creates a manuscript. Existing-article alternatives stay pending against the original baseline. One successful automatic revision maximum per task; no self-scored loops.
+
+Default aggregate limits are 8 model attempts, 3 searches, 5 page attempts and 900000 ms active execution, with separate stage limits. Saved matching results are reusable. Unknown outcomes require explicit acknowledgement before a possibly repeated/charged request. An expired lease needs explicit recovery; two workers cannot commit the same step. No background daemon or automatic retry. Monetary cost remains unknown without reliable billing data.
+
+See [workflow guide](docs/workflows.md), [简中指南](docs/workflows.zh-CN.md), [workflow protocol](docs/workflow-protocol.md). Real search/model interoperability and output quality are unvalidated until an opt-in live run; the demo uses loopback fixtures.
 
 <!-- section:writing-memory -->
 ## Intent and writing memory, with author control
@@ -124,10 +144,13 @@ Reports retain their input/version history. Later relevant document, pending-cha
 | <!-- feature:writing-memory --> Memory | Scoped profiles, candidate approvals, request exceptions, bounded selection and exact usage history |
 | <!-- feature:terminal-guide --> Guide | English/Simplified Chinese numbered menus, cancellation and explicit send/approval |
 | <!-- feature:bilingual --> Docs | Paired README/source/review/memory guides and mechanical parity checks |
+| <!-- feature:workflows --> Workflows | Phase consent, 3 templates, candidate artifacts and explicit adoption |
+| <!-- feature:web-search --> Web search | Tavily basic adapter, public query isolation and saved source provenance |
+| <!-- feature:durable-resume --> Resume | Durable attempts, quotas, lease fencing, unknown outcomes and idempotent local adoption |
 
 <!-- limit:no-gui --> **No GUI or packaged desktop editor.** The guide is an interactive terminal, not a visual rich-text editor.
 
-<!-- limit:no-web-search --> **No autonomous web research or global search.** Provide URLs/files; saved-source search is local.
+<!-- limit:bounded-web-search --> **Bounded real web search, not unrestricted browsing.** New-article research uses Tavily Search and public static pages. Search snippets are discovery records, not fetched evidence. Existing-article templates use explicitly selected saved sources.
 
 <!-- limit:no-semantic-verdict --> **No factual certification or guaranteed intent understanding.** Mechanical checks cannot validate model conclusions or all free-text conflicts.
 
@@ -135,7 +158,7 @@ Reports retain their input/version history. Later relevant document, pending-cha
 
 <!-- limit:static-extraction --> **Static UTF-8 extraction only.** No PDF, JS rendering, browser login, compression, redirects or full HTML5 parser.
 
-<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v4. Old v1/v2/v3 retain their existing editing/source/analysis capabilities; memory needs explicit backed-up migration. Updating source code never upgrades private manuscripts.
+<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v5. Legacy v1–v4 retain their respective editing/source/analysis/memory capabilities; workflows require an explicit backed-up upgrade. Code updates never migrate private writing.
 
 <!-- limit:no-background-learning --> **No background learning, fine-tuning, vectors or Skills/MCP execution.** Candidate inference requires an explicit request; author activation is separate. Title is a rule-scope tag, not a new title-generation command.
 
@@ -153,7 +176,7 @@ Private databases and exports are unencrypted; do not commit them. Network sourc
 
 No new third-party runtime dependency was added. Existing pnpm lockfile is retained. Node's SQLite, test runner, fetch and readline are used through bounded code paths. Default tests never call paid providers; real OS/model/install results must be reported separately.
 
-[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.5 specification](docs/v0.0.5-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.6 specification](docs/v0.0.6-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## License

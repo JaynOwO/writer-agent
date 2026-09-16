@@ -21,7 +21,7 @@ for(const [name,from,to] of [
   ['language switch','[简体中文](README.zh-CN.md)','[Chinese](wrong.md)'],
   ['section','<!-- section:sources -->',''],
   ['feature','<!-- feature:provenance -->',''],
-  ['limitation','<!-- limit:no-web-search -->',''],
+  ['limitation','<!-- limit:bounded-web-search -->',''],
   ['installation command','pnpm install --frozen-lockfile','pnpm install --no-frozen-lockfile'],
 ] as const)test('README checker catches '+name+' drift',()=>{
   assert.ok(zh.includes(from),'Test fixture must exercise existing content');assert.throws(()=>checkReadmePair(en,zh.replace(from,to),facts,manifest));

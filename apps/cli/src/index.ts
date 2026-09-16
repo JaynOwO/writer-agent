@@ -12,11 +12,16 @@ import { claimCommand, reviewCommand } from './analysis-command.js';
 import { memoryCommand } from './memory-command.js';
 import { memoryDemo } from './memory-demo.js';
 import { wizardCommand } from './wizard.js';
+import { workflowCommand } from './workflow-command.js';
+import { workflowDemo } from './workflow-demo.js';
 import { reviewDemo } from './review-demo.js';
 
-const help = `Siglum v0.0.5 (CLI development preview; no API key needed for demos/tests)
+const help = `Siglum v0.0.6 (CLI development preview; no API key needed for demos/tests)
 
   writer help
+  writer workflow help
+  writer workflow guide <workspace> [--lang zh-CN|en]
+  writer demo:workflow
   writer guide <workspace> [--lang zh-CN|en]
   writer demo:memory
   writer memory help
@@ -70,6 +75,8 @@ function requireArgs(args: string[], min: number, max = min): void {
 async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
+  if (command === 'workflow') { await workflowCommand(rest); return; }
+  if (command === 'demo:workflow') { requireArgs(rest,0); await workflowDemo(); return; }
   if (command === 'demo:memory') { requireArgs(rest,0); await memoryDemo(); return; }
   if (command === 'guide') { await wizardCommand(rest); return; }
   if (command === 'memory' || command === 'intent' || command === 'profile') { await memoryCommand(command,rest); return; }

@@ -52,3 +52,8 @@ The v0.0.4 authoring session retrieved the SQLite VACUUM, OpenAI structured-outp
 - SQLite transactional backup primitive already used by this project: https://sqlite.org/lang_vacuum.html
 
 No new dependency or API version is selected from a claim that it is latest. Validation uses the installed Node22.16.0 runtime and exact existing compiler/types. Documentation retrieval does not substitute for runtime tests or Windows/real-provider validation; some versioned Node URLs were not retrievable during this session.
+
+## v0.0.6 API reference consulted
+
+- Tavily Search REST: https://docs.tavily.com/documentation/api-reference/endpoint/search — endpoint, Bearer authentication, basic/auto_parameters/include_* flags, query/results/request_id/usage and HTTP quota errors. The implementation uses direct HTTP; no real account was queried during development.
+- Runtime uses the already-pinned Node22/24 target APIs. No package version upgrade or new dependencies were made.
