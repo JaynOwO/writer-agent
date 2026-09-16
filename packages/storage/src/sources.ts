@@ -139,13 +139,17 @@ export class SourceLibrary {
       const e=this.excerpt(id),s=this.snapshot(e.snapshotId),source=this.get(s.sourceId);
       items.push({sourceId:s.sourceId,snapshotId:s.id,excerptId:e.id,locator:source.locator,title:s.metadata.title,textHash:s.textHash,contentHash:e.quoteHash,startLine:e.startLine,endLine:e.endLine,text:e.quote});
     }
+    // Tool results retain an explicit unverified third-party origin, even when stored as imported text.
+    const hasOrigin=this.db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='source_provenance'").get();
+    if(hasOrigin) for(let i=0;i<items.length;i++){const item=items[i]!, row=this.db.prepare('SELECT payload,payload_hash FROM source_provenance WHERE snapshot_id=?').get(item.snapshotId); if(row){if(typeof row.payload!=='string'||hashBytes(row.payload)!==row.payload_hash)throw new WriterError('CORRUPT_DATA','Tool origin integrity mismatch.');const p=JSON.parse(row.payload) as {serverId:string;name:string;attemptId:string;descriptorHash:string};items[i]={...item,origin:{kind:'mcp',serverId:p.serverId,name:p.name,attemptId:p.attemptId,descriptorHash:p.descriptorHash,verification:'external-service-unverified'}};}}
     validateSourceContext(items);return items;
   }
   verifyContext(items:readonly SourceContextItem[]):void {
     validateSourceContext(items);
     for(const item of items) {
       const expected=this.context(item.excerptId===null?{snapshots:[item.snapshotId]}:{excerpts:[item.excerptId]})[0]!;
-      for(const key of Object.keys(expected) as (keyof SourceContextItem)[])if(expected[key]!==item[key])throw new WriterError('INVALID_INPUT','Source context differs from the saved snapshot/excerpt.');
+      if(Object.keys(expected).length!==Object.keys(item).length)throw new WriterError('INVALID_INPUT','Unexpected source origin metadata.');
+      for(const key of Object.keys(expected) as (keyof SourceContextItem)[])if(JSON.stringify(expected[key])!==JSON.stringify(item[key]))throw new WriterError('INVALID_INPUT','Source context differs from the saved snapshot/excerpt.');
     }
   }
   bind(documentId:string,blockId:string,excerptId:string):SourceBinding {

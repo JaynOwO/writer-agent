@@ -1,3 +1,5 @@
+import { ExtensionStore } from './extensions.js';
+export { ExtensionStore } from './extensions.js';
 // SPDX-License-Identifier: Apache-2.0
 import { DatabaseSync } from 'node:sqlite';
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
@@ -89,12 +91,14 @@ export class Workspace {
   private readonly db: DatabaseSync;
   private closed = false;
   private transactionDepth = 0;
+  readonly extensions: ExtensionStore;
   readonly workflows: WorkflowStore;
   readonly sources: SourceLibrary;
   readonly analysis: AnalysisLedger;
   readonly memory: WritingMemory;
   private constructor(root: string, db: DatabaseSync) {
     this.root = root; this.db = db;
+    this.extensions = new ExtensionStore(db, () => { this.assertOpen(); if(this.schemaVersion()<6) throw new WriterError('MIGRATION_REQUIRED','Extensions/research index require schema v6; preview and explicitly apply migration.'); }, fn => this.transaction(fn), this);
     this.workflows = new WorkflowStore(db, () => { this.assertOpen(); if (this.schemaVersion() < 5) throw new WriterError('MIGRATION_REQUIRED', 'Workflow tasks need schema v5. Preview and explicitly apply migration first.'); }, fn => this.transaction(fn), this);
     this.sources = new SourceLibrary(db, () => {
       this.assertOpen();
@@ -111,7 +115,7 @@ export class Workspace {
   }
   private schemaVersion(): number {
     const v = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (v !== 1 && v !== 2 && v !== 3 && v !== 4 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
+    if (v !== 1 && v !== 2 && v !== 3 && v !== 4 && v !== 5 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
     return v;
   }
 
@@ -157,7 +161,7 @@ export class Workspace {
     try {
       const version = db.prepare('PRAGMA user_version').get();
       const app = db.prepare('PRAGMA application_id').get();
-      if (!version || ![1,2,3,4,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
+      if (!version || ![1,2,3,4,5,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
         throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace format/version. No migration or overwrite was attempted.');
       }
       db.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL;');
@@ -324,3 +328,5 @@ export class Workspace {
     if (reason.length > 4000) throw new WriterError('INVALID_INPUT', 'Decision reason exceeds 4000 characters.');
   }
 }
+
+export type { StoredSkill, StoredServer, StoredCatalog, CitationRecord } from './extensions.js';

@@ -2,14 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.6 -->
+<!-- siglum:version=0.0.7 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 A local-first agent harness for research, writing, and review.
 
 **Models propose. Sources stay traceable. Authors decide.**
 
-**v0.0.6** · CLI development preview · **Apache-2.0**
+**v0.0.7** · CLI development preview · **Apache-2.0**
 
 Keep manuscript revisions, source snapshots, claim annotations, review reports and author-confirmed writing guidance in your own workspace. A model may draft intent, suggest preferences, propose edits or review changes; it cannot approve its own output. Bounded, author-authorized templates now coordinate research and writing; this is not a complete desktop IDE or an unrestricted autonomous agent.
 
@@ -29,6 +29,7 @@ pnpm demo:sources
 pnpm demo:review
 pnpm demo:memory
 pnpm demo:workflow
+pnpm demo:extensions
 ```
 
 Windows PowerShell can use `pnpm.cmd` when its `.ps1` shim is restricted. No execution-policy change is required:
@@ -38,7 +39,7 @@ pnpm.cmd check
 pnpm.cmd demo:memory
 ```
 
-Expected markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`, `MEMORY_DEMO_OK`, `WORKFLOW_DEMO_OK`. **They validate software workflows, not real-model editing quality or memory learning accuracy.**
+Expected markers: `DEMO_OK`, `PROVIDER_DEMO_OK`, `SOURCES_DEMO_OK`, `REVIEW_DEMO_OK`, `MEMORY_DEMO_OK`, `WORKFLOW_DEMO_OK`, `EXTENSIONS_DEMO_OK`. **They validate software workflows, not real-model editing quality or memory learning accuracy.**
 
 <!-- section:workflows -->
 ## Phase-authorized writing workflows
@@ -55,9 +56,25 @@ New-article web mode uses your own Tavily key (`TAVILY_API_KEY`) and compatible 
 
 Outline approval grants no implicit composition permission. Candidate A, critique and optional candidate B remain private artifacts; author adoption creates a manuscript. Existing-article alternatives stay pending against the original baseline. One successful automatic revision maximum per task; no self-scored loops.
 
-Default aggregate limits are 8 model attempts, 3 searches, 5 page attempts and 900000 ms active execution, with separate stage limits. Saved matching results are reusable. Unknown outcomes require explicit acknowledgement before a possibly repeated/charged request. An expired lease needs explicit recovery; two workers cannot commit the same step. No background daemon or automatic retry. Monetary cost remains unknown without reliable billing data.
+Default aggregate limits are 8 model attempts, 3 searches, 5 shared page/MCP read attempts and 900000 ms active execution, with separate stage limits. Saved matching results are reusable. Unknown outcomes require explicit acknowledgement before a possibly repeated/charged request. An expired lease needs explicit recovery; two workers cannot commit the same step. No background daemon or automatic retry. Monetary cost remains unknown without reliable billing data.
 
 See [workflow guide](docs/workflows.md), [简中指南](docs/workflows.zh-CN.md), [workflow protocol](docs/workflow-protocol.md). Real search/model interoperability and output quality are unvalidated until an opt-in live run; the demo uses loopback fixtures.
+
+<!-- section:extensions -->
+## Skills, MCP and question-based evidence
+
+The optional extension layer imports/activates **instruction-only Skills**, loads selected reference lines, discovers trusted MCP tools/text resources and executes author-selected fixed-argument read/compute calls inside approved new-article phases. Stdio and Streamable HTTP support explicit 2026-07-28 / 2025-11-25 subsets; no automatic installer, OAuth, arbitrary scripts or general model tool loop. Connection trust is separate from tool/stage approval. **A local MCP process is not an OS sandbox.**
+
+```sh
+pnpm siglum extensions help
+pnpm siglum extensions guide ../my-writing --lang en
+pnpm siglum extensions guide ../my-writing --lang zh-CN
+pnpm eval:retrieval
+```
+
+Enhanced new tasks search across bounded saved text with deterministic Latin/Han matching and neighboring passages, instead of always taking the first40 lines. Plans disclose actual coverage and omissions; retrieval ranking is not reliability. Chapter drafting is opt-in, uses the approved outline/global intent and frozen chapter evidence, and ends with a bounded whole-candidate review. Each chapter is a budgeted model request.
+
+Host-generated footnotes and citation maps keep stable source/excerpt identities and exact offsets while display numbers can change. They associate source-entry quotation candidates, not proven claim support; later manuscript changes make maps stale. The actual stdio/HTTP integration tests use owned synthetic servers, **not independent interoperability certification**. The native client has a restricted JSON Schema/frontmatter subset; the official SDK was evaluated but not installed in the DNS-blocked build environment. Read the [English guide](docs/extensions.md), [简中指南](docs/extensions.zh-CN.md) and [compatibility matrix](docs/extensions-protocol.md) before connecting programs/services.
 
 <!-- section:writing-memory -->
 ## Intent and writing memory, with author control
@@ -148,6 +165,12 @@ Reports retain their input/version history. Later relevant document, pending-cha
 | <!-- feature:web-search --> Web search | Tavily basic adapter, public query isolation and saved source provenance |
 | <!-- feature:durable-resume --> Resume | Durable attempts, quotas, lease fencing, unknown outcomes and idempotent local adoption |
 
+| <!-- feature:skills --> Skills | Immutable text-only packages, explicit activation and selected reference spans |
+| <!-- feature:mcp --> MCP | Trusted stdio/HTTP clients, fixed-argument author grants, text tools/resources, explicit compatibility limits |
+| <!-- feature:research-index --> Evidence | Whole-saved-text index, literal relevance/diversity/dedup, bounded windows and coverage |
+| <!-- feature:citations --> Citations | Host numbering, exact stable source-entry maps and stale manuscript mappings |
+| <!-- feature:chapters --> Chapters | Opt-in approved-outline sections, stable-source assembly and bounded final review |
+
 <!-- limit:no-gui --> **No GUI or packaged desktop editor.** The guide is an interactive terminal, not a visual rich-text editor.
 
 <!-- limit:bounded-web-search --> **Bounded real web search, not unrestricted browsing.** New-article research uses Tavily Search and public static pages. Search snippets are discovery records, not fetched evidence. Existing-article templates use explicitly selected saved sources.
@@ -158,11 +181,13 @@ Reports retain their input/version history. Later relevant document, pending-cha
 
 <!-- limit:static-extraction --> **Static UTF-8 extraction only.** No PDF, JS rendering, browser login, compression, redirects or full HTML5 parser.
 
-<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v5. Legacy v1–v4 retain their respective editing/source/analysis/memory capabilities; workflows require an explicit backed-up upgrade. Code updates never migrate private writing.
+<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v6. Legacy v1–v5 retain their respective editing/source/analysis/memory capabilities; workflows require an explicit backed-up upgrade. Code updates never migrate private writing.
 
-<!-- limit:no-background-learning --> **No background learning, fine-tuning, vectors or Skills/MCP execution.** Candidate inference requires an explicit request; author activation is separate. Title is a rule-scope tag, not a new title-generation command.
+<!-- limit:no-background-learning --> **No background learning, fine-tuning or vector database.** Candidate inference requires an explicit request; author activation is separate. Title is a rule-scope tag, not a new title-generation command.
 
 <!-- limit:memory-retention --> **Disable is not erase.** Old requests, databases, backups and remote services may retain past content. Export excludes examples by default, not secrets manually typed into rule text. Review what you export/send. This version does not promise secure deletion.
+
+<!-- limit:extension-subset --> **Extension support is bounded, not universal.** Skills do not run scripts. MCP uses an explicit native protocol/schema subset and author-selected parameters, not arbitrary callbacks or a sandbox. Independent third-party services and real-model quality need separate tests.
 
 <!-- section:privacy -->
 ## Local storage, explicit transmission
@@ -176,7 +201,7 @@ Private databases and exports are unencrypted; do not commit them. Network sourc
 
 No new third-party runtime dependency was added. Existing pnpm lockfile is retained. Node's SQLite, test runner, fetch and readline are used through bounded code paths. Default tests never call paid providers; real OS/model/install results must be reported separately.
 
-[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.6 specification](docs/v0.0.6-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.7 specification](docs/v0.0.7-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## License

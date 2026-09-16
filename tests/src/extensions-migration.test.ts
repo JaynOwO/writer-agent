@@ -1,0 +1,24 @@
+// SPDX-License-Identifier: Apache-2.0
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { DatabaseSync } from 'node:sqlite';
+import { mkdirSync, existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { Workspace, migrateWorkspace } from '@writer-agent/storage';
+import { temporary, propose } from './helpers.js';
+import { workflowConfig, grant } from './workflow-helpers.js';
+const {SCHEMA_V1_SQL}=await import(new URL('../../packages/storage/dist/schema.js',import.meta.url).href) as {SCHEMA_V1_SQL:string};
+const {SOURCES_SQL}=await import(new URL('../../packages/storage/dist/source-schema.js',import.meta.url).href) as {SOURCES_SQL:string};
+const {ANALYSIS_SQL}=await import(new URL('../../packages/storage/dist/analysis-schema.js',import.meta.url).href) as {ANALYSIS_SQL:string};
+const {MEMORY_SQL}=await import(new URL('../../packages/storage/dist/memory-schema.js',import.meta.url).href) as {MEMORY_SQL:string};
+const {WORKFLOW_SQL}=await import(new URL('../../packages/storage/dist/workflow-schema.js',import.meta.url).href) as {WORKFLOW_SQL:string};
+function old(t:Parameters<typeof temporary>[0]){
+ const root=join(temporary(t),'旧工作区 v5 😀'),path=join(root,'.writer/workspace.sqlite');mkdirSync(join(root,'.writer'),{recursive:true});const db=new DatabaseSync(path);
+ try{db.exec(SCHEMA_V1_SQL+SOURCES_SQL+ANALYSIS_SQL+MEMORY_SQL+WORKFLOW_SQL+'PRAGMA user_version=5');db.prepare('INSERT INTO workspace(id,name,created_at) VALUES(?,?,?)').run('legacy5','legacy','2026-09-15');}finally{db.close();}
+ const w=Workspace.open(root);try{const d=w.createDocument('Before upgrade','甲可能成立。\r\n\r\nUnchanged paragraph.'),change=propose(w,d.id,0,'甲成立。');w.reject(change.id,'Do not strengthen');const source=w.sources.add({kind:'file',locator:'prior.txt',mediaType:'text/plain',raw:Buffer.from('Prior evidence, not certified.')});const excerpt=w.sources.extract(source.snapshot.id,1,1);w.sources.note(source.snapshot.id,'Private legacy note',excerpt.id);const run=w.workflows.create(workflowConfig({selection:{snapshots:[source.snapshot.id]}}));grant(w,run.id);return {root,path,d,run};}finally{w.close();}
+}
+function rows(path:string){const db=new DatabaseSync(path,{readOnly:true});try{return Object.fromEntries(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name!='sqlite_sequence' ORDER BY name").all().map(r=>{const table=String(r.name);return [table,db.prepare('SELECT * FROM '+table).all()];}));}finally{db.close();}}
+test('Schema5 old source/workflow behavior works; extension access asks for explicit migration',t=>{const {root,path,run}=old(t),before=rows(path),w=Workspace.open(root);try{assert.equal(w.info().schemaVersion,5);assert.ok(w.workflows.run(run.id).grantId);assert.throws(()=>w.extensions.skills(),{code:'MIGRATION_REQUIRED'});}finally{w.close();}const p=migrateWorkspace(root);assert.equal(p.to,6);assert.equal(p.applied,false);assert.deepEqual(rows(path),before);assert.equal(existsSync(join(root,'.writer/backups')),false);});
+test('Schema5-to6 preserves every prior row and creates a verified backup without injecting extensions into old runs',t=>{const {root,path,run,d}=old(t),before=rows(path),m=migrateWorkspace(root,true);assert.ok(m.backup);assert.deepEqual(rows(m.backup),before);const after=rows(path);for(const [k,v]of Object.entries(before))assert.deepEqual(after[k],v,k);const w=Workspace.open(root);try{assert.equal(w.info().schemaVersion,6);assert.equal(Object.hasOwn(w.workflows.run(run.id).capture,'extensions'),false);w.workflows.assertFresh(w.workflows.run(run.id));assert.equal(w.history(d.id).length,1);assert.deepEqual(w.extensions.skills(),[]);}finally{w.close();}assert.equal(migrateWorkspace(root,true).needed,false);assert.equal(readdirSync(join(root,'.writer/backups')).length,1);});
+test('Extension DDL failure rolls back the whole new schema and retains original v5 plus backup',t=>{const {root,path}=old(t),db=new DatabaseSync(path);try{db.exec('CREATE TABLE mcp_servers(dummy TEXT)');}finally{db.close();}const before=rows(path);assert.throws(()=>migrateWorkspace(root,true),{code:'CORRUPT_DATA'});assert.deepEqual(rows(path),before);const check=new DatabaseSync(path);try{assert.equal(check.prepare('PRAGMA user_version').get()!.user_version,5);assert.equal(check.prepare("SELECT count(*) n FROM sqlite_master WHERE name='skill_packages'").get()!.n,0);}finally{check.close();}assert.equal(readdirSync(join(root,'.writer/backups')).length,1);assert.equal(existsSync(join(root,'.writer/migration.lock')),false);});
+test('Unknown future extension schemas are refused without migration/recreation',t=>{const {root,path}=old(t),db=new DatabaseSync(path);try{db.exec('PRAGMA user_version=7');}finally{db.close();}const before=rows(path);assert.throws(()=>migrateWorkspace(root,true),{code:'UNSUPPORTED_SCHEMA'});assert.throws(()=>Workspace.open(root),{code:'UNSUPPORTED_SCHEMA'});assert.deepEqual(rows(path),before);});

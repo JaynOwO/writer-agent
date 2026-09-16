@@ -33,5 +33,10 @@
     "searches": 3,
     "fetches": 5,
     "activeMs": 900000
+  },
+  "extensions": {
+    "skills": [],
+    "calls": [],
+    "chapterDrafting": false
   }
 }

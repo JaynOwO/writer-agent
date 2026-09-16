@@ -14,13 +14,18 @@ import { memoryDemo } from './memory-demo.js';
 import { wizardCommand } from './wizard.js';
 import { workflowCommand } from './workflow-command.js';
 import { workflowDemo } from './workflow-demo.js';
+import { extensionsDemo } from './extensions-demo.js';
+import { extensionsCommand } from './extensions-command.js';
 import { reviewDemo } from './review-demo.js';
 
-const help = `Siglum v0.0.6 (CLI development preview; no API key needed for demos/tests)
+const help = `Siglum v0.0.7 (CLI development preview; no API key needed for demos/tests)
 
   writer help
+  writer extensions help
+  writer extensions guide <workspace> [--lang zh-CN|en]
   writer workflow help
   writer workflow guide <workspace> [--lang zh-CN|en]
+  writer demo:extensions
   writer demo:workflow
   writer guide <workspace> [--lang zh-CN|en]
   writer demo:memory
@@ -75,7 +80,9 @@ function requireArgs(args: string[], min: number, max = min): void {
 async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
+  if (['extensions','skill','mcp','research','citations'].includes(command)) { await extensionsCommand(command,rest); return; }
   if (command === 'workflow') { await workflowCommand(rest); return; }
+  if (command === 'demo:extensions') { requireArgs(rest, 0); await extensionsDemo(); return; }
   if (command === 'demo:workflow') { requireArgs(rest,0); await workflowDemo(); return; }
   if (command === 'demo:memory') { requireArgs(rest,0); await memoryDemo(); return; }
   if (command === 'guide') { await wizardCommand(rest); return; }

@@ -1,9 +1,10 @@
+import { EXTENSION_SQL } from './extension-schema.js';
 // SPDX-License-Identifier: Apache-2.0
 import { SOURCES_SQL } from './source-schema.js';
 import { WORKFLOW_SQL } from './workflow-schema.js';
 import { MEMORY_SQL } from './memory-schema.js';
 import { ANALYSIS_SQL } from './analysis-schema.js';
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 export const APPLICATION_ID = 0x57525431; // "WRT1"
 export const SCHEMA_V1_SQL = `
 CREATE TABLE workspace (
@@ -74,4 +75,4 @@ PRAGMA application_id = ${APPLICATION_ID};
 PRAGMA user_version = 1;
 `;
 
-export const SCHEMA_SQL = SCHEMA_V1_SQL + SOURCES_SQL + ANALYSIS_SQL + MEMORY_SQL + WORKFLOW_SQL + `PRAGMA user_version = ${SCHEMA_VERSION};`;
+export const SCHEMA_SQL = SCHEMA_V1_SQL + SOURCES_SQL + ANALYSIS_SQL + MEMORY_SQL + WORKFLOW_SQL + EXTENSION_SQL + `PRAGMA user_version = ${SCHEMA_VERSION};`;

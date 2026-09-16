@@ -4,7 +4,8 @@
 
 The owner sets product scope; ChatGPT authors source, tests and delivery bundles. The owner uses the separately installed Writer Agent Updater v0.1.2 as the local integrator. Do not require Codex/Spark or a long manual Git workflow. Retain repository JaynOwO/writer-agent, package IDs @writer-agent/*, .writer data path and writer-agent-v*-delivery.zip filenames; product-facing name is Siglum. `pnpm siglum` aliases `pnpm writer`.
 
-v0.0.6 authorizes owner choices 1B/2C/3B/4B/5C/6B: fixed three-template foreground workflow runtime, phase-scoped explicit consent, real Tavily basic Search adapter, bounded public page intake, query/outline/candidate draft/review tasks, at most one successful automatic revision, durable attempts/checkpoints/lease fencing/recovery, numbered bilingual guide and backed-up additive schema5. Read docs/v0.0.6-spec.md, docs/workflow-protocol.md and paired workflow guides. Existing Proposal v1, analysis, memory and isolated block operations remain intact. No GUI, daemon, arbitrary workflow scripts, Skills/MCP, new dependencies or license change.
+v0.0.7 authorizes the combined text-only Skills, explicit MCP read/resource clients, question-based indexed evidence, citation maps and bounded chapter drafting. Read docs/v0.0.7-spec.md, extensions-protocol.md and the paired extension guides. Retain original source/memory/analysis/workflow authority, old optional-field decoding, no GUI/daemon/arbitrary scripts or automatic paid requests. This implementation is a limited native MCP/JSON Schema/frontmatter subset, not the SDK or full conformance; unsupported declarations must fail closed. No dependency/license change.
+
 
 ## Git and delivery boundaries
 
@@ -25,6 +26,7 @@ pnpm demo:sources
 pnpm demo:review
 pnpm demo:memory
 pnpm demo:workflow
+pnpm demo:extensions
 ```
 
 The updater already calls check and the two existing demos; the source workflow is exercised within the test suite. CI additionally runs demo:sources, demo:review and demo:memory. Tests use synthetic sources and loopback HTTP, no public websites/paid model keys. Record the actual OS/Node/dependency environment and failed/unrun checks. A successful fixture test is not a semantic accuracy guarantee or proof of live-site/provider interoperability.
@@ -42,7 +44,7 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 7. Every proposal still requires exact original text, block ID and monotonic block version. Stale document heads and stale same-block operations are refused.
 8. Save pending proposals/context atomically; no transaction over a network wait. Only explicit human accept/reject/revert changes manuscript approval state.
 9. Old source links become stale on their block's change, including ABA. Never silently approve/rebase a citation.
-10. Code updates never migrate user data. v1/v2/v3/v4-to-v5 workspace migration is explicit, backed up and transactional; close other sessions first. Backups are private and unencrypted.
+10. Code updates never migrate user data. v1/v2/v3/v4/v5-to-v6 workspace migration is explicit, backed up and transactional; close other sessions first. Backups are private and unencrypted.
 
 ## Analysis additions
 
@@ -51,7 +53,7 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - Reconstruct host inputs before save; stale document/annotation/selected-change state saves no current report. No transaction over network waits.
 - Keep exact observations, model assessments and human decisions separate. Correct quotes are not correct reasoning. Empty findings are not safe-to-accept.
 - Retain inputs, selected source text, model metadata, versioned protocol/prompt and returned usage locally; no secret fields or hidden reasoning. Unknown usage/cost is unknown.
-- Preserve all regression tests. Update schema-version assertions only when adding the tested v5 migration. Draft evaluation labels cannot become human-reviewed by automatic script.
+- Preserve all regression tests. Update schema-version assertions only when adding the tested v6 migration. Draft evaluation labels cannot become human-reviewed by automatic script.
 - Update README.md, README.zh-CN.md, paired review guides and commands together. Keep updater format 1 and original delivery filename prefix.
 
 ## Intent/memory invariants
@@ -70,3 +72,13 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - Store attempts before dispatch and reserve quotas durably. Never silently retry outcome-unknown calls, reset spent counters, steal live leases, or claim end-to-end exactly-once. Changing budgets revokes grants; input refresh preserves historical artifacts.
 - Keep run-private candidate drafts outside official documents until explicit adoption. Existing-article alternatives stay against the official baseline. Use short nested savepoint-safe transactions for local side effects/checkpoints; no network awaits inside.
 - All new tests/demo use synthetic loopback services. Close every SQLite connection before cleaning Windows test directories. Use an explicit delivery ZIP argument; do not require Codex, reset/clean, hand-edited manifests, or updater upgrades.
+
+## v0.0.7 extensions and research
+
+- Never equate Skill import, activation, MCP connection trust, catalogue discovery, fixed tool-argument approval, phase consent or manuscript adoption. These are separate author decisions. No untrusted code installer, shell-string executor, full MCP conformance claim or OS sandbox claim.
+- Hash executable and direct argument files before launch; close every direct child/pipe on exit. A process with user permissions can still access disk/network; transitive dependencies/grandchildren are not sandboxed.
+- Captures include skill activation/version, trusted connection/version and descriptor/arguments. Re-observed changes require fresh selection. Tools share durable read/fetch quotas; outcome-unknown is never silently retried.
+- MCP text is external-service-unverified origin, not directly fetched web evidence. Do not strip its origin when copying context or reinterpret returned URLs as approved requests.
+- New research uses full saved-text indexing, bounded exact windows and clear omissions. No-match is navigation only; ranking is not truth. Keep Chinese/English/Unicode coordinates exact and prevent oversized heading/citation fanout.
+- Chapter draft/assembly remains run-private until explicit adoption, then atomic manuscript+citation/checkpoint. Source-entry candidate quotes are not per-claim support. Relevant later revisions make maps stale. Old tasks retain old fields/behavior.
+- All tests/demo use owned synthetic services. Report SDK/third-party interoperability, Windows, real search/model calls and clean dependency installation separately. Keep explicit ZIP integration and no manual reset/clean.

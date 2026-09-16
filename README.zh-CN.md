@@ -2,14 +2,14 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.6 -->
+<!-- siglum:version=0.0.7 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 面向研究、写作与审稿的本地优先 Agent Harness。
 
 **模型提出建议，来源可追溯，作者保留最终决定权。**
 
-**v0.0.6** · 命令行开发预览版 · **Apache-2.0**
+**v0.0.7** · 命令行开发预览版 · **Apache-2.0**
 
 在自己的工作区保存文稿版本、来源快照、论断标注、审稿报告与经过作者确认的写作要求。模型可以起草意图、归纳候选偏好、提出修改或分析变化，但不能批准自己的输出。现在可按阶段授权执行有界研究写作；仍不是完整桌面 IDE 或无限制自主 Agent。
 
@@ -29,6 +29,7 @@ pnpm demo:sources
 pnpm demo:review
 pnpm demo:memory
 pnpm demo:workflow
+pnpm demo:extensions
 ```
 
 Windows PowerShell 拦截 `.ps1` 时可使用 `pnpm.cmd`，不用修改执行策略：
@@ -38,7 +39,7 @@ pnpm.cmd check
 pnpm.cmd demo:memory
 ```
 
-预期标记：`DEMO_OK`、`PROVIDER_DEMO_OK`、`SOURCES_DEMO_OK`、`REVIEW_DEMO_OK`、`MEMORY_DEMO_OK`, `WORKFLOW_DEMO_OK`。**这些标记验证程序流程，不代表真实模型的改稿质量或学习偏好的准确率。**
+预期标记：`DEMO_OK`、`PROVIDER_DEMO_OK`、`SOURCES_DEMO_OK`、`REVIEW_DEMO_OK`、`MEMORY_DEMO_OK`, `WORKFLOW_DEMO_OK`, `EXTENSIONS_DEMO_OK`。**这些标记验证程序流程，不代表真实模型的改稿质量或学习偏好的准确率。**
 
 <!-- section:workflows -->
 ## 按阶段授权的写作工作流
@@ -58,6 +59,22 @@ pnpm siglum workflow guide ../my-writing --lang zh-CN
 默认总预算为 8 次模型尝试、3 次搜索、5 次页面尝试和 900000 毫秒活跃执行时间，另有阶段上限。匹配的已保存结果可复用；结果未知的请求需明确确认才可重新尝试，可能重复调用／计费。过期执行锁需要明确恢复，两个终端不能提交同一步。没有后台守护进程或自动重试；缺可靠计费数据就显示费用未知。
 
 见[工作流指南](docs/workflows.zh-CN.md)、[English guide](docs/workflows.md)与[工作流协议](docs/workflow-protocol.md)。真实搜索／模型互操作和写作质量尚需主动实测，演示使用本机假服务。
+
+<!-- section:extensions -->
+## Skills、MCP 与按问题选材
+
+扩展层可以导入／启用**说明型 Skill**、加载指定参考行，发现受信任的 MCP 工具／文本资源，在授权的新稿研究阶段执行作者预选的固定参数读取／计算。stdio 与 Streamable HTTP 支持明确的 2026-07-28／2025-11-25 子集；没有自动安装器、OAuth、任意脚本或模型无限自行挑工具。信任连接与授权工具／阶段是两回事，**本地 MCP 进程不是系统沙箱**。
+
+```sh
+pnpm siglum extensions help
+pnpm siglum extensions guide ../my-writing --lang en
+pnpm siglum extensions guide ../my-writing --lang zh-CN
+pnpm eval:retrieval
+```
+
+增强任务在有界的完整已保存文本中，以确定性的英文词／中文双字匹配和邻接上下文找材料，不再总取前40行。计划披露实际范围与遗漏；相关性不是可信度。逐章生成是可选项，遵守已确认大纲与全局意图，使用固定章节证据，并在合稿后做有界整稿审阅；每章单独计入模型预算。
+
+宿主脚注与引用图记录稳定源快照／片段和精确偏移，编号可以重排。关联的是来源条目的候选引文，不是已证明的论据支持；文稿新版本会让旧映射过期。实际 stdio／HTTP 测试使用本项目自己编写的假服务，**不是独立互操作认证**。原生客户端使用受限 JSON Schema／frontmatter 子集；评估过官方 SDK，但 DNS 受限的构建环境没有装入它。连接外部程序前阅读[英文指南](docs/extensions.md)、[简中指南](docs/extensions.zh-CN.md)和[兼容矩阵](docs/extensions-protocol.md)。
 
 <!-- section:writing-memory -->
 ## 意图与写作记忆，由作者掌控
@@ -148,6 +165,12 @@ pnpm siglum memory help
 | <!-- feature:web-search --> 搜索 | Tavily basic、公开查询隔离与来源记录 |
 | <!-- feature:durable-resume --> 恢复 | 持久尝试、预算、租约防并发、未知结果与本地幂等采用 |
 
+| <!-- feature:skills --> 技能 | 不可变说明型文本包、明确启用与参考行范围 |
+| <!-- feature:mcp --> MCP | 信任的 stdio／HTTP 连接、固定参数授权、文本工具／资源与兼容边界 |
+| <!-- feature:research-index --> 选材 | 已保存全文索引、字面相关性／分散／去重、有界窗口与覆盖说明 |
+| <!-- feature:citations --> 引用 | 宿主编号、稳定来源条目映射、文稿修改后失效 |
+| <!-- feature:chapters --> 章节 | 可选按批准大纲分章、稳定引用合稿与有界整稿审阅 |
+
 <!-- limit:no-gui --> **没有 GUI 或打包桌面编辑器。** 向导是交互式终端，不是可视化富文本编辑器。
 
 <!-- limit:bounded-web-search --> **真实搜索有明确边界，不是无限浏览。** 新稿研究接入 Tavily Search 与公共静态网页；搜索摘要不是已获取的证据。已有文章的改稿／审稿模板使用明确选定的本地来源。
@@ -158,11 +181,13 @@ pnpm siglum memory help
 
 <!-- limit:static-extraction --> **只做静态 UTF-8 提取。** 无 PDF、JS 渲染、浏览器登录、压缩、重定向或完整 HTML5 解析。
 
-<!-- limit:manual-migration --> **不自动迁移私人数据。** 新工作区使用 schema v5，旧 v1–v4 保留各自已有功能；工作流需要明确授权、先备份再升级。更新代码不迁移私人稿件。
+<!-- limit:manual-migration --> **不自动迁移私人数据。** 新工作区使用 schema v6，旧 v1–v5 保留各自已有功能；工作流需要明确授权、先备份再升级。更新代码不迁移私人稿件。
 
-<!-- limit:no-background-learning --> **没有后台学习、微调、向量库或 Skills／MCP 执行。** 归纳候选需主动请求，启用需作者确认。title 只是规则适用标签，不是新的标题生成命令。
+<!-- limit:no-background-learning --> **没有后台学习、微调或向量库。** 归纳候选需主动请求，启用需作者确认。title 只是规则适用标签，不是新的标题生成命令。
 
 <!-- limit:memory-retention --> **停用不等于擦除。** 旧请求、数据库、备份和远端服务可能保留过去内容。导出默认去掉示例，但不会识别规则里手打的秘密；导出／发送前需检查内容。本版不承诺安全删除。
+
+<!-- limit:extension-subset --> **扩展不是全面兼容。** Skill 不执行脚本，MCP 使用明确的原生协议／schema 子集和作者预设参数，不支持任意回调，也不是系统沙箱。独立第三方服务与真实模型质量需要另行测试。
 
 <!-- section:privacy -->
 ## 本地保存，明确发送
@@ -176,7 +201,7 @@ pnpm siglum memory help
 
 没有新增第三方运行时依赖，保留原依赖锁文件。通过有界代码使用 Node 的 SQLite、测试器、fetch 与 readline。默认测试不调用收费模型；操作系统、模型和安装结果必须分别报告。
 
-[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.6 规格](docs/v0.0.6-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
+[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.7 规格](docs/v0.0.7-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
 
 <!-- section:license -->
 ## 许可证

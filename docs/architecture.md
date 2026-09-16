@@ -1,4 +1,4 @@
-# Architecture — Siglum v0.0.6
+# Architecture — Siglum v0.0.7
 
 ## Dependencies and authority
 
@@ -41,7 +41,7 @@ This is not a network sandbox or a complete SSRF audit. Public addresses may sti
 
 Old schema-v1 workspaces can still use original editing, v2 still supports sources; analysis features request an explicit v3 migration. The migration previews by default, retains a verified VACUUM INTO backup, checks a cooperative lock/data version, adds tables transactionally and preserves all existing content rows. Unknown formats are refused. Source-code update bundles never migrate user data. See the paired source guides for backup and recovery boundaries.
 
-Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, automatic tool execution, Skills/MCP, passive learning and factual certification are not implemented. v0.0.5 adds explicit author-confirmed intent and candidate-based memory below.
+Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, unrestricted automatic tool execution, passive learning and factual certification are not implemented. v0.0.7 adds bounded selected Skills/MCP below. v0.0.5 adds explicit author-confirmed intent and candidate-based memory below.
 
 ## v0.0.4 analysis layer
 
@@ -76,3 +76,15 @@ Each stage grant captures exact input/guidance, model settings, source scope, op
 One run has an owner/generation/45-second lease. Every result checks it plus input freshness before commit. Attempt state is persisted as reserved then dispatched before external effects; recovery labels abandoned dispatched attempts outcome-unknown and fences old writers. Explicit retry records acknowledgement and preserves spent quotas. Completed artifacts are keyed by request/task version, model settings and relevant epoch; matching public discovery/fetch steps can survive a private direction refresh. Budget-only changes need a fresh grant but preserve result cache keys. Late/untrusted/invalid outputs cannot approve text or become current artifacts.
 
 Search planning sees only the public brief. Search results remain discoveries; fetched page bytes/excerpts use the existing SourceLibrary. A capped selection with omission reasons, not snippets, reaches content tasks. Query-plan, outline, draft, draft-review and draft-revision are separate structured requests; parent outputs and quotations are validated. Workflow code does not call shell/Git, load scripts from sources or activate preferences. See workflow-protocol.md and paired workflows guides.
+
+## v0.0.7 extension/research layer
+
+Optional config.extensions enables immutable Skill captures and explicit MCP call descriptors in the existing WorkflowStore fingerprint. Core defines constrained schemas and research/citation value transformations; ExtensionStore stores packages, activation/trust/catalogue events, original third-party provenance, derived index cache and citation maps in the same schema6 database. Existing source/model/memory APIs remain authoritative. Native MCP transport is an isolated CLI host adapter, not a model capability handle. It uses explicit protocol dates and a documented strict subset without new npm dependencies. Unsupported schema assertions exclude tools.
+
+Workflow research uses the existing reserve/dispatched/complete path for MCP reads as well as built-in fetch/search. MCP attempts share the fetch/read quota and have exact author-selected arguments. Discovery is performed before actual calls; observed relevant changes revoke old descriptor usability. The client cannot prevent a server from lying or constrain a trusted child with user OS access. Returned text is imported as a file-kind source with an immutable source_provenance row and origin in SourceContext; it is not a Siglum direct web capture. No result URL or source instruction executes a new capability.
+
+Enhanced research indexes complete bounded saved source text. Search discovery is sorted by literal relevance and host diversity, with URL/snippet dedup; fetched text dedups by hash. Window selection has exact original line/UTF16 anchors, neighbor context and omissions, not source-truth scores or complete semantic retrieval. New research query commands persist derived indexes and exact excerpt records; they do not invoke models.
+
+Chapter requests retain author-approved global outline/guidance and selected chapter source identities. Chapters each consume a model attempt. Host assembly maps local display references onto the frozen master selection, then saves a host artifact and citation map atomically. Whole-candidate review is bounded; no silent partial-review success. Citation-map sourceEntry quote associations are candidates, not per-claim support. Marker/neighbor offsets are structural, not a natural-language/Markdown parser. Adoption creates the manuscript/map/checkpoint together; later manuscript revisions mark maps stale.
+
+Old tasks omit extension fields and retain old hashes/behavior. Migration1..5->6 is additive and explicit, never run by code installation. SDK/independent-server conformance, Windows subprocess cleanup and real-model research quality require separate evidence. See extensions-protocol.md and the paired extension guides.

@@ -21,12 +21,12 @@ test('old schema remains usable for original editing without implicit migration'
   const{dir}=legacy(t);const w=Workspace.open(dir);try{assert.equal(w.info().schemaVersion,1);assert.equal(w.listDocuments().length,1);assert.deepEqual(w.sources.context({}),[]);expectCode(()=>w.sources.list(),'MIGRATION_REQUIRED');}finally{w.close();}
 });
 test('migration preview does not change schema, make backup or modify manuscript records',t=>{
-  const{dir,path}=legacy(t),before=rows(path);const r=migrateWorkspace(dir);assert.equal(r.applied,false);assert.equal(r.from,1);assert.equal(r.to,5);assert.equal(r.needed,true);
+  const{dir,path}=legacy(t),before=rows(path);const r=migrateWorkspace(dir);assert.equal(r.applied,false);assert.equal(r.from,1);assert.equal(r.to,6);assert.equal(r.needed,true);
   assert.deepEqual(rows(path),before);assert.equal(existsSync(join(dir,'.writer','backups')),false);const w=Workspace.open(dir);assert.equal(w.info().schemaVersion,1);w.close();
 });
 test('explicit migration makes a readable v1 backup, retains every old row and enables sources',t=>{
   const{dir,path,d}=legacy(t),before=rows(path);const r=migrateWorkspace(dir,true);assert.equal(r.applied,true);assert.ok(r.backup);assert.deepEqual(rows(path),before);assert.deepEqual(rows(r.backup),before);
-  const w=Workspace.open(dir);try{assert.equal(w.info().schemaVersion,5);assert.equal(w.history(d.id).length,3);assert.equal(w.markdown(d.id),'甲可能成立。\r\n\r\n乙。');assert.deepEqual(w.sources.list(),[]);w.sources.add({kind:'file',locator:'a.txt',raw:Buffer.from('source'),mediaType:'text/plain'});}finally{w.close();}
+  const w=Workspace.open(dir);try{assert.equal(w.info().schemaVersion,6);assert.equal(w.history(d.id).length,3);assert.equal(w.markdown(d.id),'甲可能成立。\r\n\r\n乙。');assert.deepEqual(w.sources.list(),[]);w.sources.add({kind:'file',locator:'a.txt',raw:Buffer.from('source'),mediaType:'text/plain'});}finally{w.close();}
   const backup=new DatabaseSync(r.backup,{readOnly:true});assert.equal(backup.prepare('PRAGMA user_version').get()?.user_version,1);backup.close();assert.equal(existsSync(join(dir,'.writer','migration.lock')),false);
 });
 test('repeated migration is a no-op and does not create a second backup',t=>{

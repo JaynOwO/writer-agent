@@ -57,3 +57,13 @@ No new dependency or API version is selected from a claim that it is latest. Val
 
 - Tavily Search REST: https://docs.tavily.com/documentation/api-reference/endpoint/search — endpoint, Bearer authentication, basic/auto_parameters/include_* flags, query/results/request_id/usage and HTTP quota errors. The implementation uses direct HTTP; no real account was queried during development.
 - Runtime uses the already-pinned Node22/24 target APIs. No package version upgrade or new dependencies were made.
+
+## v0.0.7 implementation references
+
+- Agent Skills: https://agentskills.io/specification
+- MCP schema: https://modelcontextprotocol.io/specification/2026-07-28/schema
+- MCP stdio: https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio
+- MCP HTTP: https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http
+- Official SDK overview (evaluated, not installed): https://modelcontextprotocol.io/docs/sdk
+
+The release uses an explicitly constrained native client/schema subset; reference consultation is not conformance or interoperability evidence.

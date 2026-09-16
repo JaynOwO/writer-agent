@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
-import { WriterError, validateWorkflowConfig, validateWorkflowBudget, renderWorkflowDraft } from '@writer-agent/core';
+import { WriterError, validateWorkflowConfig, validateWorkflowBudget, renderWorkflowDraft, renderCitedDraft } from '@writer-agent/core';
 import type { WorkflowConfig, WorkflowBudget, WorkflowContentRequest, OutlineOutput, DraftOutput } from '@writer-agent/core';
 import { Workspace } from '@writer-agent/storage';
 import { parseAnalysisJson } from '@writer-agent/models';
@@ -64,7 +64,7 @@ export async function workflowCommand(args:string[]):Promise<void>{
     else if(action==='finish'){s.finish(id);print(s.run(id));}
     else {
       const artifact=s.artifact(id);let content=JSON.stringify(artifact,null,2)+'\n';
-      if(action==='export-draft'){if(!['draft','draft-revision'].includes(artifact.type))throw new WriterError('INVALID_INPUT','Choose a candidate draft artifact.');const v=artifact.value as {output:DraftOutput;request:WorkflowContentRequest};content=renderWorkflowDraft(v.output,v.request.sources);}
+      if(action==='export-draft'){if(!['draft','draft-revision'].includes(artifact.type))throw new WriterError('INVALID_INPUT','Choose a candidate draft artifact.');const v=artifact.value as {output:DraftOutput;request:WorkflowContentRequest};content=s.run(artifact.runId).capture.extensions?renderCitedDraft(v.output,v.request.sources).markdown:renderWorkflowDraft(v.output,v.request.sources);}
       writeFileSync(a[2]!,content,{encoding:'utf8',flag:'wx',mode:0o600});print({exported:true,artifactId:id,approved:false});
     }
   }finally{process.removeListener('SIGINT',cancel);process.removeListener('SIGTERM',cancel);w.close();}

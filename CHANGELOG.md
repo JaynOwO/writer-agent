@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.7 — Skills, bounded MCP and research preview
+
+Added explicit instruction-only Skill import/activation/reference loading, native MCP tools/text-resource clients (explicit modern/legacy protocol subsets, stdio and Streamable HTTP), fixed-argument workflow grants and durable third-party provenance. Added full-saved-text derived indexes, literal question-based evidence windows, relevance/diversity/dedup explanations, bounded chapter drafting, host citation renumbering/maps, and additive backed-up schema6. Old tasks without the opt-in field keep their captured protocol behavior. Added bilingual extension guide and compatibility matrix, synthetic retrieval comparisons and one combined local-transport demo.
+
+The native MCP client is not full protocol/JSON Schema/YAML compatibility, a system sandbox, arbitrary scripts or an autonomous tool planner. No official SDK is installed; dependency lock remains unchanged. Real third-party interoperability, real search/model quality and Windows must be verified separately. Citation mappings are source-entry candidates, not semantic evidence certification. No GUI or sentence-level text rollback.
+
 ## 0.0.6 — phase-authorized writing workflows
 
 Added three fixed foreground templates, native Tavily basic Search, separated public query planning, durable attempts/phase grants/quotas, generation-fenced leases, explicit unknown-outcome recovery, outline approval, candidate A/review/optional B, A/B comparison, idempotent author adoption, bilingual workflow menus/guides and additive backed-up schema5. Original editing/source/analysis/memory commands and genuine dependency lockfile retained. No new runtime dependency.

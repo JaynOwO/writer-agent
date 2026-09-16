@@ -129,3 +129,7 @@ Budget-only changes revoke the grant while preserving matching outputs. Input re
 After configuring real keys/models, use a disposable workspace and a small PUBLIC technical topic. Set small quotas, authorize research, inspect actual captured pages and omissions, approve the outline, authorize composition, compare candidates and adopt only after reading them. Reopen at the outline gate once to validate continuity. Record real provider/model, successful and failed requests, returned usage, elapsed time and manual corrections. This is an opt-in live test, not something the delivery has run for you.
 
 See [protocol](workflow-protocol.md), [security](security-model.md), [memory](memory.md), [sources](sources.md) and [limitations](limitations.md).
+
+## v0.0.7 extension opt-in
+
+This guide's original prefix/no-tool behavior remains the interpretation for old task records. New guide-created schema6 tasks include an empty extensions object by default, enabling question-based source windows and citation maps. Select Tools/skills/chapters in the run menu to attach authorized skills, fixed MCP read arguments and opt-in section drafting. These changes require refresh/new stage consent. MCP reads and page reads share the existing fetches quota. See [English extension guide](extensions.md) / [简中扩展指南](extensions.zh-CN.md); old configs are not silently upgraded.
