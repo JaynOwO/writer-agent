@@ -18,3 +18,4 @@ export * from './source-policy.js';
 export * from './extensions.js';
 export * from './tool-schema.js';
 export * from './research.js';
+export * from './navigation.js';

@@ -1,6 +1,6 @@
 {
   "name": "writer-agent",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "private": true,
   "type": "module",
   "description": "Siglum: local-first writing workflows, bounded tools and traceable evidence",
@@ -27,7 +27,8 @@
     "demo:memory": "node scripts/memory-demo.mjs",
     "demo:workflow": "node scripts/workflow-demo.mjs",
     "demo:extensions": "node scripts/extensions-demo.mjs",
-    "eval:retrieval": "node scripts/eval-retrieval.mjs"
+    "eval:retrieval": "node scripts/eval-retrieval.mjs",
+    "demo:product": "node scripts/product-demo.mjs"
   },
   "devDependencies": {
     "@types/node": "22.19.7",

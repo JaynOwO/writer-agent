@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.8 — Product integration preview
+
+- Replace native MCP protocol execution with pinned official SDK2.0.0; preserve strict host transport/permission/schema budgets and historical records. Old registration fingerprints require explicit renewal.
+- Add user-local versioned connection presets, task credential bindings, OS keyring2.1.0, masked input, isolated self-test recovery and explicit nonpersistent/environment alternatives.
+- Add local metadata diagnostics, separate live service tests, durable probe results and recovery explanations.
+- Add explicitly authorized navigation summaries retaining original evidence and existing attempt accounting. No promised token/cost reduction.
+- Add private, selectable, static bilingual HTML reading reports and shared application services. No GUI editing or implicit network on report open.
+- Preserve workspace schema6, earlier behavior when optional fields are absent, author manuscript decisions and all existing regressions.
+- Add PRODUCT_DEMO_OK and official SDK transport fixtures. Real service quality and each OS must be reported separately.
+
+
 ## 0.0.7 — Skills, bounded MCP and research preview
 
 Added explicit instruction-only Skill import/activation/reference loading, native MCP tools/text-resource clients (explicit modern/legacy protocol subsets, stdio and Streamable HTTP), fixed-argument workflow grants and durable third-party provenance. Added full-saved-text derived indexes, literal question-based evidence windows, relevance/diversity/dedup explanations, bounded chapter drafting, host citation renumbering/maps, and additive backed-up schema6. Old tasks without the opt-in field keep their captured protocol behavior. Added bilingual extension guide and compatibility matrix, synthetic retrieval comparisons and one combined local-transport demo.

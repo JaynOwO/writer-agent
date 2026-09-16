@@ -4,7 +4,7 @@
 
 The owner sets product scope; ChatGPT authors source, tests and delivery bundles. The owner uses the separately installed Writer Agent Updater v0.1.2 as the local integrator. Do not require Codex/Spark or a long manual Git workflow. Retain repository JaynOwO/writer-agent, package IDs @writer-agent/*, .writer data path and writer-agent-v*-delivery.zip filenames; product-facing name is Siglum. `pnpm siglum` aliases `pnpm writer`.
 
-v0.0.7 authorizes the combined text-only Skills, explicit MCP read/resource clients, question-based indexed evidence, citation maps and bounded chapter drafting. Read docs/v0.0.7-spec.md, extensions-protocol.md and the paired extension guides. Retain original source/memory/analysis/workflow authority, old optional-field decoding, no GUI/daemon/arbitrary scripts or automatic paid requests. This implementation is a limited native MCP/JSON Schema/frontmatter subset, not the SDK or full conformance; unsupported declarations must fail closed. No dependency/license change.
+v0.0.8 authorizes choices 1C/2B/3C/4C/5C: local diagnostics and explicit live validation, pinned official MCP SDK, optional navigation summaries, private static HTML reports, user-local versioned presets and OS credentials. Read docs/v0.0.8-spec.md, product.md/product.zh-CN.md and dependencies.md. SDK2.0.0 and keyring2.1.0 are locked actual dependencies, not native protocol fallbacks. Retain host trust/schema/byte limits and all previous manuscript/source/analysis/memory/workflow guards. No GUI, daemon, hidden retries, implicit real calls or plaintext key fallback.
 
 
 ## Git and delivery boundaries
@@ -27,6 +27,7 @@ pnpm demo:review
 pnpm demo:memory
 pnpm demo:workflow
 pnpm demo:extensions
+pnpm demo:product
 ```
 
 The updater already calls check and the two existing demos; the source workflow is exercised within the test suite. CI additionally runs demo:sources, demo:review and demo:memory. Tests use synthetic sources and loopback HTTP, no public websites/paid model keys. Record the actual OS/Node/dependency environment and failed/unrun checks. A successful fixture test is not a semantic accuracy guarantee or proof of live-site/provider interoperability.
@@ -82,3 +83,13 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - New research uses full saved-text indexing, bounded exact windows and clear omissions. No-match is navigation only; ranking is not truth. Keep Chinese/English/Unicode coordinates exact and prevent oversized heading/citation fanout.
 - Chapter draft/assembly remains run-private until explicit adoption, then atomic manuscript+citation/checkpoint. Source-entry candidate quotes are not per-claim support. Relevant later revisions make maps stale. Old tasks retain old fields/behavior.
 - All tests/demo use owned synthetic services. Report SDK/third-party interoperability, Windows, real search/model calls and clean dependency installation separately. Keep explicit ZIP integration and no manual reset/clean.
+
+## v0.0.8 product boundaries
+
+- Workspace schema remains6. User-local nonsecret connections.sqlite uses schema1; never copy secrets into workspace/Git/reports. Loading metadata is not reading/unlocking a credential.
+- Preset creation, OS key writes, live connection tests, task-local binding, stage consent and manuscript adoption are distinct. Credential callbacks are host-only and stripped from model descriptions; local bindings protect imported task references.
+- No implicit OS-store fallback. Linux explicitly selects Secret Service, not kernel-keyring auto-fallback. Journal random new items and compensate only unreferenced owned operations. No other-app enumeration. Removal is not service-side key revocation.
+- SDK-backed transport retains the declared supported subset. Old registrations require explicit renewal. Self-authored SDK fixtures are not independent third-party interoperability evidence.
+- Navigation summaries are derived-navigation-not-evidence; preserve original selected text, account for summary calls and omissions. They currently add guidance rather than claiming guaranteed context compression.
+- HTML is an escaped static time-point snapshot with private content groups. Excluded structured groups must be absent, not hidden. Text itself may already quote evidence; no semantic secret-redaction claim. Do not add executable approval actions.
+- Keep Windows full-app validation distinct from uploaded Windows binding self-tests; Linux/Chromium/set_content is not Windows/Edge/file:// evidence.

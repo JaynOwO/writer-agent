@@ -10,7 +10,11 @@ export interface WorkflowModel {
   allowRemote:boolean; responseFormat:'json-schema'|'json'|'prompt'; tokenParameter:'max_completion_tokens'|'max_tokens';
   timeoutMs:number; maxOutputTokens:number;
 }
+export interface ConnectionRef { id:string; version:string }
+export interface WorkflowConnections { model?:ConnectionRef; search?:ConnectionRef; mcp?:Record<string,ConnectionRef> }
 export interface WorkflowConfig {
+  connectionRefs?: WorkflowConnections;
+  navigationSummary?: boolean;
   template:WorkflowTemplate; title:string; goal:string; publicBrief:string; language:'zh-CN'|'en';
   research:'web'|'selected'; documentId:string|null; changeIds:string[];
   selection:SourceSelection; profileId:string|null; intent:IntentCard|null; memoryOptions:MemoryOptions;
@@ -54,6 +58,7 @@ export interface SearchRequest { query:string;language:'zh-CN'|'en';domains:stri
 export interface WorkflowQueryRequest { protocolVersion:1;task:'query-plan';runId:string;requestId:string;publicBrief:string;language:'zh-CN'|'en';maxQueries:number }
 export type ContentTask = 'outline'|'draft'|'draft-review'|'draft-revision';
 export interface WorkflowContentRequest {
+  navigation?: import('./navigation.js').NavigationPacket;
   skills?: import('./extensions.js').LoadedSkill[];
   section?: {index:number;total:number;heading:string;approvedOutlineHash:string};
   protocolVersion:1;task:ContentTask;runId:string;requestId:string;goal:string;language:'zh-CN'|'en';

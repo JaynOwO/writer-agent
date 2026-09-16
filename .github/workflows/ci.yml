@@ -40,3 +40,4 @@ jobs:
       - run: pnpm demo:workflow
       - run: pnpm demo:extensions
       - run: pnpm eval:retrieval
+      - run: pnpm demo:product

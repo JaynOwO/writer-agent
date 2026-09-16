@@ -18,8 +18,11 @@ import { extensionsDemo } from './extensions-demo.js';
 import { extensionsCommand } from './extensions-command.js';
 import { reviewDemo } from './review-demo.js';
 
-const help = `Siglum v0.0.7 (CLI development preview; no API key needed for demos/tests)
+import { productCommand } from './product-command.js';
+import { ProductError } from './application/secrets.js';
+const help = `Siglum v0.0.8 (CLI development preview; no API key needed for demos/tests)
 
+  writer product help
   writer help
   writer extensions help
   writer extensions guide <workspace> [--lang zh-CN|en]
@@ -81,6 +84,7 @@ async function main(args: string[]): Promise<void> {
   const [command = 'help', ...rest] = args;
   if (command === 'help' || command === '--help' || command === '-h') { console.log(help); return; }
   if (['extensions','skill','mcp','research','citations'].includes(command)) { await extensionsCommand(command,rest); return; }
+  if(command==='product'){await productCommand(rest);return;}
   if (command === 'workflow') { await workflowCommand(rest); return; }
   if (command === 'demo:extensions') { requireArgs(rest, 0); await extensionsDemo(); return; }
   if (command === 'demo:workflow') { requireArgs(rest,0); await workflowDemo(); return; }
@@ -156,6 +160,6 @@ async function main(args: string[]): Promise<void> {
 }
 main(process.argv.slice(2)).catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(error instanceof WriterError || error instanceof ProviderError ? `ERROR [${error.code}]: ${message}` : `ERROR: ${message}`);
-  process.exitCode = error instanceof WriterError ? 2 : error instanceof ProviderError ? 3 : 1;
+  console.error(error instanceof WriterError || error instanceof ProviderError || error instanceof ProductError ? `ERROR [${error.code}]: ${message}` : `ERROR: ${message}`);
+  process.exitCode = error instanceof WriterError ? 2 : error instanceof ProviderError || error instanceof ProductError ? 3 : 1;
 });

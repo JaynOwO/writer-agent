@@ -1,6 +1,8 @@
-# Extension compatibility and authority — v0.0.7
+# Extension compatibility and authority — v0.0.8
 
-This is an explicit supported-subset matrix, **not a MCP conformance certification**. The native adapter is isolated in `apps/cli/src/mcp-client.ts`; it can be replaced by a pinned official SDK adapter later. The SDK was considered; npm DNS failed in the author's environment, so no uninstalled SDK or invented lockfile is claimed. Dependency versions remain exactly those of v0.0.6. Independent SDK-server/third-party interoperability and Windows process behavior have not been proven by Linux self-fixture tests.
+This is a supported-subset matrix, **not conformance certification**. MCP execution uses pinned `@modelcontextprotocol/client@2.0.0`. Host `apps/cli/src/mcp-client.ts` keeps bounded transport I/O, permission identity, supported JSON Schema assertions and safe error handling. The former native lifecycle/protocol path is removed, not a fallback. Official SDK service fixtures are tested separately from owned raw-wire fixtures; neither is independent third-party service certification. See product.md/product.zh-CN.md and dependencies.md.
+
+Old registration hashes include the previous adapter identity. Use explicit `mcp renew`/guide re-registration, then trust/discover and reselect tools; historical records are not rewritten or silently authorized. User-level presets can supply exact-endpoint credentials through host callbacks; callbacks/keys never become model values.
 
 ## MCP matrix
 
@@ -9,7 +11,7 @@ This is an explicit supported-subset matrix, **not a MCP conformance certificati
 | Protocol selection | `2026-07-28` or `2025-11-25`, user-configured; no guessing/downgrade |
 | 2026 discovery | `server/discover`, complete result, supportedVersions/capabilities and cache hints; optional serverInfo under result `_meta` |
 | 2026 request metadata | namespaced protocol/clientInfo/clientCapabilities on each request; no initialize/session |
-| 2025 compatibility | exact-version initialize, initialized notification; explicit session header/DELETE cleanup for HTTP |
+| 2025 compatibility | SDK exact-version initialize, initialized notification and session headers; close cancels the local transport (remote session expiry is service-owned) |
 | stdio | absolute installed executable, argv array, explicit cwd, restricted inherited environment, no shell |
 | Streamable HTTP | one POST per request, JSON or request-scoped SSE, bounded UTF-8, no redirects |
 | Modern HTTP mirroring | protocol/method/name and supported `x-mcp-header` primitive property paths; Base64 sentinel when needed |
@@ -31,7 +33,7 @@ MCP protocol sources consulted during implementation (2026-09-15 session):
 - https://modelcontextprotocol.io/specification/2025-11-25/basic/lifecycle
 - https://modelcontextprotocol.io/docs/sdk
 
-## Native JSON Schema policy
+## Host JSON Schema policy
 
 Only the implemented 2020-12 subset is accepted. Unknown validation keywords exclude that tool; there is no weak "looks valid" fallback. Supported assertions: boolean schemas, type, properties/required/additionalProperties, items/prefixItems, min/max items/string code-points/properties/numbers, uniqueItems, enum/const, anyOf/oneOf/allOf/not and acyclic local `#/$defs/…` references. `$schema` must be absent or 2020-12. No pattern/format/regex, remote refs, recursive schemas, conditionals, unevaluatedProperties, general vocabularies or draft07 interpretation. `$ref` does not grant schema HTTP access.
 
@@ -76,7 +78,7 @@ Author selections, not a hidden model, choose at most three enabled skills and r
 
 Optional config.extensions contains `skills`, `calls` and `chapterDrafting`. Absent means old task behavior. Present means capture the exact skill versions, trusted connection versions, observed catalogue, descriptor/schema and fixed arguments, then incorporate them into the stage fingerprint. Selected MCP research calls currently only execute at the start of a **new-article** research phase. They do not form an arbitrary tool planner, network browser or general workflow language. Revision/audit tasks can use skills but retain original mutation semantics.
 
-One logical MCP attempt consumes shared fetch/read quota before discovery/call; discovery RPCs have finite list limits and the same active-phase time budget. The native client rechecks descriptor identity before dispatch and observes catalogues into local state. Unsupported post-dispatch tool content is not imported or marked success. Cache reuse only occurs for the same captured request/version/epoch. Credentials are read at use time and sent only to the explicit server, never embedded in model source context. Exact parameters may themselves contain author-supplied private text; there is no semantic secret detector.
+One logical MCP attempt consumes shared fetch/read quota before discovery/call; discovery RPCs have finite list limits and the same active-phase time budget. The SDK-backed host rechecks descriptor identity before dispatch and observes catalogues into local state. Unsupported post-dispatch tool content is not imported or marked success. Cache reuse only occurs for the same captured request/version/epoch. Credentials are read at use time and sent only to the explicit server, never embedded in model source context. Exact parameters may themselves contain author-supplied private text; there is no semantic secret detector.
 
 Returned text is stored as imported bytes with a separate immutable source_provenance row (server, descriptor, attempt, raw bounded result). SourceContext gains optional `origin: {kind:'mcp',serverId,name,attemptId,descriptorHash,verification:'external-service-unverified'}`. It is not a direct-page-fetch attestation. Model context includes this origin and selected text, not connection secret fields. The source/context read verifies both hash and origin; removing the origin invalidates the packet.
 
@@ -93,3 +95,9 @@ Chapter requests add `section:{index,total,heading,approvedOutlineHash}` and ret
 Additive tables: skill_packages/skill_decisions, mcp_servers/mcp_trust/mcp_catalogs, source_provenance, research_indexes, citation_maps. Original tables/IDs are preserved. Source kind remains web/file at the original schema boundary; provenance distinguishes imported MCP text. Derived indexes can be rebuilt; original text, approvals and citation provenance cannot be discarded. Citation maps/artifacts/activation decisions have append-only triggers and integrity hashes, not adversarial tamper-proofing against the file owner.
 
 Explicit backed-up migration accepts schemas1–5 and refuses unknown formats. Code installation never migrates writing data. Old requests without extension fields preserve their original hashes and are not retroactively asserted to have read skills or index-selected material. After a manuscript edit, citation maps become historical/stale; candidate maps remain tied to their artifact. An author adoption and its exact citation map/checkpoint commit together.
+
+## v0.0.8 SDK integration notes
+
+The SDK provides Client, protocol version selection/validation and StreamableHTTPClientTransport. A custom bounded stdio **Transport** frames SDK messages; it does not implement an alternate initialize/discover protocol. Guarded fetch restricts endpoint/method, refuses redirects, bounds UTF-8/JSON/SSE responses and disables unsolicited GET streams/reconnect/step-up callbacks. Additional SDK capabilities are not author permission. Plaintext/unknown key fallback is not enabled. Never interpret a successful connection as proof of account balance or safe server behavior.
+
+Metadata resolution in `product doctor` does not import/unlock the OS backend or launch SDK servers. Explicit tests pin version/input/caps and are recorded separately. Direct-child cleanup is bounded; there is no process-tree OS sandbox. Refer to the release validation report for actual OS and SDK fixture results.
