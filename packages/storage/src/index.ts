@@ -1,3 +1,6 @@
+import { RangeEditor } from './range-editor.js';
+export { RangeEditor } from './range-editor.js';
+export type { EditingBuffer, RangeDecision } from './range-editor.js';
 import { ExtensionStore } from './extensions.js';
 export { ExtensionStore } from './extensions.js';
 // SPDX-License-Identifier: Apache-2.0
@@ -91,6 +94,7 @@ export class Workspace {
   private readonly db: DatabaseSync;
   private closed = false;
   private transactionDepth = 0;
+  readonly ranges: RangeEditor;
   readonly extensions: ExtensionStore;
   readonly workflows: WorkflowStore;
   readonly sources: SourceLibrary;
@@ -98,6 +102,7 @@ export class Workspace {
   readonly memory: WritingMemory;
   private constructor(root: string, db: DatabaseSync) {
     this.root = root; this.db = db;
+    this.ranges = new RangeEditor(db, () => { this.assertOpen(); if(this.schemaVersion()<7) throw new WriterError('MIGRATION_REQUIRED','Range editing requires explicit backed-up schema v7 migration.'); }, fn => this.transaction(fn), this);
     this.extensions = new ExtensionStore(db, () => { this.assertOpen(); if(this.schemaVersion()<6) throw new WriterError('MIGRATION_REQUIRED','Extensions/research index require schema v6; preview and explicitly apply migration.'); }, fn => this.transaction(fn), this);
     this.workflows = new WorkflowStore(db, () => { this.assertOpen(); if (this.schemaVersion() < 5) throw new WriterError('MIGRATION_REQUIRED', 'Workflow tasks need schema v5. Preview and explicitly apply migration first.'); }, fn => this.transaction(fn), this);
     this.sources = new SourceLibrary(db, () => {
@@ -115,7 +120,7 @@ export class Workspace {
   }
   private schemaVersion(): number {
     const v = this.db.prepare('PRAGMA user_version').get()?.user_version;
-    if (v !== 1 && v !== 2 && v !== 3 && v !== 4 && v !== 5 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
+    if (v !== 1 && v !== 2 && v !== 3 && v !== 4 && v !== 5 && v !== 6 && v !== SCHEMA_VERSION) throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace schema.');
     return v;
   }
 
@@ -161,7 +166,7 @@ export class Workspace {
     try {
       const version = db.prepare('PRAGMA user_version').get();
       const app = db.prepare('PRAGMA application_id').get();
-      if (!version || ![1,2,3,4,5,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
+      if (!version || ![1,2,3,4,5,6,SCHEMA_VERSION].includes(integer(version, 'user_version')) || !app || integer(app, 'application_id') !== APPLICATION_ID) {
         throw new WriterError('UNSUPPORTED_SCHEMA', 'Unknown workspace format/version. No migration or overwrite was attempted.');
       }
       db.exec('PRAGMA foreign_keys = ON; PRAGMA synchronous = FULL;');
@@ -217,7 +222,9 @@ export class Workspace {
     this.assertOpen(); requireString(id, 'revisionId');
     const row = this.db.prepare('SELECT * FROM revisions WHERE id=?').get(id);
     if (!row) throw new WriterError('NOT_FOUND', `Revision not found: ${id}`);
-    return decodeRevision(row);
+    const revision = decodeRevision(row);
+    if(this.schemaVersion()>=7){const journal=this.ranges.journal(revision.id);if(journal)return {...revision,editOrigin:journal.kind};}
+    return revision;
   }
   currentRevision(documentId: string): Revision { return this.getRevision(this.getDocument(documentId).headRevisionId); }
   markdown(documentId: string): string { return renderMarkdown(this.currentRevision(documentId).snapshot); }
@@ -287,6 +294,7 @@ export class Workspace {
     this.validateReason(reason);
     return this.transaction(() => {
       const change = this.getChange(changeId);
+      this.assertNotRangeManaged(changeId);
       if (change.status !== 'pending') throw new WriterError('INVALID_TRANSITION', 'Only pending changes can be rejected. Use revert for accepted changes.');
       this.db.prepare("UPDATE changes SET status='rejected' WHERE id=?").run(changeId);
       const decisionId = this.appendDecision(changeId, 'rejected', reason, this.getDocument(change.documentId).headRevisionId);
@@ -298,6 +306,7 @@ export class Workspace {
     this.validateReason(reason);
     return this.transaction(() => {
       const change = this.getChange(changeId);
+      this.assertNotRangeManaged(changeId);
       const current = this.currentRevision(change.documentId);
       const snapshot = action === 'accepted' ? applyChange(current.snapshot, change) : revertChange(current.snapshot, change);
       const revision = this.appendRevision(change.documentId, current.id, snapshot, action, change.id);
@@ -322,6 +331,9 @@ export class Workspace {
     const decisionId = newId('dec');
     this.db.prepare('INSERT INTO decisions(id,change_id,action,reason,revision_id,created_at) VALUES(?,?,?,?,?,?)').run(decisionId,changeId,action,reason,revisionId,new Date().toISOString());
     return decisionId;
+  }
+  private assertNotRangeManaged(changeId:string):void {
+    if(this.schemaVersion()>=7 && this.ranges.forChange(changeId)) throw new WriterError('INVALID_TRANSITION','This block proposal is now reviewed as ranges. Use its explicit range decisions; the old proposal is not automatically accepted.');
   }
   private validateReason(reason: string): void {
     validateText(reason, 'reason');

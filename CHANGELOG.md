@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.0.9 integration correction — winfix3
+
+- Keep explicitly Linux CI sandbox staging paths POSIX when checked from Windows; preserve the existing platform/CI restrictions and helper verification.
+- Add subprocess regressions against the actual module with POSIX and Windows default path APIs. The pre-fix Windows-flavour regression reproduces the reported slash mismatch.
+- Include the already delivered panel-fix1 sources and saved-log tests in the source tree; this does not automatically reinstall the local updater.
+- Retain the prior bounded rename, real repository identity and sandbox CI corrections. No dependency, runtime lock, license or manuscript schema changes.
+
+
+## 0.0.9 — Desktop/range editing preview; developer Updater0.2
+
+- winfix1: retry contended updater bootstrap directory/pointer renames with 10 bounded waits (5.5 seconds total waiting), rechecking package hashes and destination/pointer state before every attempt. Persistent failures still stop; do not delete a destination or disable tests. Add transient/persistent error and same-version corrected-task regressions.
+
+- Add isolated Electron desktop with native workspaces, buffer persistence, explicit model/phase approval, source/intent views and typed application dispatch.
+- Add schema7 range decisions and invertible nonoverlapping history; bind semantic review to selected range state.
+- Add Windows x64 portable packaging and explicit current-user install/uninstall flow, without signing or Windows certification claims.
+- Add independent developer updater: authenticated panel, stable repository identity, fixed ZIP cache, worktree integration, pinned CI, durable reconciliation and public Release product download.
+- Preserve old writing/CLI protocols, actual locked dependencies and unchanged Apache-2.0 LICENSE/NOTICE. Code installation does not migrate writing data.
+
+
 ## 0.0.8 — Product integration preview
 
 - Replace native MCP protocol execution with pinned official SDK2.0.0; preserve strict host transport/permission/schema budgets and historical records. Old registration fingerprints require explicit renewal.

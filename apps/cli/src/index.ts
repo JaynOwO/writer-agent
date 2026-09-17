@@ -20,7 +20,7 @@ import { reviewDemo } from './review-demo.js';
 
 import { productCommand } from './product-command.js';
 import { ProductError } from './application/secrets.js';
-const help = `Siglum v0.0.8 (CLI development preview; no API key needed for demos/tests)
+const help = `Siglum v0.0.9 (CLI development preview; no API key needed for demos/tests)
 
   writer product help
   writer help

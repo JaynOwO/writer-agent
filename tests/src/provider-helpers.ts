@@ -35,7 +35,7 @@ export async function fakeServer(t:TestContext,handler:(req:CapturedRequest,res:
     })().catch(()=>{if(!res.headersSent)res.writeHead(500);res.end();});
   });
   await new Promise<void>((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',()=>{server.removeListener('error',reject);resolve();});});
-  t.after(()=>new Promise<void>(resolve=>{server.closeAllConnections();server.close(()=>resolve());}));
+  t.after(()=>new Promise<void>(resolve=>{server.close(()=>resolve());server.closeAllConnections();}));
   const address=server.address();if(!address||typeof address==='string')throw new Error('fixture address');
   return {base:`http://127.0.0.1:${address.port}`,requests,server};
 }

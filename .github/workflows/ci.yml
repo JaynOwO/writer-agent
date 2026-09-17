@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   check:
-    timeout-minutes: 10
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -41,3 +41,43 @@ jobs:
       - run: pnpm demo:extensions
       - run: pnpm eval:retrieval
       - run: pnpm demo:product
+      # Download the exact checksum-pinned official runtime only in Node24 jobs.
+      # The smoke fixture uses temporary synthetic workspaces, never private credentials.
+      - if: matrix.node == '24'
+        run: pnpm desktop:runtime
+      # Do not disable the renderer sandbox or global user-namespace policy.
+      # Only the checksum-verified official helper is installed with privilege,
+      # outside the user-writable checkout, on this disposable hosted runner.
+      - name: Prepare verified Linux Electron sandbox
+        id: linux-sandbox
+        if: runner.os == 'Linux' && matrix.node == '24'
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ && "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]
+          node scripts/desktop-sandbox-ci.mjs
+          stage="$RUNNER_TEMP/siglum-sandbox-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          target="/opt/siglum-ci-sandbox-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          [[ ! -e "$target" && ! -L "$target" ]]
+          sudo -n mkdir -- "$target"
+          printf 'directory=%s\n' "$target" >> "$GITHUB_OUTPUT"
+          sudo -n chown root:root -- "$target"
+          sudo -n chmod 0755 -- "$target"
+          sudo -n install -o root -g root -m 4755 -- "$stage/chrome-sandbox" "$target/chrome-sandbox"
+          expected="$(cat "$stage/helper.sha256")"
+          printf '%s  %s\n' "$expected" "$target/chrome-sandbox" | sha256sum --check --status
+          [[ "$(stat -c '%u:%g:%a' "$target/chrome-sandbox")" == '0:0:4755' ]]
+          printf 'CHROME_DEVEL_SANDBOX=%s/chrome-sandbox\n' "$target" >> "$GITHUB_ENV"
+      - if: matrix.node == '24'
+        run: pnpm desktop:smoke
+      - name: Remove CI-only sandbox helper
+        if: always() && steps.linux-sandbox.outputs.directory != ''
+        shell: bash
+        env:
+          SANDBOX_DIRECTORY: ${{ steps.linux-sandbox.outputs.directory }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_RUN_ID" =~ ^[0-9]+$ && "$GITHUB_RUN_ATTEMPT" =~ ^[0-9]+$ ]]
+          [[ "$SANDBOX_DIRECTORY" == "/opt/siglum-ci-sandbox-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" ]]
+          sudo -n rm -f -- "$SANDBOX_DIRECTORY/chrome-sandbox"
+          sudo -n rmdir -- "$SANDBOX_DIRECTORY"
