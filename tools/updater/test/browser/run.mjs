@@ -1,0 +1,22 @@
+// SPDX-License-Identifier: Apache-2.0
+// Actual Electron-hosted browser + local HTTP panel + real temporary Git; GitHub is a fake.
+import {app,BrowserWindow} from 'electron';import assert from 'node:assert/strict';
+import {writeFileSync,readFileSync}from'node:fs';import{join}from'node:path';
+import {fixture} from '../helpers.mjs';import{PanelApplication,servePanel}from'../../src/server.mjs';
+const hooks=[];let panel,window;const passed=[];const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+async function run(){try{const f=await fixture({after:fn=>hooks.push(fn)}),a=new PanelApplication(join(f.root,'panel'));a.store.close();a.store=f.store;a.config=f.config;a.engine=async()=>f.engine;
+ panel=await servePanel(a);await app.whenReady();window=new BrowserWindow({width:1280,height:900,show:true,webPreferences:{sandbox:true,contextIsolation:true,nodeIntegration:false,partition:'updater-owned-fixture'}});window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('console-message',e=>console.log('RENDERER',e.message));await window.loadURL(panel.url);const js=async x=>{try{return await window.webContents.executeJavaScript(x);}catch(e){console.error('JS_FAILED',x.slice(0,160));throw e;}};async function wait(x){for(let i=0;i<150;i++){if(await js(x))return;await sleep(100);}throw Error('UI timeout: '+x);}
+ await wait("document.querySelector('#tasks').textContent.includes('尚无任务')");assert.equal(await js('typeof require'),'undefined');console.log('STEP',passed.length+1);passed.push('authenticated real panel opens with the bound repository');
+ await window.reload();await wait("document.querySelector('#tasks').textContent.includes('尚无任务')");console.log('STEP',passed.length+1);passed.push('refresh retains only this session authorization');
+ // Simulate author file selection with a real File/DOM input change, not a prepare API shortcut.
+ const data=f.bytes.toString('base64');await js(`(()=>{const bytes=Uint8Array.from(atob(${JSON.stringify(data)}),c=>c.charCodeAt(0)),dt=new DataTransfer();dt.items.add(new File([bytes],'renamed package (1).zip',{type:'application/zip'}));const input=document.getElementById('zip');input.files=dt.files;input.dispatchEvent(new Event('change'));})()`);
+ await wait("!document.querySelector('#detail').hidden && document.querySelector('#actions').textContent.includes('确认并全流程执行')");console.log('STEP',passed.length+1);passed.push('renamed ZIP filename uploads and is previewed by manifest identity');
+ await js("window.confirm=()=>true; Array.from(document.querySelectorAll('#actions button')).find(b=>b.textContent==='确认并全流程执行').click()");
+ await wait("document.querySelector('#tasks').textContent.includes('done')");const t=f.store.list()[0];assert.equal(t.remoteMerged,true);assert.equal(t.localSynced,true);assert.equal(t.cleanupComplete,true);assert.equal(f.gh.mergeCount,1);console.log('STEP',passed.length+1);passed.push('one explicit panel decision runs worktree / fake PR CI merge / local sync');
+ await js("document.querySelector('#lang').click()");await wait("document.querySelector('#headline').textContent.includes('Update code')");console.log('STEP',passed.length+1);passed.push('English panel renders persisted completion facts');
+ await wait("Array.from(document.querySelectorAll('#actions button')).some(b=>b.textContent==='Continue / reconcile')");await js("Array.from(document.querySelectorAll('#actions button')).find(b=>b.textContent==='Continue / reconcile').click()");await sleep(800);assert.equal(f.gh.mergeCount,1);console.log('STEP',passed.length+1);passed.push('already-completed replay does not merge twice');
+ const unauthorized=await fetch(panel.origin+'/api/state');assert.equal(unauthorized.status,403);console.log('STEP',passed.length+1);passed.push('uncredentialed panel API is rejected');
+ await sleep(500);const image=await window.webContents.capturePage(),out=process.env.SIGLUM_TEST_OUTPUT||f.root;writeFileSync(join(out,'updater-browser.png'),image.toPNG());writeFileSync(join(out,'updater-browser.json'),JSON.stringify({passed:passed.length,checks:passed,versions:process.versions,github:'synthetic API with real local bare Git',validation:'fixture hook, not production CI'},null,2));
+ window.destroy();await panel.close();for(const fn of hooks)fn();console.log('UPDATER_BROWSER_OK',passed.length);app.exit(0);
+}catch(e){console.error('UPDATER_BROWSER_FAILED',e.stack);try{window?.destroy();await panel?.close();}catch{}for(const fn of hooks){try{fn();}catch{}}app.exit(1);}}
+run();

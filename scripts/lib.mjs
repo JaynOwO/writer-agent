@@ -19,5 +19,6 @@ export function tests() {
   const dir = resolve(root, 'tests/dist');
   const files = readdirSync(dir).filter(n => n.endsWith('.test.js')).sort().map(n => resolve(dir, n));
   if (files.length === 0) { console.error('No tests found.'); process.exit(1); }
-  run(['--test', ...files]);
+  // Keep fixture processes bounded on developer PCs and hosted CI runners.
+  run(['--test', '--test-concurrency=4', ...files]);
 }

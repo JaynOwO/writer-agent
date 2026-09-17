@@ -4,7 +4,7 @@
 
 The owner sets product scope; ChatGPT authors source, tests and delivery bundles. The owner uses the separately installed Writer Agent Updater v0.1.2 as the local integrator. Do not require Codex/Spark or a long manual Git workflow. Retain repository JaynOwO/writer-agent, package IDs @writer-agent/*, .writer data path and writer-agent-v*-delivery.zip filenames; product-facing name is Siglum. `pnpm siglum` aliases `pnpm writer`.
 
-v0.0.8 authorizes choices 1C/2B/3C/4C/5C: local diagnostics and explicit live validation, pinned official MCP SDK, optional navigation summaries, private static HTML reports, user-local versioned presets and OS credentials. Read docs/v0.0.8-spec.md, product.md/product.zh-CN.md and dependencies.md. SDK2.0.0 and keyring2.1.0 are locked actual dependencies, not native protocol fallbacks. Retain host trust/schema/byte limits and all previous manuscript/source/analysis/memory/workflow guards. No GUI, daemon, hidden retries, implicit real calls or plaintext key fallback.
+v0.0.9 and Updater0.2 authorize desktop Windows preview, exact range decisions, isolated authenticated updater panel/worktrees, public Release selection and repository-ID-based rename handling. Read docs/desktop.md, range-edit-protocol.md, packaging.md and tools/updater/README.md. Application runtime remains separate from Git. Repository name is mutable; keep host/repositoryId1370967185/ownerId255999131 as the explicit project binding. No actual rename/publish/admin or paid call is authorized by source implementation. Read-only old names are historical metadata, never rewrite signed/historical source bundles.
 
 
 ## Git and delivery boundaries
@@ -55,7 +55,7 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - Keep exact observations, model assessments and human decisions separate. Correct quotes are not correct reasoning. Empty findings are not safe-to-accept.
 - Retain inputs, selected source text, model metadata, versioned protocol/prompt and returned usage locally; no secret fields or hidden reasoning. Unknown usage/cost is unknown.
 - Preserve all regression tests. Update schema-version assertions only when adding the tested v6 migration. Draft evaluation labels cannot become human-reviewed by automatic script.
-- Update README.md, README.zh-CN.md, paired review guides and commands together. Keep updater format 1 and original delivery filename prefix.
+- Update README.md, README.zh-CN.md, paired review guides and commands together. Keep updater format1 data contract with optional stable identity and truthful package types.
 
 ## Intent/memory invariants
 
@@ -93,3 +93,7 @@ Update README.md and README.zh-CN.md together for user-visible changes. Keep the
 - Navigation summaries are derived-navigation-not-evidence; preserve original selected text, account for summary calls and omissions. They currently add guidance rather than claiming guaranteed context compression.
 - HTML is an escaped static time-point snapshot with private content groups. Excluded structured groups must be absent, not hidden. Text itself may already quote evidence; no semantic secret-redaction claim. Do not add executable approval actions.
 - Keep Windows full-app validation distinct from uploaded Windows binding self-tests; Linux/Chromium/set_content is not Windows/Edge/file:// evidence.
+
+## v0.0.9 verification additions
+
+`pnpm check` also runs desktop pure contracts/installer file tests and standalone updater tests using temporary repositories and synthetic APIs. Node24 CI explicitly acquires the checksum-pinned runtime and runs `pnpm desktop:smoke`. That test has synthetic model HTTP and temporary workspaces, not OS IME or production account approval. Never use --no-sandbox or treat packed Windows files as Windows execution evidence. Workspace migration to7 remains explicit, backed-up and separate from installation. Unrelated accepted ranges must survive compensating reverts. Keep literal/semantic evidence distinct and range-report stale checks intact.

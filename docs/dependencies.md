@@ -68,3 +68,7 @@ https://github.com/Brooooooklyn/keyring-node
 https://learn.microsoft.com/en-us/windows/win32/api/wincred/
 https://specifications.freedesktop.org/secret-service/latest-single/
 ```
+
+## v0.0.9 desktop runtime
+
+Electron44.4.1 is an official binary dependency pinned in apps/desktop/runtime-lock.json, not an npm package silently resolved at runtime. Both Windowsx64 and Linuxx64 ZIP hashes were checked against the prepared official assets. Upstream LICENSE and LICENSES.chromium.html accompany each portable distribution. Embedded Node/SQLite/NAPI are separately tested inside Electron; this does not certify Windows execution. The app has no new external renderer framework. pnpm genuinely includes the new dependency-free desktop workspace; MCP/keyring package versions remain as listed above.

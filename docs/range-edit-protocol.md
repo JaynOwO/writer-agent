@@ -1,0 +1,11 @@
+# Range editing protocol v1 / schema7
+
+Operations pin document, base revision, stable block ID/version, exact UTF-16 interval, before/after and algorithm identity. Unicode grapheme boundaries are verified. The bounded word-LCS split has a coarse single-range fallback; fallback is disclosed and never removes decision guards. A source proposal delegates to a range set without rewriting the original block history. Partial adoption is represented by the range states, not a fabricated block acceptance.
+
+To apply: reconstruct a complete monotonic revision journal, map the interval only through nonoverlapping splices, verify current exact text, dependencies and atomic groups, then save a new revision/decision/operation state in one short transaction. Rejection changes decision state, not text. Revert creates a tracked inverse; any later overlapping change blocks it. Repeated text is never located by a fuzzy/first-match search. Same-position insertions and compound groups have explicit conflicts. ABA does not revive stale operations.
+
+Manual editing buffers pin expected head and their own CAS generation; committed manual splices join the same history. Existing block operations without a trusted narrow journal invalidate same-block ranges conservatively. Historical workspaces upgrade additively and explicitly; code installation performs no data migration.
+
+AnalysisRequest optionally carries rangeOperationIds. The host constructs virtual block changes from the selected pending ranges, without changing the canonical manuscript. Captures pin range state/hash plus current mapped text; acceptance/rejection invalidates reports, even if the canonical head is unchanged. Old analysis requests without this field retain their old protocol identity. Exact quotations are still only syntax/provenance checks, not semantic truth.
+
+Supported in this preview: within existing stable blocks, independent nonoverlapping edits, grouped operations, manual-buffer commits, opt-in host split of old block proposals, range-aware semantic-review requests. Cross-block structural editing, arbitrary rich text, simultaneous collaborative editing, guaranteed NLP equivalence and semantic redaction are not implemented.

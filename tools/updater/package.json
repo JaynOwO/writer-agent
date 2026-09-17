@@ -1,0 +1,14 @@
+{
+  "name": "siglum-updater",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "scripts": {
+    "start": "node launch.mjs",
+    "test": "node --test test/*.test.mjs"
+  }
+}
