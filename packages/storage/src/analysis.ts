@@ -2,6 +2,8 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { newId, hashBytes, WriterError, analysisString, stringIds, validateCandidate, pinAnchor, captureAnalysisRequest, validateAnalysisOutput, applyChange, validateEvidence, validateSourceQuotes, analysisObservations, exactObject, optionsFromCapture, } from '@writer-agent/core';
 import type { Revision, Change, SourceSelection, Snapshot, ClaimCandidate, ClaimOccurrence, AnalysisRequest, AnalysisRun, AnalysisProviderInfo, AnalysisUsage, ClaimDecision, ClaimDecisionAction, FindingDecision, HumanEvidenceAssessment, EvidenceRelation, SourceQuote, MemoryOptions, } from '@writer-agent/core';
+import { applySplices } from '@writer-agent/core';
+import type { RangeEditor } from './range-editor.js';
 import type { WritingMemory } from './memory.js';
 import type { SourceLibrary } from './sources.js';
 interface Host {
@@ -9,6 +11,7 @@ interface Host {
     getRevision(id: string): Revision;
     getChange(id: string): Change;
     readonly sources: SourceLibrary;
+    readonly ranges: RangeEditor;
     readonly memory: WritingMemory;
     info(): {schemaVersion:number};
 }
@@ -157,6 +160,7 @@ export class AnalysisLedger {
         instruction: string;
         blockIds?: readonly string[];
         changeIds?: readonly string[];
+        rangeOperationIds?: readonly string[];
         documentScope?: boolean;
         selection?: SourceSelection;
         memoryOptions?: MemoryOptions;
@@ -165,7 +169,9 @@ export class AnalysisLedger {
         this.ready();
         const revision = this.host.currentRevision(documentId);
         analysisString(options.instruction, 'instruction', 10000);
-        const changeIds = options.changeIds ?? [], blockIds = options.blockIds ?? [];
+        const rangeIds = options.rangeOperationIds;
+        if(rangeIds && (task !== 'semantic-review' || !rangeIds.length || options.changeIds?.length))throw new WriterError('INVALID_INPUT','Choose either exact pending ranges or whole proposals, never both.');
+        const changeIds = rangeIds ?? options.changeIds ?? [], blockIds = options.blockIds ?? [];
         stringIds(changeIds);
         stringIds(blockIds, 10000);
         if (task !== 'claim-extraction' && task !== 'semantic-review')
@@ -175,9 +181,27 @@ export class AnalysisLedger {
         if (options.documentScope && blockIds.length)
             throw new WriterError('INVALID_INPUT', 'Full document and selected-block scopes are mutually exclusive.');
         let projected = revision.snapshot;
-        const selectedChanges = changeIds.map(id => { const c = this.host.getChange(id); if (c.documentId !== documentId)
-            throw new WriterError('INVALID_INPUT', 'Review changes must belong to one document.'); projected = applyChange(projected, c); return c; });
-        const selected = options.documentScope ? revision.snapshot.blocks.map(b => b.id) : task === 'semantic-review' ? selectedChanges.map(c => c.blockId) : [...blockIds];
+        const selectedChanges = rangeIds ? rangeIds.map(id => {
+            const c = this.host.ranges.operation(id);
+            if(c.documentId !== documentId || c.status !== 'pending')throw new WriterError('INVALID_TRANSITION','Review only pending ranges in this article.');
+            return c;
+        }) : changeIds.map(id => {
+            const c = this.host.getChange(id);
+            if(c.documentId !== documentId)throw new WriterError('INVALID_INPUT','Review changes must belong to one document.');
+            if(this.host.info().schemaVersion >= 7 && this.host.ranges.forChange(id))throw new WriterError('INVALID_TRANSITION','This proposal is range-managed. Select pending ranges to review the actual partial projection.');
+            projected = applyChange(projected,c); return c;
+        });
+        if(rangeIds){
+            projected = {blocks:revision.snapshot.blocks.map(b => {
+                const edits = selectedChanges.filter(c => c.blockId === b.id).map(c => {
+                    const p=this.host.ranges.preview(c.id);
+                    if(p.conflict || !p.resolved)throw new WriterError('CHANGE_CONFLICT','A selected range conflicts with current text.');
+                    return p.resolved;
+                });
+                return edits.length ? {...b, version:b.version+1, text:applySplices(b.text,edits).text} : b;
+            })};
+        }
+        const selected = options.documentScope ? revision.snapshot.blocks.map(b => b.id) : task === 'semantic-review' ? (rangeIds ? [...new Set(selectedChanges.map(c=>c.blockId))] : selectedChanges.map(c => c.blockId)) : [...blockIds];
         if (new Set(selected).size !== selected.length)
             throw new WriterError('INVALID_INPUT', 'Review batch cannot edit one block twice.');
         if (selected.some(id => !revision.snapshot.blocks.some(b => b.id === id)))
@@ -188,7 +212,7 @@ export class AnalysisLedger {
         const intentImportantIds = new Set(memory?.capture.packet.importantClaims.map(c=>c.occurrenceId) ?? []);
         const ledger = this.list(documentId), importantIds = [...new Set(ledger.filter(c => c.important || intentImportantIds.has(c.id)).map(c => c.claimId))];
         const chosen = ledger.filter(c => (c.important || intentImportantIds.has(c.id)) && c.annotation === 'confirmed' && c.state === 'current' && c.anchors.every(a => selected.includes(a.blockId)));
-        return captureAnalysisRequest({ ...(memory ? {memory:memory.capture} : {}), protocolVersion: 1, task, documentId, baseRevisionId: revision.id, instruction: options.instruction,
+        return captureAnalysisRequest({ ...(rangeIds ? {rangeOperationIds:[...rangeIds]} : {}), ...(memory ? {memory:memory.capture} : {}), protocolVersion: 1, task, documentId, baseRevisionId: revision.id, instruction: options.instruction,
             scope: options.documentScope ? 'document' : 'blocks', documentBlockCount: revision.snapshot.blocks.length, before: view(revision.snapshot), after: task === 'semantic-review' ? view(projected) : null,
             changes: selectedChanges.map(c => ({ id: c.id, hash: hashBytes(JSON.stringify(c)) })), sources: this.host.sources.context(options.selection ?? {}),
             protectedClaims: chosen.map(c => ({ claimId: c.claimId, occurrenceId: c.id, statement: c.statement, anchors: c.anchors.map(({ blockId, start, end, quote }) => ({ blockId, start, end, quote })) })),
@@ -196,12 +220,12 @@ export class AnalysisLedger {
     }
     assertFresh(request: AnalysisRequest): void { this.ready(); captureAnalysisRequest(request); this.verifyRequest(request); }
     private verifyRequest(request: AnalysisRequest): void {
-        if (this.host.currentRevision(request.documentId).id !== request.baseRevisionId || this.stamp(request.documentId) !== request.ledgerStamp || request.changes.some(c => hashBytes(JSON.stringify(this.host.getChange(c.id))) !== c.hash))
+        if (this.host.currentRevision(request.documentId).id !== request.baseRevisionId || this.stamp(request.documentId) !== request.ledgerStamp || request.changes.some(c => hashBytes(JSON.stringify(request.rangeOperationIds ? this.host.ranges.operation(c.id) : this.host.getChange(c.id))) !== c.hash))
             throw new WriterError('STALE_REVISION', 'Captured analysis inputs are stale. No current report was saved.');
         if(request.memory)this.host.memory.assertFresh(request.memory);
         const nowRequest = this.prepare(request.documentId, request.task, { instruction: request.instruction, documentScope: request.scope === 'document', useMemory: request.memory!==undefined, ...(request.memory ? {memoryOptions:optionsFromCapture(request.memory.options)} : {}),
             ...(request.task === 'claim-extraction' && request.scope === 'blocks' ? { blockIds: request.before.blocks.map(b => b.id) } : {}),
-            changeIds: request.changes.map(c => c.id), selection: { snapshots: request.sources.filter(s => s.excerptId === null).map(s => s.snapshotId), excerpts: request.sources.filter(s => s.excerptId !== null).map(s => s.excerptId!) } });
+            ...(request.rangeOperationIds ? {rangeOperationIds:request.rangeOperationIds} : {changeIds: request.changes.map(c => c.id)}), selection: { snapshots: request.sources.filter(s => s.excerptId === null).map(s => s.snapshotId), excerpts: request.sources.filter(s => s.excerptId !== null).map(s => s.excerptId!) } });
         // Preserve source selection order exactly; context() deterministically groups snapshots then excerpts.
         if (JSON.stringify(nowRequest) !== JSON.stringify(request))
             throw new WriterError('STALE_REVISION', 'Document, pending changes, selected context or claim decisions changed. Start a fresh analysis.');
@@ -215,7 +239,7 @@ export class AnalysisLedger {
         return this.transaction(() => {
             this.verifyRequest(retained);
             const run: AnalysisRun = { id: newId('run'), documentId: retained.documentId, baseRevisionId: retained.baseRevisionId,
-                request: retained, output: checked, provider: info, usage: tokens, durationMs, promptVersion: retained.memory ? 'analysis-memory-v1' : 'analysis-v1', status: 'completed', interpretation: 'model-assessment-not-verified', createdAt: now() };
+                request: retained, output: checked, provider: info, usage: tokens, durationMs, promptVersion: retained.rangeOperationIds ? 'analysis-range-v1' : retained.memory ? 'analysis-memory-v1' : 'analysis-v1', status: 'completed', interpretation: 'model-assessment-not-verified', createdAt: now() };
             this.insert('analysis_runs', run.id, run, { document_id: run.documentId, revision_id: run.baseRevisionId, task: run.request.task });
             if (checked.task === 'claim-extraction') {
                 const revision = this.host.getRevision(run.baseRevisionId);
@@ -255,7 +279,7 @@ export class AnalysisLedger {
         if (run.request.task === 'semantic-review' && this.stamp(run.documentId) !== run.request.ledgerStamp)
             freshness = 'stale';
         for (const c of run.request.changes)
-            if (hashBytes(JSON.stringify(this.host.getChange(c.id))) !== c.hash)
+            if (hashBytes(JSON.stringify(run.request.rangeOperationIds ? this.host.ranges.operation(c.id) : this.host.getChange(c.id))) !== c.hash || (!run.request.rangeOperationIds && this.host.info().schemaVersion>=7 && this.host.ranges.forChange(c.id)))
                 freshness = 'stale';
         if(run.request.memory){try{this.host.memory.assertFresh(run.request.memory);}catch{freshness='stale';}}
         const feedback = this.db.prepare('SELECT payload,payload_hash FROM analysis_feedback WHERE run_id=? ORDER BY seq').all(id).map(r => unpack<FindingDecision>(r));

@@ -2,18 +2,21 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.8 -->
+<!-- siglum:version=0.0.9 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 面向研究、写作与审稿的本地优先 Agent Harness。
 
 **模型提出建议，来源可追溯，作者保留最终决定权。**
 
-**v0.0.8** · 命令行开发预览版 · **Apache-2.0**
+**v0.0.9** · 桌面与命令行开发预览版 · **Apache-2.0**
 
-在自己的工作区保存文稿版本、来源快照、论断标注、审稿报告与经过作者确认的写作要求。模型可以起草意图、归纳候选偏好、提出修改或分析变化，但不能批准自己的输出。现在可按阶段授权执行有界研究写作；仍不是完整桌面 IDE 或无限制自主 Agent。
+在自己的工作区保存文稿版本、来源快照、论断标注、审稿报告与经过作者确认的写作要求。模型可以起草意图、归纳候选偏好、提出修改或分析变化，但不能批准自己的输出。现在可按阶段授权执行有界研究写作；仍不是完整富文本 IDE 或无限制自主 Agent。
 
 产品名称为 Siglum。仓库 `JaynOwO/writer-agent`、包名 `@writer-agent/*`、`.writer` 数据路径和交付文件名保留兼容；`pnpm siglum` 与 `pnpm writer` 等价。
+
+
+**CI 修正（winfix2）：**仓库根目录改用原生路径及实际文件身份核对；Linux 桌面 CI 使用经过校验、独立安装的沙箱辅助程序，不关闭沙箱。同时修正桌面冒烟测试在干净 pnpm 目录中的依赖查找路径。请把新源码 ZIP 作为新更新任务导入；继续旧任务仍会使用旧包。详见[修复说明](docs/ci-winfix2.md)。
 
 <!-- section:quickstart -->
 ## 不需要模型 Key 的演示
@@ -165,7 +168,7 @@ pnpm siglum product guide ../extensions-playground --lang zh-CN
 
 <!-- limit:product-validation --> **程序实现不等于平台／服务认证。** 凭据绑定测试、应用测试、官方 SDK 服务夹具与独立服务互操作分别记录。软件不附送凭据；缺配置／不支持／未测试不会显示通过。摘要可能增加总输入与费用。HTML 只读且冻结，不是 GUI 编辑器或实时状态页。
 
-见[产品指南](docs/product.zh-CN.md)与[依赖／兼容说明](docs/dependencies.md)。官方 SDK2.0.0、凭据绑定2.1.0 已成为锁定依赖。工作区保持 schema6；本机非秘密配置单独使用 schema1。旧 MCP 连接需明确为当前适配器重新注册、信任和发现，不自动降级协议执行。
+见[产品指南](docs/product.zh-CN.md)与[依赖／兼容说明](docs/dependencies.md)。官方 SDK2.0.0、凭据绑定2.1.0 已成为锁定依赖。新工作区使用 schema7；本机非秘密配置单独使用 schema1。旧 MCP 连接需明确为当前适配器重新注册、信任和发现，不自动降级协议执行。
 
 <!-- section:status -->
 ## 已实现能力与边界
@@ -195,17 +198,17 @@ pnpm siglum product guide ../extensions-playground --lang zh-CN
 | <!-- feature:citations --> 引用 | 宿主编号、稳定来源条目映射、文稿修改后失效 |
 | <!-- feature:chapters --> 章节 | 可选按批准大纲分章、稳定引用合稿与有界整稿审阅 |
 
-<!-- limit:no-gui --> **没有 GUI 或打包桌面编辑器。** 向导是交互式终端，不是可视化富文本编辑器。
+<!-- limit:desktop-preview --> **桌面为 Windows x64 开发预览。** 便携包有明确的当前用户安装流程，不是签名 Setup.exe；采用稳定块 Markdown 编辑，不是富文本／多人协作编辑器。高级设置仍使用 CLI 向导。
 
 <!-- limit:bounded-web-search --> **真实搜索有明确边界，不是无限浏览。** 新稿研究接入 Tavily Search 与公共静态网页；搜索摘要不是已获取的证据。已有文章的改稿／审稿模板使用明确选定的本地来源。
 
 <!-- limit:no-semantic-verdict --> **不认证事实，也不保证理解原意。** 机械检查不能验证模型结论或发现全部自由文字冲突。
 
-<!-- limit:block-edits --> **正文仍按完整文本块修改。** 未实现句子级独立撤回。
+<!-- limit:range-boundaries --> **范围操作限定于稳定文本块内。** 可独立采用／拒绝／撤回，执行历史与重叠检查；未实现跨块结构重排。精细高亮不认证原意没有变化。
 
 <!-- limit:static-extraction --> **只做静态 UTF-8 提取。** 无 PDF、JS 渲染、浏览器登录、压缩、重定向或完整 HTML5 解析。
 
-<!-- limit:manual-migration --> **不自动迁移私人数据。** 新工作区使用 schema v6，旧 v1–v5 保留各自已有功能；工作流需要明确授权、先备份再升级。更新代码不迁移私人稿件。
+<!-- limit:manual-migration --> **不自动迁移私人数据。** 新工作区使用 schema v7，旧 v1–v6 保留各自已有功能；工作流需要明确授权、先备份再升级。更新代码不迁移私人稿件。
 
 <!-- limit:no-background-learning --> **没有后台学习、微调或向量库。** 归纳候选需主动请求，启用需作者确认。title 只是规则适用标签，不是新的标题生成命令。
 
@@ -225,9 +228,38 @@ pnpm siglum product guide ../extensions-playground --lang zh-CN
 
 新增官方 MCP SDK 与系统凭据绑定，依赖版本精确锁定；锁文件由真实 pnpm 安装生成。通过有界代码使用 Node 的 SQLite、测试器、fetch 与 readline。默认测试不调用收费模型；操作系统、模型和安装结果必须分别报告。
 
-[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.8 规格](docs/v0.0.8-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
+[架构](docs/architecture.md) · [命令行](docs/cli.md) · [v0.0.9 规格](docs/v0.0.9-spec.md) · [已知限制](docs/limitations.md) · [贡献说明](CONTRIBUTING.md)
+
+
+<!-- section:desktop -->
+## 桌面与可独立审核的范围修改
+
+<!-- feature:desktop --> 完整解压 Windows 便携包后运行 Siglum.exe；普通写作无需另装 Node／Git。「安装到本机」可以明确复制校验后的版本到当前用户目录。应用代码没有签名，Windows 安装与系统凭据库实际验证另行记录。既有 CLI 与只读报告仍保留。
+
+<!-- feature:range-decisions --> 桌面通过受限 preload 连接独立写作进程。块提案可转为范围集合，单独接受／拒绝或撤回某项，不恢复不相关旧文字。重叠、历史缺失或后续人工编辑会阻止有歧义的决定；自动保存缓冲与批准 AI 分开。语义审稿准确固定选中范围。
+
+开发者源码命令（获取运行时是明确的联网动作）：
+
+```sh
+pnpm desktop:runtime
+pnpm desktop
+pnpm desktop:smoke
+```
+
+[Desktop guide](docs/desktop.md) · [简中桌面指南](docs/desktop.zh-CN.md) · [范围协议](docs/range-edit-protocol.md) · [打包说明](docs/packaging.md)
+
+<!-- section:updater -->
+## 开发者源码集成
+
+<!-- feature:updater --> **Siglum Updater 0.2.0** 位于独立 tools/updater，不赋予写作模型 Git 权限。固定入口打开认证本地面板，选包固定准确内容，独立 worktree 保留日常目录，持久状态在重试前核对不确定的 GitHub 结果。仓库主机／ID（github.com / 1370967185）固定，名称动态解析；改名不等于授权换所有者／仓库或绕过基线。公开 Release 下载需要产品描述清单和明确选择。
+
+[Updater guide](tools/updater/README.md) · [简中更新器指南](tools/updater/README.zh-CN.md)。源码更新不发布 Release、不签名、不迁移私稿、不自动改仓库名。
 
 <!-- section:license -->
 ## 许可证
 
 **Apache-2.0**，参见 [LICENSE](LICENSE)、[NOTICE](NOTICE) 和[许可说明](docs/license-status.md)。项目包保留 `private: true` 防止误发布 npm，这不改变许可证。软件许可不会自动改变你自己的文稿、导入资料、模型或外部服务的权利与条款。
+
+### 桌面 CI 修正（winfix4）
+
+源码修正版保留当前更新面板与此前修复。桌面测试现在等待 Electron 进程关闭后再清理临时数据；Linux CI 使用经过校验、沙箱辅助文件位于可执行程序旁的独立运行时。场景通过不等于完整冒烟测试成功，进程退出和清理也必须通过。新的 Windows 与托管 CI 结果仍须实际验证。详见[桌面测试说明](docs/desktop.md)。

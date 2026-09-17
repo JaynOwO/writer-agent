@@ -1,4 +1,4 @@
-# Architecture — Siglum v0.0.8
+# Architecture — Siglum v0.0.9
 
 ## Dependencies and authority
 
@@ -41,7 +41,7 @@ This is not a network sandbox or a complete SSRF audit. Public addresses may sti
 
 Old schema-v1 workspaces can still use original editing, v2 still supports sources; analysis features request an explicit v3 migration. The migration previews by default, retains a verified VACUUM INTO backup, checks a cooperative lock/data version, adds tables transactionally and preserves all existing content rows. Unknown formats are refused. Source-code update bundles never migrate user data. See the paired source guides for backup and recovery boundaries.
 
-Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. GUI, streaming, unrestricted automatic tool execution, passive learning and factual certification are not implemented. v0.0.7 adds bounded selected Skills/MCP below. v0.0.5 adds explicit author-confirmed intent and candidate-based memory below.
+Storage/extraction are synchronous and must not later block a desktop UI thread. Future desktop hosts need an appropriate process/worker and explicit capabilities. Streaming, unrestricted automatic tool execution, passive learning and factual certification are not implemented. The desktop preview described below adds an isolated renderer and utility process. v0.0.7 adds bounded selected Skills/MCP below. v0.0.5 adds explicit author-confirmed intent and candidate-based memory below.
 
 ## v0.0.4 analysis layer
 
@@ -100,3 +100,13 @@ Official MCP SDK2.0.0 owns Client/lifecycle. Host bounded Transport/fetch mainta
 Optional workflow navigationSummary adds one successful cached navigation artifact per input through the existing budgeted attempt mechanism. It pins source quotes and fallible notes. Selected original evidence remains in outline/draft/review requests; summary adds navigation, not a promised net compression or fact certificate. Chapter projection drops notes missing any referenced source. Legacy omitted fields keep original decoding/hash behavior.
 
 Static report snapshots are assembled from explicit content-group flags, escaped, rendered without JS/remote resources and published without overwriting. Generated status is frozen, not real time. Source/guidance fields are omitted when not selected, but model/manuscript prose may already reproduce private content; this is not semantic redaction. Product diagnostics use metadata only by default. Explicit probes have nonsecret durable state; model trials use disposable synthetic workspaces, MCP checks do discovery only, and keyring self-test never enumerates other apps.
+
+## v0.0.9 desktop, range editing and developer updater
+
+Schema7 adds range sets/operations/journal/buffers without replacing canonical blocks or old histories. Range-aware analysis optionally pins selected pending operation hashes and combines same-block splices for review. A delegated block proposal does not become wholly accepted when one child operation is accepted. Inverse operations pass the same mapping/conflict checks; manual buffers have independent CAS versions and require explicit canonical commit.
+
+apps/desktop contains a locally packaged Electron page, restricted preload and native main shell. apps/cli/src/application/desktop.ts is the shared application service in a utility process. Native host capabilities own directory/file pickers, safe export and explicit user-level install; renderer business methods do not take arbitrary paths. UI tokens/secrets do not acquire Git authority. Advanced settings can continue using the existing CLI.
+
+tools/updater is a separately versioned source integrator with its own state/config/cache and authenticated loopback server. Git/common-dir locks and phase records guard exact worktrees. GitHub target identity is host/repositoryId/ownerId; name changes resolve dynamically, owner changes or different IDs stop. The source importer reads the bounded data manifest, not bundle executable scripts. Building tests still executes trusted project code, not an OS sandbox. Full integration requires all pinned CI checks plus head/base verification. Existing dirty checkouts are not reset or stashed. The client cannot replace server-enforced merge rules atomically.
+
+Electron 44.4.1 official runtime artifacts are independently checksum pinned. Dependency packages remain pnpm locked. The Windows portable includes a user-level installer inside the native app; installation/registry/shortcuts and full Windows execution require separate evidence. There is no hidden service, signing assertion, GitHub Release publication or repository rename.

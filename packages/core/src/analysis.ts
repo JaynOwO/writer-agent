@@ -114,7 +114,8 @@ function candidates(value: unknown, snapshot: Snapshot): Map<string, ClaimCandid
     return refs;
 }
 export function captureAnalysisRequest(value: AnalysisRequest): AnalysisRequest {
-    exactObject(value, ['protocolVersion', 'task', 'documentId', 'baseRevisionId', 'instruction', 'scope', 'documentBlockCount', 'before', 'after', 'changes', 'sources', 'protectedClaims', 'excludedProtectedClaimIds', 'ledgerStamp', ...(value.memory !== undefined ? ['memory'] : [])]);
+    exactObject(value, ['protocolVersion', 'task', 'documentId', 'baseRevisionId', 'instruction', 'scope', 'documentBlockCount', 'before', 'after', 'changes', 'sources', 'protectedClaims', 'excludedProtectedClaimIds', 'ledgerStamp', ...(value.memory !== undefined ? ['memory'] : []), ...(value.rangeOperationIds !== undefined ? ['rangeOperationIds'] : [])]);
+    if(value.rangeOperationIds !== undefined){ array(value.changes); stringIds(value.rangeOperationIds); if(value.task !== 'semantic-review' || !value.rangeOperationIds.length || JSON.stringify(value.rangeOperationIds) !== JSON.stringify(value.changes.map((c: {id:string}) => c.id)))fail(); }
     if(value.memory !== undefined){validateMemoryCapture(value.memory);if(value.memory.documentId!==value.documentId||value.memory.task!=='review'||value.task!=='semantic-review')fail();}
     if (value.protocolVersion !== 1 || !['claim-extraction', 'semantic-review'].includes(value.task) || !['blocks', 'document'].includes(value.scope))
         fail();

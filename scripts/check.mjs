@@ -4,3 +4,5 @@ tsc('-p', 'tsconfig.check.json');
 tsc('-b');
 tests();
 checkReadmes();
+
+await import('./interface-tests.mjs');

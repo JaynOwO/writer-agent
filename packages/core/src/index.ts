@@ -19,3 +19,5 @@ export * from './extensions.js';
 export * from './tool-schema.js';
 export * from './research.js';
 export * from './navigation.js';
+
+export * from "./range-edits.js";

@@ -18,6 +18,8 @@ export interface Revision {
   readonly documentId: string;
   readonly parentId: string | null;
   readonly kind: 'created' | 'accepted' | 'reverted';
+  /** Companion journal identifies new actions without rewriting legacy revision rows. */
+  readonly editOrigin?: 'range-accepted' | 'range-reverted' | 'manual-edited';
   readonly changeId: string | null;
   readonly snapshot: Snapshot;
   readonly createdAt: string;

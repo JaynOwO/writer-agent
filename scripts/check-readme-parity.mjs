@@ -9,7 +9,7 @@ const matches=(text,re)=>[...text.matchAll(re)].map(m=>m[1]);
 export function checkReadmePair(en,zh,facts,manifest) {
   assert.equal(facts.version,manifest.version,'README facts version differs from package.json');
   assert.equal(facts.license,manifest.license,'README facts license differs from package.json');
-  assert.equal(facts.brand,'Siglum');assert.equal(facts.repository,'JaynOwO/writer-agent');
+  assert.equal(facts.brand,'Siglum');assert.match(facts.repository,/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/);assert.equal(facts.repositoryId,'1370967185');
   const languages=[['README.md',en],['README.zh-CN.md',zh]];
   for(const[name,text]of languages) {
     assert.match(text,/^# Siglum\r?\n/,'Missing product heading in '+name);
