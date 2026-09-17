@@ -2,18 +2,21 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-<!-- siglum:version=0.0.8 -->
+<!-- siglum:version=0.0.9 -->
 <!-- siglum:license=Apache-2.0 -->
 <!-- section:intro -->
 A local-first agent harness for research, writing, and review.
 
 **Models propose. Sources stay traceable. Authors decide.**
 
-**v0.0.8** · CLI development preview · **Apache-2.0**
+**v0.0.9** · Desktop and CLI development preview · **Apache-2.0**
 
 Keep manuscript revisions, source snapshots, claim annotations, review reports and author-confirmed writing guidance in your own workspace. A model may draft intent, suggest preferences, propose edits or review changes; it cannot approve its own output. Bounded, author-authorized templates now coordinate research and writing; this is not a complete desktop IDE or an unrestricted autonomous agent.
 
 The product is Siglum. Repository `JaynOwO/writer-agent`, package IDs `@writer-agent/*`, `.writer` data path and delivery filenames stay compatible with the existing updater. `pnpm siglum` and `pnpm writer` are equivalent.
+
+
+**CI correction (winfix2):** repository-root identity now handles native Windows path aliases; Linux desktop CI uses a verified, isolated sandbox helper rather than disabling the sandbox. The desktop smoke dependency path is corrected for a clean pnpm layout. Import the new source ZIP as a new updater task; continuing an older task deliberately keeps its older bytes. See [repair notes](docs/ci-winfix2.md).
 
 <!-- section:quickstart -->
 ## Try without a model key
@@ -126,7 +129,7 @@ pnpm siglum help
 
 `suggest` previews the destination, source choices and writing-guidance plan. `--send` authorizes one inference request; remote inference also requires `--allow-remote`. Intent drafting, preference drafting and semantic review each require their own explicit send. The guide previews the exact selected data and obtains confirmation. No automatic retry, repair call, provider switch or extra judge is hidden in a request.
 
-A successful edit request stores pending proposals and the selected source/guidance snapshot atomically; manuscript text is unchanged. Accept/reject/revert remain separate author actions. `provenance` means supplied-not-verified, not necessarily used, cited or supportive. Secrets come only from named process environment variables, never from literal key flags. See [provider instructions](docs/providers.md).
+A successful edit request stores pending proposals and the selected source/guidance snapshot atomically; manuscript text is unchanged. Accept/reject/revert remain separate author actions. `provenance` means supplied-not-verified, not necessarily used, cited or supportive. Legacy commands use named process environment variables, never literal key flags. Explicit desktop/product presets may instead use the system store or current-session mode. See [provider instructions](docs/providers.md).
 
 <!-- section:semantic-review -->
 ## Claim ledger and semantic review
@@ -165,7 +168,7 @@ The existing writing workspace must already exist; do not initialize over privat
 
 <!-- limit:product-validation --> **Implementation is not platform/provider certification.** OS binding tests, application tests, official SDK server fixtures and independent service tests are distinct. No credentials are supplied; missing/unsupported/not-run is never a pass. Summaries may increase total input and cost. HTML is read-only and frozen, not a GUI editor or live status screen.
 
-See [product guide](docs/product.md) and [dependency / compatibility notes](docs/dependencies.md). SDK2.0.0 and keyring2.1.0 are now locked dependencies. Workspace schema stays6; user-level nonsecret configuration has its own schema1. Old MCP registrations need an explicit current-adapter registration/trust/discovery, not an automatic protocol fallback.
+See [product guide](docs/product.md) and [dependency / compatibility notes](docs/dependencies.md). SDK2.0.0 and keyring2.1.0 are now locked dependencies. New writing workspaces use schema7; user-level nonsecret configuration has its own schema1. Old MCP registrations need an explicit current-adapter registration/trust/discovery, not an automatic protocol fallback.
 
 <!-- section:status -->
 ## Included, with clear boundaries
@@ -195,17 +198,17 @@ See [product guide](docs/product.md) and [dependency / compatibility notes](docs
 | <!-- feature:citations --> Citations | Host numbering, exact stable source-entry maps and stale manuscript mappings |
 | <!-- feature:chapters --> Chapters | Opt-in approved-outline sections, stable-source assembly and bounded final review |
 
-<!-- limit:no-gui --> **No GUI or packaged desktop editor.** The guide is an interactive terminal, not a visual rich-text editor.
+<!-- limit:desktop-preview --> **Desktop is a Windows x64 development preview.** Portable distribution includes an explicit user-level install flow, not a signed Setup.exe. It is a stable-block Markdown editor, not a rich-text/collaborative editor. Advanced configuration remains in the CLI guides.
 
 <!-- limit:bounded-web-search --> **Bounded real web search, not unrestricted browsing.** New-article research uses Tavily Search and public static pages. Search snippets are discovery records, not fetched evidence. Existing-article templates use explicitly selected saved sources.
 
 <!-- limit:no-semantic-verdict --> **No factual certification or guaranteed intent understanding.** Mechanical checks cannot validate model conclusions or all free-text conflicts.
 
-<!-- limit:block-edits --> **Text changes remain whole-block operations.** Fine-grained sentence-level rollback is not implemented.
+<!-- limit:range-boundaries --> **Range operations stay within stable blocks.** Independent accept/reject/revert is implemented with strict history/conflict checks; cross-block structural moves are not. Word highlights do not certify unchanged meaning.
 
 <!-- limit:static-extraction --> **Static UTF-8 extraction only.** No PDF, JS rendering, browser login, compression, redirects or full HTML5 parser.
 
-<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v6. Legacy v1–v5 retain their respective editing/source/analysis/memory capabilities; workflows require an explicit backed-up upgrade. Code updates never migrate private writing.
+<!-- limit:manual-migration --> **No implicit data migration.** New workspaces use schema v7. Legacy v1–v6 retain their respective editing/source/analysis/memory capabilities; workflows require an explicit backed-up upgrade. Code updates never migrate private writing.
 
 <!-- limit:no-background-learning --> **No background learning, fine-tuning or vector database.** Candidate inference requires an explicit request; author activation is separate. Title is a rule-scope tag, not a new title-generation command.
 
@@ -225,9 +228,38 @@ Private databases and exports are unencrypted; do not commit them. Network sourc
 
 Pinned official MCP SDK and OS credential binding dependencies are added; the lockfile is genuinely generated by pnpm. See docs/dependencies.md. Node's SQLite, test runner, fetch and readline are used through bounded code paths. Default tests never call paid providers; real OS/model/install results must be reported separately.
 
-[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.8 specification](docs/v0.0.8-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+[Architecture](docs/architecture.md) · [CLI](docs/cli.md) · [v0.0.9 specification](docs/v0.0.9-spec.md) · [Limitations](docs/limitations.md) · [Contributing](CONTRIBUTING.md)
+
+
+<!-- section:desktop -->
+## Desktop and independently reviewable edits
+
+<!-- feature:desktop --> Open the Windows portable folder and run Siglum.exe. No separate Node/Git is required for ordinary writing. The optional **Install locally** action copies a verified version for the current user. Code is not application-signed; actual Windows installation and system-keyring validation remain separate checks. Existing CLI and read-only reports remain available.
+
+<!-- feature:range-decisions --> The desktop hosts a separate writing utility process and restricted preload. Pending block proposals can become range sets. Accept/reject one range, or revert one accepted range without restoring unrelated edits. Overlap, missing history and later manual edits block ambiguous decisions. Autosaved editing buffers and approved model changes stay separate. Range-aware semantic review pins exactly the selected operations.
+
+Developer source commands (runtime acquisition is an explicit network action):
+
+```sh
+pnpm desktop:runtime
+pnpm desktop
+pnpm desktop:smoke
+```
+
+[Desktop guide](docs/desktop.md) · [简中桌面指南](docs/desktop.zh-CN.md) · [Range protocol](docs/range-edit-protocol.md) · [Packaging](docs/packaging.md)
+
+<!-- section:updater -->
+## Developer source integration
+
+<!-- feature:updater --> **Siglum Updater 0.2.0** is a separate developer tool under tools/updater; it is not embedded in writing-model capabilities. A fixed local launcher opens an authenticated panel. ZIP selection fixes the exact package, independent worktrees preserve the ordinary checkout, and phase records reconcile unknown GitHub outcomes before retry. Repository host/ID (github.com / 1370967185) is stable while names resolve dynamically. Renaming does not authorize a different owner/repository or a different base commit. Public Release downloads require the documented product descriptor and an explicit choice.
+
+[Updater guide](tools/updater/README.md) · [简中更新器指南](tools/updater/README.zh-CN.md). Source updates do not publish Releases, sign installers, migrate private workspaces or rename the repository.
 
 <!-- section:license -->
 ## License
 
 **Apache-2.0** — see [LICENSE](LICENSE), [NOTICE](NOTICE) and [license notes](docs/license-status.md). All project packages stay `private: true` to prevent accidental npm publication; this does not restrict the license. The software license does not automatically license your manuscripts, imported research, models or external services.
+
+### Desktop CI correction (winfix4)
+
+The source repair keeps the current updater panel and earlier fixes. Desktop tests now clean their temporary data after the Electron process closes; Linux CI uses a verified runtime with its sandbox helper beside the executable. A passed scenario list is not complete smoke success until process exit and cleanup pass. New Windows and hosted-CI results must still be verified. See [desktop testing details](docs/desktop.md).

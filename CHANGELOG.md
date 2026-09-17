@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.0.9 integration correction — winfix4
+
+- Correct Linux hosted Electron testing: stage the entire checksum-pinned runtime into an isolated root-owned CI directory, with the verified SUID helper **beside the executable**. The smoke runner explicitly selects that directory instead of relying on CHROME_DEVEL_SANDBOX fallback while a different adjacent helper exists. CI removes its temporary privileged runtime afterwards. No sandbox bypass or global policy change.
+- The parent Node smoke runner now owns temporary synthetic data and cleans it only after Electron has closed. It validates the current run's full scenario report, retries bounded transient file locks, and fails if process exit or cleanup fails. Electron no longer deletes its own active userData directory or prints final success prematurely.
+- Add lifecycle, failure, cleanup identity, timeout and exact CI runtime staging regressions. Keep all four CI jobs and desktop smoke active in both Node24 jobs. Include all previous rename/path/panel fixes; no app data schema or dependency changes.
+
+## v0.0.9 integration correction — winfix3
+
+- Keep explicitly Linux CI sandbox staging paths POSIX when checked from Windows; preserve the existing platform/CI restrictions and helper verification.
+- Add subprocess regressions against the actual module with POSIX and Windows default path APIs. The pre-fix Windows-flavour regression reproduces the reported slash mismatch.
+- Include the already delivered panel-fix1 sources and saved-log tests in the source tree; this does not automatically reinstall the local updater.
+- Retain the prior bounded rename, real repository identity and sandbox CI corrections. No dependency, runtime lock, license or manuscript schema changes.
+
+
+## 0.0.9 — Desktop/range editing preview; developer Updater0.2
+
+- winfix1: retry contended updater bootstrap directory/pointer renames with 10 bounded waits (5.5 seconds total waiting), rechecking package hashes and destination/pointer state before every attempt. Persistent failures still stop; do not delete a destination or disable tests. Add transient/persistent error and same-version corrected-task regressions.
+
+- Add isolated Electron desktop with native workspaces, buffer persistence, explicit model/phase approval, source/intent views and typed application dispatch.
+- Add schema7 range decisions and invertible nonoverlapping history; bind semantic review to selected range state.
+- Add Windows x64 portable packaging and explicit current-user install/uninstall flow, without signing or Windows certification claims.
+- Add independent developer updater: authenticated panel, stable repository identity, fixed ZIP cache, worktree integration, pinned CI, durable reconciliation and public Release product download.
+- Preserve old writing/CLI protocols, actual locked dependencies and unchanged Apache-2.0 LICENSE/NOTICE. Code installation does not migrate writing data.
+
+
 ## 0.0.8 — Product integration preview
 
 - Replace native MCP protocol execution with pinned official SDK2.0.0; preserve strict host transport/permission/schema budgets and historical records. Old registration fingerprints require explicit renewal.

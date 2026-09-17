@@ -1,7 +1,7 @@
 {
   "brand": "Siglum",
   "repository": "JaynOwO/writer-agent",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "license": "Apache-2.0",
   "providers": [
     "ollama",
@@ -20,7 +20,9 @@
     "writing-memory",
     "workflows",
     "extensions",
-    "product"
+    "product",
+    "desktop",
+    "updater"
   ],
   "features": [
     "revisions",
@@ -48,18 +50,22 @@
     "os-credentials",
     "navigation-summaries",
     "html-reports",
-    "validation-guide"
+    "validation-guide",
+    "desktop",
+    "range-decisions",
+    "updater"
   ],
   "limitations": [
-    "no-gui",
+    "desktop-preview",
     "bounded-web-search",
     "no-semantic-verdict",
-    "block-edits",
+    "range-boundaries",
     "static-extraction",
     "manual-migration",
     "no-background-learning",
     "memory-retention",
     "extension-subset",
     "product-validation"
-  ]
+  ],
+  "repositoryId": "1370967185"
 }

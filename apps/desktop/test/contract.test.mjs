@@ -1,0 +1,20 @@
+// SPDX-License-Identifier: Apache-2.0
+import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+import {validateEnvelope,validSender,safeExternal,PAGE,APP_METHODS,HOST_METHODS} from '../contract.mjs';
+for(const method of ['readFile','sql','git','exec','host:open','host:close','initialize','saveKeyToFile'])test('renderer refuses '+method,()=>assert.throws(()=>validateEnvelope(method,{})));
+test('only the exact main frame and registered page may send',()=>{const frame={url:PAGE},wc={mainFrame:frame},w={webContents:wc};assert(validSender({sender:wc,senderFrame:frame},w));assert(!validSender({sender:wc,senderFrame:{url:PAGE}},w));assert(!validSender({sender:{},senderFrame:frame},w));frame.url='https://example.invalid';assert(!validSender({sender:wc,senderFrame:frame},w));});
+for(const url of ['javascript:alert(1)','file:///etc/passwd','data:text/html,test','https://user:pass@example.com'])test('external source rejects '+url.split(':')[0],()=>assert.throws(()=>safeExternal(url)));
+test('request rejects oversized payload and non-object data',()=>{assert.throws(()=>validateEnvelope('document','x'));assert.throws(()=>validateEnvelope('document',null));assert.throws(()=>validateEnvelope('document',{a:'x'.repeat(6_000_001)}));});
+test('host retains sandbox, preload isolation and denies arbitrary navigation',()=>{const s=readFileSync(new URL('../host.mjs',import.meta.url),'utf8');for(const x of ['sandbox:true','contextIsolation:true','nodeIntegration:false',"setWindowOpenHandler(()=>({action:'deny'}))","validSender(event,window)"])assert(s.includes(x));assert(!s.includes('--no-sandbox'));});
+test('preload whitelist matches the application and host contracts',()=>{const s=readFileSync(new URL('../preload.cjs',import.meta.url),'utf8');for(const name of [...APP_METHODS,...HOST_METHODS])assert(s.includes("'"+name+"'"),name);assert(!s.includes('executeJavaScript'));});
+
+// Resolve from the CLI sibling, both in the checkout and the portable layout.
+// An extra '..' resolves source/cli rather than source/apps/cli on a clean pnpm install.
+test('desktop smoke resolves the keyring from its sibling CLI package', async () => {
+  const {createRequire} = await import('node:module');
+  const source = readFileSync(new URL('./run.mjs', import.meta.url), 'utf8');
+  assert(source.includes("join(desktopRoot,'../cli/package.json')"));
+  const cli = new URL('../../cli/package.json', import.meta.url);
+  assert.equal(JSON.parse(readFileSync(cli, 'utf8')).name, '@writer-agent/cli');
+  assert.equal(typeof createRequire(cli).resolve('@napi-rs/keyring'), 'string');
+});

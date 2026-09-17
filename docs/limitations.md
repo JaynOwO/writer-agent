@@ -1,3 +1,7 @@
+# Current v0.0.9 preview boundaries
+
+See desktop.md, range-edit-protocol.md, packaging.md and tools/updater guides for the new capabilities. Desktop editing is Markdown in stable blocks, not rich text or structural cross-block collaboration. Range adoption and inverse history exist; overlapping later work is refused. Windows portable files and installation code are provided; a Linux run is not a Windows certification. No application signing or service-side key revocation is provided. Model quality/claim support, live independent MCP, public Tavily and GitHub administrative operations require separate evidence.
+
 # Known limitations — Siglum v0.0.8
 
 This is a developer preview, not a certified writing assistant, general MCP client or finished desktop editor. The current authoritative boundaries below supersede the older version-specific notes retained in the rest of this document.

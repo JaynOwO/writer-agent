@@ -43,17 +43,17 @@ function rows(path: string) {
     }
 }
 for (const version of [1, 2] as const) {
-    test(`schema v${version} preview and old workflows do not implicitly enable analysis`, t => { const { root, path } = legacy(t, version), before = rows(path); assert.equal(migrateWorkspace(root).to, 6); assert.deepEqual(rows(path), before); assert.equal(existsSync(join(root, '.writer/backups')), false); const w = Workspace.open(root); try {
+    test(`schema v${version} preview and old workflows do not implicitly enable analysis`, t => { const { root, path } = legacy(t, version), before = rows(path); assert.equal(migrateWorkspace(root).to, 7); assert.deepEqual(rows(path), before); assert.equal(existsSync(join(root, '.writer/backups')), false); const w = Workspace.open(root); try {
         assert.equal(w.info().schemaVersion, version);
         expectCode(() => w.analysis.list(w.listDocuments()[0]!.id), 'MIGRATION_REQUIRED');
     }
     finally {
         w.close();
     } });
-    test(`schema v${version} -> v6 preserves all original rows and verifies a v${version} backup`, t => {
+    test(`schema v${version} -> v7 preserves all original rows and verifies a v${version} backup`, t => {
         const { root, path, d } = legacy(t, version), before = rows(path), m = migrateWorkspace(root, true);
         assert.equal(m.from, version);
-        assert.equal(m.to, 6);
+        assert.equal(m.to, 7);
         assert.ok(m.backup);
         const backupRows = rows(m.backup);
         assert.deepEqual(backupRows, before);
@@ -62,7 +62,7 @@ for (const version of [1, 2] as const) {
             assert.deepEqual(after[table], records, table);
         const w = Workspace.open(root);
         try {
-            assert.equal(w.info().schemaVersion, 6);
+            assert.equal(w.info().schemaVersion, 7);
             w.analysis.add(d.id, candidate(w.currentRevision(d.id).snapshot));
             assert.equal(w.history(d.id).length, 3);
         }
@@ -74,4 +74,4 @@ for (const version of [1, 2] as const) {
     });
 }
 test('v2 migration DDL failure rolls back all analysis tables and retains backup', t => { const { root, path } = legacy(t, 2), db = new DatabaseSync(path); db.exec('CREATE TABLE analysis_runs(dummy TEXT)'); db.close(); const before = rows(path); expectCode(() => migrateWorkspace(root, true), 'CORRUPT_DATA'); assert.deepEqual(rows(path), before); const check = new DatabaseSync(path); assert.equal(check.prepare('PRAGMA user_version').get()?.user_version, 2); assert.equal(check.prepare("SELECT count(*) n FROM sqlite_master WHERE name='ledger_claims'").get()?.n, 0); check.close(); assert.equal(readdirSync(join(root, '.writer/backups')).length, 1); assert.equal(existsSync(join(root, '.writer/migration.lock')), false); });
-test('future schema v7 is rejected, not silently downgraded to v6', t => { const { root, path } = legacy(t, 2), db = new DatabaseSync(path); db.exec('PRAGMA user_version=7'); db.close(); expectCode(() => Workspace.open(root), 'UNSUPPORTED_SCHEMA'); expectCode(() => migrateWorkspace(root, true), 'UNSUPPORTED_SCHEMA'); });
+test('future schema v8 is rejected, not silently downgraded to v7', t => { const { root, path } = legacy(t, 2), db = new DatabaseSync(path); db.exec('PRAGMA user_version=8'); db.close(); expectCode(() => Workspace.open(root), 'UNSUPPORTED_SCHEMA'); expectCode(() => migrateWorkspace(root, true), 'UNSUPPORTED_SCHEMA'); });
